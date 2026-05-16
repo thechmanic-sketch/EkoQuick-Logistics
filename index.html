@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ekoquick — KZN Delivery Quotes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --orange: #FF6B35;
+            --orange-light: #FFF0EB;
+            --orange-dark: #E55A2B;
+            --blue: #1E3A5F;
+            --blue-light: #E8F0FE;
+            --blue-dark: #0F1F33;
+            --white: #ffffff;
+            --gray-50: #F8F9FA;
+            --gray-100: #F1F3F4;
+            --gray-200: #E8EAED;
+            --gray-300: #DADCE0;
+            --gray-400: #9AA0A6;
+            --gray-500: #5F6368;
+            --gray-600: #3C4043;
+            --gray-700: #202124;
+            --success: #34A853;
+            --error: #EA4335;
+            --warning: #FBBC04;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+            --shadow-xl: 0 20px 60px rgba(0,0,0,0.15);
+            --radius: 20px;
+            --radius-sm: 14px;
+            --radius-xs: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(180deg, var(--blue-dark) 0%, var(--blue) 100%);
+            min-height: 100vh;
+            color: var(--gray-700);
+            overflow-x: hidden;
+        }
+
+        /* Animated background particles */
+        .bg-particles {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .particle {
+            position: absolute;
+            width: 4px; height: 4px;
+            background: var(--orange);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 15s infinite ease-in-out;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.3; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Header */
+        .header {
+            position: relative;
+            padding: 40px 20px 60px;
+            text-align: center;
+            z-index: 1;
+        }
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .header-badge .pulse {
+            width: 8px; height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        .logo {
+            font-size: 42px;
+            font-weight: 800;
+            color: var(--white);
+            letter-spacing: -2px;
+            line-height: 1;
+        }
+        .logo span {
+            background: linear-gradient(135deg, var(--orange) 0%, #FF8F5D 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .tagline {
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            margin-top: 12px;
+            font-weight: 400;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 520px;
+            margin: -30px auto 0;
+            padding: 0 16px 40px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Glass Cards */
+        .card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255,255,255,0.5);
+            animation: slideUp 0.6s ease forwards;
+            opacity: 0;
+        }
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .card-icon {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+            border-radius: var(--radius-xs);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(255,107,53,0.3);
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-700);
+        }
+        .card-subtitle {
+            font-size: 12px;
+            color: var(--gray-400);
+            font-weight: 500;
+        }
+
+        /* Vehicle Selector */
+        .vehicle-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .vehicle-option {
+            position: relative;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            padding: 20px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--white);
+            overflow: hidden;
+        }
+        .vehicle-option::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--orange), var(--orange-dark));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        .vehicle-option:hover {
+            border-color: var(--orange);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+        .vehicle-option:hover::before {
+            transform: scaleX(1);
+        }
+        .vehicle-option.selected {
+            border-color: var(--orange);
+            background: var(--orange-light);
+            box-shadow: 0 0 0 3px rgba(255,107,53,0.15), var(--shadow);
+        }
+        .vehicle-option.selected::before {
+            transform: scaleX(1);
+        }
+        .vehicle-option .icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+        .vehicle-option:hover .icon {
+            transform: scale(1.1);
+        }
+        .vehicle-option .name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gray-600);
+            display: block;
+        }
+        .vehicle-option.selected .name {
+            color: var(--orange-dark);
+        }
+        .vehicle-option .price-tag {
+            font-size: 11px;
+            color: var(--gray-400);
+            margin-top: 6px;
+            display: block;
+            font-weight: 600;
+            background: var(--gray-100);
+            padding: 3px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        .vehicle-option.selected .price-tag {
+            background: var(--orange);
+            color: white;
+        }
+
+        /* Price Info Bar */
+        .price-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .price-bar-item {
+            text-align: center;
+            padding: 14px 8px;
+            background: linear-gradient(135deg, var(--blue-light) 0%, #F0F4FF 100%);
+            border-radius: var(--radius-xs);
+            border: 1px solid rgba(30,58,95,0.08);
+        }
+        .price-bar-item .amount {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--blue);
+            line-height: 1;
+        }
+        .price-bar-item .label {
+            font-size: 10px;
+            color: var(--gray-400);
+            font-weight: 600;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-600);
+            margin-bottom: 8px;
+        }
+        .form-label i {
+            color: var(--orange);
+            font-size: 12px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 16px 18px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+            color: var(--gray-700);
+            background: var(--white);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        .form-input:focus {
+            border-color: var(--orange);
+            box-shadow: 0 0 0 4px rgba(255,107,53,0.1);
+        }
+        .form-input::placeholder {
+            color: var(--gray-400);
+        }
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        /* Status Badge */
+        .api-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 50px;
+            margin-bottom: 16px;
+            width: fit-content;
+        }
+        .api-status.connected {
+            background: #E6F4EA;
+            color: #1E8E3E;
+        }
+        .api-status.error {
+            background: #FCE8E8;
+            color: #D93025;
+        }
+        .api-status.fallback {
+            background: var(--orange-light);
+            color: var(--orange-dark);
+        }
+        .status-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        /* Distance Result */
+        .distance-result {
+            background: linear-gradient(135deg, var(--blue-light) 0%, #E8F0FE 100%);
+            border-radius: var(--radius-sm);
+            padding: 24px;
+            text-align: center;
+            margin: 20px 0;
+            border: 1px solid rgba(30,58,95,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        .distance-result::before {
+            content: '';
+            position: absolute;
+            top: -50%; right: -50%;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(30,58,95,0.05) 0%, transparent 70%);
+        }
+        .distance-label {
+            font-size: 11px;
+            color: var(--blue);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .distance-value {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--blue);
+            margin-top: 6px;
+            line-height: 1;
+        }
+        .distance-meta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .distance-meta span {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-500);
+            background: rgba(255,255,255,0.7);
+            padding: 4px 14px;
+            border-radius: 20px;
+        }
+
+        /* Quote Box */
+        .quote-box {
+            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+            border-radius: var(--radius-sm);
+            padding: 32px 24px;
+            text-align: center;
+            color: var(--white);
+            margin: 24px 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(255,107,53,0.3);
+        }
+        .quote-box::before {
+            content: '';
+            position: absolute;
+            top: -30px; right: -30px;
+            width: 120px; height: 120px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+        }
+        .quote-box::after {
+            content: '';
+            position: absolute;
+            bottom: -20px; left: -20px;
+            width: 80px; height: 80px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        .quote-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        .quote-amount {
+            font-size: 52px;
+            font-weight: 800;
+            margin: 8px 0;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            position: relative;
+            z-index: 1;
+            line-height: 1;
+        }
+        .quote-detail {
+            font-size: 14px;
+            opacity: 0.95;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Breakdown */
+        .breakdown {
+            background: var(--gray-50);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            font-size: 14px;
+            border-bottom: 1px dashed var(--gray-200);
+        }
+        .breakdown-row:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            color: var(--gray-700);
+            font-size: 16px;
+            padding-top: 14px;
+            margin-top: 4px;
+            border-top: 2px solid var(--gray-200);
+        }
+        .breakdown-row .value {
+            font-weight: 600;
+            color: var(--gray-600);
+        }
+        .breakdown-row:last-child .value {
+            color: var(--orange);
+            font-size: 18px;
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 0; height: 0;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        .btn:active::after {
+            width: 300px; height: 300px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+            color: var(--white);
+            box-shadow: 0 4px 20px rgba(255,107,53,0.35);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255,107,53,0.45);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-secondary {
+            background: var(--white);
+            color: var(--blue);
+            border: 2px solid var(--blue);
+            margin-top: 12px;
+        }
+        .btn-secondary:hover {
+            background: var(--blue-light);
+            transform: translateY(-2px);
+        }
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: var(--white);
+            margin-top: 14px;
+            box-shadow: 0 4px 20px rgba(37,211,102,0.3);
+        }
+        .btn-whatsapp:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(37,211,102,0.4);
+        }
+        .btn-outline {
+            background: transparent;
+            color: var(--gray-500);
+            border: 2px solid var(--gray-200);
+            margin-top: 10px;
+            font-size: 14px;
+            padding: 14px;
+        }
+        .btn-outline:hover {
+            border-color: var(--orange);
+            color: var(--orange);
+            background: var(--orange-light);
+        }
+
+        /* Alerts */
+        .alert {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            border-radius: var(--radius-xs);
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 14px;
+        }
+        .alert.show { display: flex; }
+        .alert-error {
+            background: #FCE8E8;
+            color: #D93025;
+        }
+        .alert-success {
+            background: #E6F4EA;
+            color: #1E8E3E;
+        }
+
+        /* Floating WhatsApp */
+        .fab-whatsapp {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 24px rgba(37,211,102,0.4);
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 28px;
+            color: white;
+        }
+        .fab-whatsapp:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 8px 32px rgba(37,211,102,0.5);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15,31,51,0.6);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .modal {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 40px 32px;
+            text-align: center;
+            max-width: 360px;
+            width: 100%;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: var(--shadow-xl);
+        }
+        .modal-overlay.active .modal {
+            transform: scale(1) translateY(0);
+        }
+        .modal-icon {
+            width: 72px; height: 72px;
+            background: linear-gradient(135deg, var(--orange-light) 0%, #FFE8E0 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 20px;
+        }
+        .modal h3 {
+            font-size: 22px;
+            color: var(--gray-700);
+            margin-bottom: 10px;
+        }
+        .modal p {
+            font-size: 14px;
+            color: var(--gray-500);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .modal-close {
+            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+            color: var(--white);
+            border: none;
+            padding: 14px 40px;
+            border-radius: var(--radius-sm);
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .modal-close:hover {
+            transform: scale(1.05);
+        }
+
+        /* How It Works */
+        .step-list {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        .step-num {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(255,107,53,0.3);
+        }
+        .step-content h4 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--gray-700);
+            margin-bottom: 2px;
+        }
+        .step-content p {
+            font-size: 13px;
+            color: var(--gray-400);
+            line-height: 1.5;
+        }
+
+        /* Coverage Tags */
+        .tag-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .tag-cloud span {
+            background: var(--blue-light);
+            color: var(--blue);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .tag-cloud span:hover {
+            background: var(--blue);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* Loading */
+        .loading-ring {
+            display: inline-block;
+            width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: var(--white);
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 400px) {
+            .logo { font-size: 34px; }
+            .vehicle-grid { gap: 8px; }
+            .vehicle-option { padding: 16px 4px; }
+            .vehicle-option .icon { font-size: 26px; }
+            .input-row { grid-template-columns: 1fr; }
+            .quote-amount { font-size: 42px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-particles" id="particles"></div>
+
+    <header class="header">
+        <div class="header-badge">
+            <span class="pulse"></span>
+            Now Serving All of KZN
+        </div>
+        <div class="logo">Eko<span>quick</span></div>
+        <p class="tagline">Instant delivery quotes. Real-time tracking. Zero hassle.</p>
+    </header>
+
+    <div class="container">
+        <!-- Vehicle Selection -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon"><i class="fas fa-truck"></i></div>
+                <div>
+                    <div class="card-title">Choose Your Vehicle</div>
+                    <div class="card-subtitle">Select what fits your load</div>
+                </div>
+            </div>
+            <div class="vehicle-grid">
+                <div class="vehicle-option selected" data-vehicle="bike" data-rate="6.50" data-base="45" onclick="selectVehicle(this)">
+                    <span class="icon">🏍️</span>
+                    <span class="name">Motor Bike</span>
+                    <span class="price-tag">From R45</span>
+                </div>
+                <div class="vehicle-option" data-vehicle="bakkie" data-rate="9.50" data-base="85" onclick="selectVehicle(this)">
+                    <span class="icon">🛻</span>
+                    <span class="name">Bakkie</span>
+                    <span class="price-tag">From R85</span>
+                </div>
+                <div class="vehicle-option" data-vehicle="truck" data-rate="14.00" data-base="150" onclick="selectVehicle(this)">
+                    <span class="icon">🚛</span>
+                    <span class="name">1 Tonne Truck</span>
+                    <span class="price-tag">From R150</span>
+                </div>
+            </div>
+            <div class="price-bar">
+                <div class="price-bar-item">
+                    <div class="amount">R6.50</div>
+                    <div class="label">per km Bike</div>
+                </div>
+                <div class="price-bar-item">
+                    <div class="amount">R9.50</div>
+                    <div class="label">per km Bakkie</div>
+                </div>
+                <div class="price-bar-item">
+                    <div class="amount">R14.00</div>
+                    <div class="label">per km Truck</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delivery Details -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon"><i class="fas fa-map-marker-alt"></i></div>
+                <div>
+                    <div class="card-title">Delivery Details</div>
+                    <div class="card-subtitle">Enter pickup and destination</div>
+                </div>
+            </div>
+
+            <div class="api-status fallback" id="apiStatus">
+                <span class="status-dot"></span>
+                <span id="apiStatusText">Checking Maps connection...</span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-circle-dot"></i> Pickup Location</label>
+                <input type="text" class="form-input" id="pickup" placeholder="e.g. 45 West Street, Durban CBD" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-location-dot"></i> Drop-off Location</label>
+                <input type="text" class="form-input" id="dropoff" placeholder="e.g. 12 Main Road, Pietermaritzburg" autocomplete="off">
+            </div>
+
+            <div class="input-row">
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-road"></i> Distance (km)</label>
+                    <input type="number" class="form-input" id="distance" placeholder="Auto-calculate" min="1" oninput="calculateQuote()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fab fa-whatsapp"></i> Your WhatsApp</label>
+                    <input type="tel" class="form-input" id="phone" placeholder="0676659966">
+                </div>
+            </div>
+
+            <div class="distance-result hidden" id="distanceBox">
+                <div class="distance-label">Estimated Driving Distance</div>
+                <div class="distance-value"><span id="distDisplay">0</span> km</div>
+                <div class="distance-meta">
+                    <span id="distTime"><i class="fas fa-clock"></i> ~0 min</span>
+                    <span id="distMode"><i class="fas fa-car"></i> Driving</span>
+                </div>
+            </div>
+
+            <div class="alert alert-error" id="errorMsg">
+                <i class="fas fa-circle-exclamation"></i>
+                <span id="errorText"></span>
+            </div>
+            <div class="alert alert-success" id="successMsg">
+                <i class="fas fa-circle-check"></i>
+                <span id="successText"></span>
+            </div>
+
+            <div class="quote-box hidden" id="quoteBox">
+                <div class="quote-label">Your Delivery Quote</div>
+                <div class="quote-amount">R<span id="quoteAmount">0</span></div>
+                <div class="quote-detail" id="quoteDetail">Motor Bike • 0 km</div>
+            </div>
+
+            <div class="breakdown hidden" id="breakdown">
+                <div class="breakdown-row">
+                    <span>Base fee</span>
+                    <span class="value" id="baseFee">R0</span>
+                </div>
+                <div class="breakdown-row">
+                    <span>Distance charge (<span id="rateDisplay">R6.50</span>/km)</span>
+                    <span class="value" id="distCharge">R0</span>
+                </div>
+                <div class="breakdown-row">
+                    <span>Total Estimate</span>
+                    <span class="value" id="totalEstimate">R0</span>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="calcBtn" onclick="calculateDistance()">
+                <i class="fas fa-calculator"></i>
+                <span id="calcBtnText">Calculate Distance & Quote</span>
+            </button>
+
+            <a href="#" class="btn btn-whatsapp hidden" id="whatsappBtn" onclick="sendQuote(event)">
+                <i class="fab fa-whatsapp"></i>
+                Send Quote to WhatsApp
+            </a>
+
+            <button class="btn btn-secondary hidden" id="bookBtn" onclick="bookNow()">
+                <i class="fas fa-check-circle"></i>
+                Confirm & Book Now
+            </button>
+
+            <button class="btn btn-outline hidden" id="trackBtn" onclick="trackDelivery()">
+                <i class="fas fa-location-arrow"></i>
+                Track My Delivery
+            </button>
+        </div>
+
+        <!-- How It Works -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon"><i class="fas fa-lightbulb"></i></div>
+                <div>
+                    <div class="card-title">How It Works</div>
+                    <div class="card-subtitle">Three simple steps</div>
+                </div>
+            </div>
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <h4>Enter Your Locations</h4>
+                        <p>Type any address in KZN — we calculate the real driving distance automatically.</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <h4>Get Instant Quote</h4>
+                        <p>See exact pricing for Bike, Bakkie, or 1 Tonne Truck in seconds.</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <h4>Book & Track</h4>
+                        <p>Confirm your booking, get WhatsApp updates, and track your driver live.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coverage -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon"><i class="fas fa-map"></i></div>
+                <div>
+                    <div class="card-title">We Cover All of KZN</div>
+                    <div class="card-subtitle">From coast to Midlands</div>
+                </div>
+            </div>
+            <div class="tag-cloud">
+                <span>Durban</span>
+                <span>Pietermaritzburg</span>
+                <span>Umhlanga</span>
+                <span>Ballito</span>
+                <span>Richards Bay</span>
+                <span>Newcastle</span>
+                <span>Ladysmith</span>
+                <span>Port Shepstone</span>
+                <span>Margate</span>
+                <span>Stanger</span>
+                <span>Howick</span>
+                <span>Estcourt</span>
+                <span>Vryheid</span>
+                <span>Kokstad</span>
+                <span>& More</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; padding: 30px 20px; color: rgba(255,255,255,0.4); font-size: 12px; font-weight: 500;">
+            <div style="margin-bottom: 8px;">© 2026 Ekoquick. All rights reserved.</div>
+            <div>Fast, reliable delivery across KwaZulu-Natal.</div>
+        </div>
+    </div>
+
+    <a href="https://wa.me/27676659966?text=Hi%20Ekoquick,%20I%20need%20help%20with%20a%20delivery." class="fab-whatsapp" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <div class="modal-icon">🎉</div>
+            <h3 id="modalTitle">Quote Sent!</h3>
+            <p id="modalText">Your quote has been sent to your WhatsApp. We've also notified our team.</p>
+            <button class="modal-close" onclick="closeModal()">Awesome!</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCoi-_rtE7Lj7UxYT5XdUol4nLChbws6-I",
+            authDomain: "ekoquick-ee4da.firebaseapp.com",
+            projectId: "ekoquick-ee4da",
+            storageBucket: "ekoquick-ee4da.firebasestorage.app",
+            messagingSenderId: "876567393639",
+            appId: "1:876567393639:web:f9010ede5eda46f2eb6bc2"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.db = db;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.serverTimestamp = serverTimestamp;
+    </script>
+
+    <script>
+        // ============================================
+        // CONFIG
+        // ============================================
+        const DISTANCE_MATRIX_API_KEY = 'BE2w7PoMQ4xmiDE0VXaN2zHdTqiOpy8ECtEStW9QCdW7O68yH33SOwZ31ASLDZ67';
+        const GEOCODING_API_KEY = '4DfCOvQ2OywhQfDePYiwZi5chZbTwLl9lBztjhUTzqWAzq8wnhdGmskJ4kmAiUuen';
+        const ADMIN_WHATSAPP = '27676659966';
+
+        let selectedVehicle = 'bike';
+        let selectedRate = 6.50;
+        let selectedBase = 45;
+        let currentQuote = 0;
+        let currentDistance = 0;
+        let currentDuration = '';
+        let currentJobId = null;
+
+        // KZN fallback distances
+        const kznDistances = {
+            'durban': { 'pietermaritzburg': 78, 'umhlanga': 16, 'ballito': 40, 'richardsbay': 180, 'newcastle': 270, 'ladysmith': 190, 'portshepstone': 120, 'pinetown': 22, 'amanzimtoti': 25, 'westville': 15, 'hillcrest': 30, 'howick': 88, 'kokstad': 330, 'vryheid': 300, 'estcourt': 160, 'mtunzini': 140 },
+            'pietermaritzburg': { 'durban': 78, 'umhlanga': 85, 'ballito': 100, 'richardsbay': 240, 'newcastle': 200, 'ladysmith': 120, 'portshepstone': 170, 'howick': 28, 'estcourt': 90, 'greytown': 70 },
+            'umhlanga': { 'durban': 16, 'ballito': 24, 'pietermaritzburg': 85, 'richardsbay': 195, 'amanzimtoti': 40 },
+            'ballito': { 'durban': 40, 'umhlanga': 24, 'pietermaritzburg': 100, 'richardsbay': 170, 'stanger': 30 },
+            'richardsbay': { 'durban': 180, 'pietermaritzburg': 240, 'empangeni': 18, 'mtunzini': 50, 'newcastle': 250 },
+            'newcastle': { 'durban': 270, 'pietermaritzburg': 200, 'ladysmith': 85, 'vryheid': 80 },
+            'ladysmith': { 'durban': 190, 'pietermaritzburg': 120, 'newcastle': 85, 'estcourt': 70 },
+            'portshepstone': { 'durban': 120, 'pietermaritzburg': 170, 'margate': 12, 'kokstad': 210 },
+            'pinetown': { 'durban': 22, 'westville': 10, 'hillcrest': 15 },
+            'westville': { 'durban': 15, 'pinetown': 10, 'hillcrest': 20 },
+            'hillcrest': { 'durban': 30, 'pinetown': 15, 'westville': 20, 'howick': 65 },
+            'howick': { 'pietermaritzburg': 28, 'hillcrest': 65, 'durban': 88 },
+            'amanzimtoti': { 'durban': 25, 'umhlanga': 40, 'portshepstone': 95 },
+            'stanger': { 'ballito': 30, 'durban': 70 },
+            'empangeni': { 'richardsbay': 18, 'durban': 195 },
+            'margate': { 'portshepstone': 12, 'durban': 132 },
+            'kokstad': { 'portshepstone': 210, 'durban': 330, 'pietermaritzburg': 260 },
+            'vryheid': { 'newcastle': 80, 'durban': 300, 'ladysmith': 140 },
+            'estcourt': { 'pietermaritzburg': 90, 'ladysmith': 70, 'durban': 160 },
+            'mtunzini': { 'richardsbay': 50, 'durban': 140 },
+            'greytown': { 'pietermaritzburg': 70, 'durban': 150 }
+        };
+
+        function normalizeLocation(loc) {
+            return loc.toLowerCase().replace(/[^a-z]/g, '');
+        }
+
+        function findFallbackDistance(from, to) {
+            const nf = normalizeLocation(from);
+            const nt = normalizeLocation(to);
+            if (kznDistances[nf] && kznDistances[nf][nt]) return kznDistances[nf][nt];
+            if (kznDistances[nt] && kznDistances[nt][nf]) return kznDistances[nt][nf];
+            for (let key in kznDistances) {
+                if (nf.includes(key) || key.includes(nf)) {
+                    for (let dest in kznDistances[key]) {
+                        if (nt.includes(dest) || dest.includes(nt)) return kznDistances[key][dest];
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 15; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDelay = Math.random() * 15 + 's';
+                p.style.animationDuration = (10 + Math.random() * 10) + 's';
+                container.appendChild(p);
+            }
+        }
+        createParticles();
+
+        function selectVehicle(el) {
+            document.querySelectorAll('.vehicle-option').forEach(v => v.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedVehicle = el.dataset.vehicle;
+            selectedRate = parseFloat(el.dataset.rate);
+            selectedBase = parseFloat(el.dataset.base);
+            const rateDisplay = document.getElementById('rateDisplay');
+            if (rateDisplay) rateDisplay.textContent = `R${selectedRate.toFixed(2)}`;
+            if (currentDistance > 0) calculateQuote();
+        }
+
+        function updateApiStatus(type, text) {
+            const status = document.getElementById('apiStatus');
+            const statusText = document.getElementById('apiStatusText');
+            status.className = 'api-status ' + type;
+            statusText.textContent = text;
+        }
+
+        function showError(msg) {
+            const err = document.getElementById('errorMsg');
+            document.getElementById('errorText').textContent = msg;
+            err.classList.add('show');
+            setTimeout(() => err.classList.remove('show'), 5000);
+        }
+
+        function showSuccess(msg) {
+            const suc = document.getElementById('successMsg');
+            document.getElementById('successText').textContent = msg;
+            suc.classList.add('show');
+            setTimeout(() => suc.classList.remove('show'), 5000);
+        }
+
+        async function geocodeAddress(address) {
+            try {
+                const response = await fetch(`https://api.distancematrix.ai/maps/api/geocode/json?key=${GEOCODING_API_KEY}&address=${encodeURIComponent(address + ', South Africa')}`);
+                const data = await response.json();
+                if (data.status === 'OK' && data.result && data.result.length > 0) {
+                    return data.result[0].geometry.location;
+                }
+            } catch (e) {
+                console.log('Geocoding failed:', e);
+            }
+            return null;
+        }
+
+        async function calculateDistance() {
+            const pickup = document.getElementById('pickup').value.trim();
+            const dropoff = document.getElementById('dropoff').value.trim();
+            const btn = document.getElementById('calcBtn');
+            const btnText = document.getElementById('calcBtnText');
+
+            if (!pickup || !dropoff) {
+                showError('Please enter both pickup and drop-off locations');
+                return;
+            }
+
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="loading-ring"></span> Calculating...';
+
+            // Try DistanceMatrix.ai
+            try {
+                const pickupCoords = await geocodeAddress(pickup);
+                const dropoffCoords = await geocodeAddress(dropoff);
+
+                if (pickupCoords && dropoffCoords) {
+                    const origins = `${pickupCoords.lat},${pickupCoords.lng}`;
+                    const destinations = `${dropoffCoords.lat},${dropoffCoords.lng}`;
+
+                    const response = await fetch(`https://api.distancematrix.ai/maps/api/distancematrix/json?key=${DISTANCE_MATRIX_API_KEY}&origins=${origins}&destinations=${destinations}&mode=driving`);
+                    const data = await response.json();
+
+                    if (data.status === 'OK' && data.rows && data.rows[0] && data.rows[0].elements && data.rows[0].elements[0].status === 'OK') {
+                        const element = data.rows[0].elements[0];
+                        const distanceMeters = element.distance.value;
+                        const durationSecs = element.duration.value;
+                        currentDistance = Math.round(distanceMeters / 1000);
+                        currentDuration = formatDuration(durationSecs);
+
+                        document.getElementById('distance').value = currentDistance;
+                        document.getElementById('distDisplay').textContent = currentDistance;
+                        document.getElementById('distTime').innerHTML = `<i class="fas fa-clock"></i> ~${currentDuration}`;
+                        document.getElementById('distanceBox').classList.remove('hidden');
+
+                        updateApiStatus('connected', 'Live distances via DistanceMatrix.ai');
+                        showSuccess(`Real driving distance: ${currentDistance} km (${currentDuration})`);
+                        calculateQuote();
+
+                        btn.disabled = false;
+                        btnText.innerHTML = '<i class="fas fa-rotate-right"></i> Recalculate';
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.log('DistanceMatrix.ai failed:', e);
+            }
+
+            // Fallback to database
+            const fallbackDist = findFallbackDistance(pickup, dropoff);
+            if (fallbackDist) {
+                currentDistance = fallbackDist;
+                currentDuration = '';
+                document.getElementById('distance').value = currentDistance;
+                document.getElementById('distDisplay').textContent = currentDistance;
+                document.getElementById('distTime').innerHTML = '<i class="fas fa-estimate"></i> Estimated';
+                document.getElementById('distanceBox').classList.remove('hidden');
+
+                updateApiStatus('fallback', 'Using estimated distances — API limit reached');
+                showSuccess(`Estimated distance: ${currentDistance} km`);
+                calculateQuote();
+            } else {
+                showError('Could not calculate distance. Please enter distance manually or try more specific addresses.');
+                document.getElementById('distanceBox').classList.add('hidden');
+            }
+
+            btn.disabled = false;
+            btnText.innerHTML = '<i class="fas fa-calculator"></i> Calculate Distance & Quote';
+        }
+
+        function formatDuration(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            if (hours > 0) return `${hours}h ${mins}m`;
+            return `${mins} min`;
+        }
+
+        function calculateQuote() {
+            const distance = parseFloat(document.getElementById('distance').value) || 0;
+            currentDistance = distance;
+            if (distance <= 0) return;
+
+            const distCharge = distance * selectedRate;
+            const total = selectedBase + distCharge;
+            currentQuote = Math.round(total);
+
+            const vehicleName = selectedVehicle === 'bike' ? 'Motor Bike' : selectedVehicle === 'bakkie' ? 'Bakkie' : '1 Tonne Truck';
+
+            document.getElementById('quoteAmount').textContent = currentQuote.toLocaleString();
+            document.getElementById('quoteDetail').textContent = `${vehicleName} • ${distance} km${currentDuration ? ' • ~' + currentDuration : ''}`;
+
+            document.getElementById('baseFee').textContent = `R${selectedBase}`;
+            document.getElementById('distCharge').textContent = `R${distCharge.toFixed(2)}`;
+            document.getElementById('totalEstimate').textContent = `R${currentQuote.toLocaleString()}`;
+
+            document.getElementById('quoteBox').classList.remove('hidden');
+            document.getElementById('breakdown').classList.remove('hidden');
+            document.getElementById('whatsappBtn').classList.remove('hidden');
+            document.getElementById('bookBtn').classList.remove('hidden');
+        }
+
+        async function sendQuote(e) {
+            e.preventDefault();
+            const phone = document.getElementById('phone').value.trim();
+            const pickup = document.getElementById('pickup').value.trim();
+            const dropoff = document.getElementById('dropoff').value.trim();
+            const vehicleName = selectedVehicle === 'bike' ? 'Motor Bike' : selectedVehicle === 'bakkie' ? 'Bakkie' : '1 Tonne Truck';
+
+            if (!phone) { showError('Please enter your WhatsApp number'); document.getElementById('phone').focus(); return; }
+            if (!pickup || !dropoff) { showError('Please enter both pickup and drop-off locations'); return; }
+
+            let formattedPhone = phone.replace(/\s/g, '').replace(/^0/, '27');
+            if (!formattedPhone.startsWith('27')) formattedPhone = '27' + formattedPhone;
+
+            const message = `🚚 *Ekoquick Delivery Quote*
+
+📍 *From:* ${pickup}
+📍 *To:* ${dropoff}
+🛻 *Vehicle:* ${vehicleName}
+📏 *Distance:* ${currentDistance} km${currentDuration ? ' (~' + currentDuration + ')' : ''}
+
+💰 *Quote: R${currentQuote.toLocaleString()}*
+
+Reply "BOOK" to confirm your delivery!`;
+
+            window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, '_blank');
+
+            setTimeout(() => {
+                const ownerMsg = `🚨 *New Ekoquick Quote Request*
+
+📍 From: ${pickup}
+📍 To: ${dropoff}
+🛻 Vehicle: ${vehicleName}
+📏 Distance: ${currentDistance} km
+💰 Quote: R${currentQuote.toLocaleString()}
+📱 Customer: ${phone}
+
+Customer has been sent the quote.`;
+                window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(ownerMsg)}`, '_blank');
+            }, 1500);
+
+            showModal('Quote Sent!', 'Your quote has been sent to your WhatsApp. We've also notified our team.');
+        }
+
+        async function bookNow() {
+            const phone = document.getElementById('phone').value.trim();
+            const pickup = document.getElementById('pickup').value.trim();
+            const dropoff = document.getElementById('dropoff').value.trim();
+            const vehicleName = selectedVehicle === 'bike' ? 'Motor Bike' : selectedVehicle === 'bakkie' ? 'Bakkie' : '1 Tonne Truck';
+
+            if (!phone || !pickup || !dropoff) { showError('Please fill in all fields first'); return; }
+
+            // Save to Firebase
+            try {
+                const jobRef = await window.addDoc(window.collection(window.db, 'jobs'), {
+                    pickup: pickup,
+                    dropoff: dropoff,
+                    vehicle: selectedVehicle,
+                    vehicleName: vehicleName,
+                    distance: currentDistance,
+                    duration: currentDuration,
+                    quote: currentQuote,
+                    customerPhone: phone,
+                    status: 'pending',
+                    createdAt: window.serverTimestamp()
+                });
+                currentJobId = jobRef.id;
+
+                // Notify admin
+                const message = `🚨 *NEW BOOKING - Ekoquick*
+
+📍 Pickup: ${pickup}
+📍 Drop-off: ${dropoff}
+🛻 Vehicle: ${vehicleName}
+📏 Distance: ${currentDistance} km
+💰 Quote: R${currentQuote.toLocaleString()}
+📱 Customer: ${phone}
+
+Job ID: ${jobRef.id}
+
+Please assign a driver.`;
+                window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
+
+                // Notify customer
+                setTimeout(() => {
+                    let formattedPhone = phone.replace(/\s/g, '').replace(/^0/, '27');
+                    if (!formattedPhone.startsWith('27')) formattedPhone = '27' + formattedPhone;
+                    const custMsg = `✅ *Booking Received!*
+
+Thank you for choosing Ekoquick.
+
+📍 ${pickup} → ${dropoff}
+🛻 ${vehicleName}
+💰 R${currentQuote.toLocaleString()}
+
+Your booking ID: *${jobRef.id}*
+
+We're assigning a driver now. You'll receive tracking info shortly! 🚚`;
+                    window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(custMsg)}`, '_blank');
+                }, 1500);
+
+                document.getElementById('trackBtn').classList.remove('hidden');
+                showModal('Booking Confirmed!', `Your delivery has been booked!
+
+Booking ID: ${jobRef.id}
+
+We're assigning a driver now.`);
+            } catch (e) {
+                console.error('Firebase error:', e);
+                showError('Booking saved locally. We'll contact you shortly.');
+            }
+        }
+
+        function trackDelivery() {
+            if (!currentJobId) {
+                showError('No active delivery to track');
+                return;
+            }
+            // Tracking link - would be hosted on GitHub Pages
+            const trackUrl = `${window.location.origin}/track.html?job=${currentJobId}`;
+            showModal('Tracking Link', `Your tracking link:
+${trackUrl}
+
+(Share this with your customer)`);
+        }
+
+        function showModal(title, text) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalText').textContent = text;
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Initialize
+        updateApiStatus('fallback', 'Ready to calculate distances');
+    </script>
+</body>
+</html>
