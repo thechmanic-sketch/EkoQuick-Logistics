@@ -769,6 +769,7 @@
             .quote-amount { font-size: 42px; }
         }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="bg-particles" id="particles"></div>
@@ -1131,18 +1132,7 @@
             setTimeout(() => suc.classList.remove('show'), 5000);
         }
 
-        async function geocodeAddress(address) {
-            try {
-                const response = await fetch(`https://api.distancematrix.ai/maps/api/geocode/json?key=${GEOCODING_API_KEY}&address=${encodeURIComponent(address + ', South Africa')}`);
-                const data = await response.json();
-                if (data.status === 'OK' && data.result && data.result.length > 0) {
-                    return data.result[0].geometry.location;
-                }
-            } catch (e) {
-                console.log('Geocoding failed:', e);
-            }
-            return null;
-        }
+        
 
         async function calculateDistance() {
             const pickup = document.getElementById('pickup').value.trim();
@@ -1158,38 +1148,33 @@
             btn.disabled = true;
             btnText.innerHTML = '<span class="loading-ring"></span> Calculating...';
 
-            // Try DistanceMatrix.ai
+            // Try DistanceMatrix.ai with direct text addresses (ONE API call)
             try {
-                const pickupCoords = await geocodeAddress(pickup);
-                const dropoffCoords = await geocodeAddress(dropoff);
+                const origins = encodeURIComponent(pickup + ', KwaZulu-Natal, South Africa');
+                const destinations = encodeURIComponent(dropoff + ', KwaZulu-Natal, South Africa');
 
-                if (pickupCoords && dropoffCoords) {
-                    const origins = `${pickupCoords.lat},${pickupCoords.lng}`;
-                    const destinations = `${dropoffCoords.lat},${dropoffCoords.lng}`;
+                const response = await fetch(`https://api.distancematrix.ai/maps/api/distancematrix/json?key=${DISTANCE_MATRIX_API_KEY}&origins=${origins}&destinations=${destinations}&mode=driving`);
+                const data = await response.json();
 
-                    const response = await fetch(`https://api.distancematrix.ai/maps/api/distancematrix/json?key=${DISTANCE_MATRIX_API_KEY}&origins=${origins}&destinations=${destinations}&mode=driving`);
-                    const data = await response.json();
+                if (data.status === 'OK' && data.rows && data.rows[0] && data.rows[0].elements && data.rows[0].elements[0].status === 'OK') {
+                    const element = data.rows[0].elements[0];
+                    const distanceMeters = element.distance.value;
+                    const durationSecs = element.duration.value;
+                    currentDistance = Math.round(distanceMeters / 1000);
+                    currentDuration = formatDuration(durationSecs);
 
-                    if (data.status === 'OK' && data.rows && data.rows[0] && data.rows[0].elements && data.rows[0].elements[0].status === 'OK') {
-                        const element = data.rows[0].elements[0];
-                        const distanceMeters = element.distance.value;
-                        const durationSecs = element.duration.value;
-                        currentDistance = Math.round(distanceMeters / 1000);
-                        currentDuration = formatDuration(durationSecs);
+                    document.getElementById('distance').value = currentDistance;
+                    document.getElementById('distDisplay').textContent = currentDistance;
+                    document.getElementById('distTime').innerHTML = `<i class="fas fa-clock"></i> ~${currentDuration}`;
+                    document.getElementById('distanceBox').classList.remove('hidden');
 
-                        document.getElementById('distance').value = currentDistance;
-                        document.getElementById('distDisplay').textContent = currentDistance;
-                        document.getElementById('distTime').innerHTML = `<i class="fas fa-clock"></i> ~${currentDuration}`;
-                        document.getElementById('distanceBox').classList.remove('hidden');
+                    updateApiStatus('connected', 'Live distances via DistanceMatrix.ai');
+                    showSuccess(`Real driving distance: ${currentDistance} km (${currentDuration})`);
+                    calculateQuote();
 
-                        updateApiStatus('connected', 'Live distances via DistanceMatrix.ai');
-                        showSuccess(`Real driving distance: ${currentDistance} km (${currentDuration})`);
-                        calculateQuote();
-
-                        btn.disabled = false;
-                        btnText.innerHTML = '<i class="fas fa-rotate-right"></i> Recalculate';
-                        return;
-                    }
+                    btn.disabled = false;
+                    btnText.innerHTML = '<i class="fas fa-rotate-right"></i> Recalculate';
+                    return;
                 }
             } catch (e) {
                 console.log('DistanceMatrix.ai failed:', e);
