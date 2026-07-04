@@ -152,7 +152,7 @@
         .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
         .tab-btn { flex: 1; padding: 12px; border: 2px solid var(--gray-200); background: var(--white); border-radius: var(--radius-xs); font-weight: 700; font-size: 13px; cursor: pointer; color: var(--gray-500); font-family: 'Poppins', sans-serif; }
         .tab-btn.active { border-color: var(--orange); color: var(--orange-dark); background: var(--orange-light); }
-        .role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+        .role-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px; }
         .role-option { border: 2px solid var(--gray-200); border-radius: var(--radius-xs); padding: 14px 6px; text-align: center; cursor: pointer; font-size: 12px; font-weight: 700; color: var(--gray-600); }
         .role-option.selected { border-color: var(--orange); background: var(--orange-light); color: var(--orange-dark); }
         .role-option i { display: block; font-size: 18px; margin-bottom: 6px; color: var(--gray-400); }
@@ -218,9 +218,6 @@
                         </div>
                         <div class="role-option" data-role="driver" onclick="selectRole(this)">
                             <i class="fas fa-truck"></i> Driver
-                        </div>
-                        <div class="role-option" data-role="admin" onclick="selectRole(this)">
-                            <i class="fas fa-user-shield"></i> Admin
                         </div>
                     </div>
                 </div>
