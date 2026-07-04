@@ -1,1 +1,394 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ekoquick — KZN Delivery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        :root {
+            --orange: #FF6B35;
+            --orange-light: #FFF0EB;
+            --orange-dark: #E55A2B;
+            --blue: #1E3A5F;
+            --blue-light: #E8F0FE;
+            --blue-dark: #0F1F33;
+            --white: #ffffff;
+            --gray-50: #F8F9FA;
+            --gray-100: #F1F3F4;
+            --gray-200: #E8EAED;
+            --gray-300: #DADCE0;
+            --gray-400: #9AA0A6;
+            --gray-500: #5F6368;
+            --gray-600: #3C4043;
+            --gray-700: #202124;
+            --success: #34A853;
+            --error: #EA4335;
+            --warning: #FBBC04;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+            --shadow-xl: 0 20px 60px rgba(0,0,0,0.15);
+            --radius: 20px;
+            --radius-sm: 14px;
+            --radius-xs: 10px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(180deg, var(--blue-dark) 0%, var(--blue) 100%);
+            min-height: 100vh;
+            color: var(--gray-700);
+        }
+        .hidden { display: none !important; }
+        .header { position: relative; padding: 40px 20px 30px; text-align: center; }
+        .header-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+            padding: 8px 20px; border-radius: 50px; font-size: 12px; font-weight: 600;
+            color: rgba(255,255,255,0.8); margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .header-badge .pulse { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1);} 50% { opacity:.5; transform: scale(.8);} }
+        .logo { font-size: 42px; font-weight: 800; color: var(--white); letter-spacing: -2px; line-height: 1; }
+        .logo span { background: linear-gradient(135deg, var(--orange) 0%, #FF8F5D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .tagline { color: rgba(255,255,255,0.6); font-size: 14px; margin-top: 12px; }
+        .container { max-width: 560px; margin: -10px auto 0; padding: 0 16px 40px; position: relative; z-index: 2; }
+        .card {
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);
+            border-radius: var(--radius); padding: 28px; margin-bottom: 16px;
+            box-shadow: var(--shadow-lg); border: 1px solid rgba(255,255,255,0.5);
+        }
+        .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .card-icon {
+            width: 44px; height: 44px; background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+            border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 18px; box-shadow: 0 4px 12px rgba(255,107,53,0.3);
+        }
+        .card-title { font-size: 18px; font-weight: 700; color: var(--gray-700); }
+        .card-subtitle { font-size: 12px; color: var(--gray-400); font-weight: 500; }
+        .vehicle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 8px; }
+        .vehicle-option {
+            position: relative; border: 2px solid var(--gray-200); border-radius: var(--radius-sm);
+            padding: 20px 8px; text-align: center; cursor: pointer; transition: all .3s cubic-bezier(.4,0,.2,1);
+            background: var(--white); overflow: hidden;
+        }
+        .vehicle-option:hover { border-color: var(--orange); transform: translateY(-3px); box-shadow: var(--shadow); }
+        .vehicle-option.selected { border-color: var(--orange); background: var(--orange-light); box-shadow: 0 0 0 3px rgba(255,107,53,0.15), var(--shadow); }
+        .vehicle-option .icon { font-size: 32px; margin-bottom: 10px; display: block; }
+        .vehicle-option .name { font-size: 12px; font-weight: 700; color: var(--gray-600); display: block; }
+        .vehicle-option.selected .name { color: var(--orange-dark); }
+        .vehicle-option .price-tag { font-size: 11px; color: var(--gray-400); margin-top: 6px; font-weight: 600; background: var(--gray-100); padding: 3px 10px; border-radius: 20px; display: inline-block; }
+        .vehicle-option.selected .price-tag { background: var(--orange); color: white; }
+        .form-group { margin-bottom: 18px; position: relative; }
+        .form-label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--gray-600); margin-bottom: 8px; }
+        .form-label i { color: var(--orange); font-size: 12px; }
+        .form-input, .form-select {
+            width: 100%; padding: 16px 18px; border: 2px solid var(--gray-200); border-radius: var(--radius-sm);
+            font-family: 'Poppins', sans-serif; font-size: 15px; color: var(--gray-700); background: var(--white);
+            transition: all .3s ease; outline: none;
+        }
+        .form-input:focus, .form-select:focus { border-color: var(--orange); box-shadow: 0 0 0 4px rgba(255,107,53,0.1); }
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .api-status { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 50px; margin-bottom: 16px; }
+        .api-status.connected { background: #E6F4EA; color: #1E8E3E; }
+        .api-status.fallback { background: var(--orange-light); color: var(--orange-dark); }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+        .distance-result { background: linear-gradient(135deg, var(--blue-light) 0%, #E8F0FE 100%); border-radius: var(--radius-sm); padding: 24px; text-align: center; margin: 20px 0; border: 1px solid rgba(30,58,95,0.08); }
+        .distance-label { font-size: 11px; color: var(--blue); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .distance-value { font-size: 36px; font-weight: 800; color: var(--blue); margin-top: 6px; line-height: 1; }
+        .quote-box { background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%); border-radius: var(--radius-sm); padding: 32px 24px; text-align: center; color: var(--white); margin: 24px 0; box-shadow: 0 8px 32px rgba(255,107,53,0.3); }
+        .quote-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; opacity: .9; }
+        .quote-amount { font-size: 52px; font-weight: 800; margin: 8px 0; line-height: 1; }
+        .quote-detail { font-size: 14px; opacity: .95; font-weight: 500; }
+        .breakdown { background: var(--gray-50); border-radius: var(--radius-sm); padding: 20px; margin-top: 20px; }
+        .breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 14px; border-bottom: 1px dashed var(--gray-200); }
+        .breakdown-row:last-child { border-bottom: none; font-weight: 700; color: var(--gray-700); font-size: 16px; padding-top: 14px; margin-top: 4px; border-top: 2px solid var(--gray-200); }
+        .breakdown-row .value { font-weight: 600; color: var(--gray-600); }
+        .breakdown-row:last-child .value { color: var(--orange); font-size: 18px; }
+        .btn {
+            width: 100%; padding: 18px; border: none; border-radius: var(--radius-sm); font-family: 'Poppins', sans-serif;
+            font-size: 16px; font-weight: 700; cursor: pointer; transition: all .3s cubic-bezier(.4,0,.2,1);
+            display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none;
+        }
+        .btn-primary { background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%); color: var(--white); box-shadow: 0 4px 20px rgba(255,107,53,0.35); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,107,53,0.45); }
+        .btn-primary:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+        .btn-secondary { background: var(--white); color: var(--blue); border: 2px solid var(--blue); margin-top: 12px; }
+        .btn-secondary:hover { background: var(--blue-light); transform: translateY(-2px); }
+        .btn-whatsapp { background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: var(--white); margin-top: 14px; box-shadow: 0 4px 20px rgba(37,211,102,0.3); }
+        .btn-outline { background: transparent; color: var(--gray-500); border: 2px solid var(--gray-200); margin-top: 10px; font-size: 14px; padding: 14px; }
+        .btn-outline:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-light); }
+        .btn-sm { width: auto; padding: 10px 18px; font-size: 13px; }
+        .btn-link { background: none; border: none; color: var(--orange); font-weight: 700; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 13px; }
+        .alert { display: none; align-items: center; gap: 10px; padding: 14px 16px; border-radius: var(--radius-xs); font-size: 13px; font-weight: 600; margin-top: 14px; }
+        .alert.show { display: flex; }
+        .alert-error { background: #FCE8E8; color: #D93025; }
+        .alert-success { background: #E6F4EA; color: #1E8E3E; }
+        .fab-whatsapp {
+            position: fixed; bottom: 24px; right: 24px; width: 64px; height: 64px;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 24px rgba(37,211,102,0.4);
+            z-index: 1000; text-decoration: none; font-size: 28px; color: white;
+        }
+        .modal-overlay {
+            position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(15,31,51,0.6); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none;
+            transition: opacity .3s ease; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal { background: var(--white); border-radius: var(--radius); padding: 40px 32px; text-align: center; max-width: 360px; width: 100%; box-shadow: var(--shadow-xl); }
+        .modal-icon { width: 72px; height: 72px; background: linear-gradient(135deg, var(--orange-light) 0%, #FFE8E0 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 20px; }
+        .modal h3 { font-size: 22px; color: var(--gray-700); margin-bottom: 10px; }
+        .modal p { font-size: 14px; color: var(--gray-500); margin-bottom: 24px; line-height: 1.6; white-space: pre-line; }
+        .modal-close { background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%); color: var(--white); border: none; padding: 14px 40px; border-radius: var(--radius-sm); font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 15px; cursor: pointer; }
+        .loading-ring { display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: var(--white); animation: spin .8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Auth */
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px; border: 2px solid var(--gray-200); background: var(--white); border-radius: var(--radius-xs); font-weight: 700; font-size: 13px; cursor: pointer; color: var(--gray-500); font-family: 'Poppins', sans-serif; }
+        .tab-btn.active { border-color: var(--orange); color: var(--orange-dark); background: var(--orange-light); }
+        .role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+        .role-option { border: 2px solid var(--gray-200); border-radius: var(--radius-xs); padding: 14px 6px; text-align: center; cursor: pointer; font-size: 12px; font-weight: 700; color: var(--gray-600); }
+        .role-option.selected { border-color: var(--orange); background: var(--orange-light); color: var(--orange-dark); }
+        .role-option i { display: block; font-size: 18px; margin-bottom: 6px; color: var(--gray-400); }
+        .role-option.selected i { color: var(--orange); }
+
+        /* Navbar for logged-in shell */
+        .app-nav { display: flex; align-items: center; justify-content: space-between; max-width: 560px; margin: 0 auto; padding: 0 16px 10px; color: white; }
+        .app-nav .who { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); }
+        .app-nav .who span { color: var(--orange); }
+        .nav-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 8px 14px; border-radius: 50px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Poppins', sans-serif; }
+
+        /* Job cards (driver/admin) */
+        .job-card { border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; }
+        .job-card .route { font-size: 14px; font-weight: 700; color: var(--gray-700); margin-bottom: 6px; }
+        .job-card .meta { font-size: 12px; color: var(--gray-500); margin-bottom: 10px; }
+        .job-status { display: inline-block; padding: 4px 12px; border-radius: 50px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .job-status.pending { background: var(--orange-light); color: var(--orange-dark); }
+        .job-status.assigned { background: var(--blue-light); color: var(--blue); }
+        .job-status.in_progress { background: #FFF4CE; color: #8A6D00; }
+        .job-status.delivered { background: #E6F4EA; color: #1E8E3E; }
+        .job-status.cancelled { background: #FCE8E8; color: #D93025; }
+        .job-actions { display: flex; gap: 8px; margin-top: 10px; }
+        .job-actions .btn { padding: 10px; font-size: 13px; }
+        #trackMap { height: 240px; border-radius: var(--radius-sm); margin-top: 16px; }
+        .empty-note { text-align: center; color: var(--gray-400); font-size: 13px; padding: 20px 0; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-badge"><span class="pulse"></span> Now Serving All of KZN</div>
+        <div class="logo">Eko<span>quick</span></div>
+        <p class="tagline">Instant delivery quotes. Real-time tracking. Zero hassle.</p>
+    </header>
+
+    <!-- AUTH GATE -->
+    <div id="authGate" class="container">
+        <div class="card">
+            <div class="tabs">
+                <button class="tab-btn active" id="tabLogin" onclick="switchAuthTab('login')">Log In</button>
+                <button class="tab-btn" id="tabSignup" onclick="switchAuthTab('signup')">Sign Up</button>
+            </div>
+
+            <div id="loginForm">
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" class="form-input" id="loginEmail" placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" class="form-input" id="loginPassword" placeholder="••••••••">
+                </div>
+                <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">
+                    <i class="fas fa-right-to-bracket"></i> <span id="loginBtnText">Log In</span>
+                </button>
+            </div>
+
+            <div id="signupForm" class="hidden">
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-user-tag"></i> I am a...</label>
+                    <div class="role-grid">
+                        <div class="role-option selected" data-role="customer" onclick="selectRole(this)">
+                            <i class="fas fa-box"></i> Customer
+                        </div>
+                        <div class="role-option" data-role="driver" onclick="selectRole(this)">
+                            <i class="fas fa-truck"></i> Driver
+                        </div>
+                        <div class="role-option" data-role="admin" onclick="selectRole(this)">
+                            <i class="fas fa-user-shield"></i> Admin
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-user"></i> Full Name</label>
+                    <input type="text" class="form-input" id="signupName" placeholder="Jane Dlamini">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fab fa-whatsapp"></i> WhatsApp Number</label>
+                    <input type="tel" class="form-input" id="signupPhone" placeholder="0676659966">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" class="form-input" id="signupEmail" placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" class="form-input" id="signupPassword" placeholder="Min. 6 characters">
+                </div>
+                <button class="btn btn-primary" id="signupBtn" onclick="doSignup()">
+                    <i class="fas fa-user-plus"></i> <span id="signupBtnText">Create Account</span>
+                </button>
+            </div>
+
+            <div class="alert alert-error" id="authError"><i class="fas fa-circle-exclamation"></i><span id="authErrorText"></span></div>
+            <div class="alert alert-success" id="authSuccess"><i class="fas fa-circle-check"></i><span id="authSuccessText"></span></div>
+        </div>
+    </div>
+
+    <!-- LOGGED-IN SHELL -->
+    <div id="appShell" class="hidden">
+        <div class="app-nav">
+            <div class="who">Signed in as <span id="whoName"></span> · <span id="whoRole"></span></div>
+            <button class="nav-btn" onclick="doLogout()"><i class="fas fa-right-from-bracket"></i> Log Out</button>
+        </div>
+
+        <!-- CUSTOMER VIEW -->
+        <div id="customerView" class="container hidden">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon"><i class="fas fa-truck"></i></div>
+                    <div><div class="card-title">Choose Your Vehicle</div><div class="card-subtitle">Select what fits your load</div></div>
+                </div>
+                <div class="vehicle-grid">
+                    <div class="vehicle-option selected" data-vehicle="bike" data-rate="6.50" data-base="45" onclick="selectVehicle(this)">
+                        <span class="icon">🏍️</span><span class="name">Motor Bike</span><span class="price-tag">From R45</span>
+                    </div>
+                    <div class="vehicle-option" data-vehicle="bakkie" data-rate="9.50" data-base="85" onclick="selectVehicle(this)">
+                        <span class="icon">🛻</span><span class="name">Bakkie</span><span class="price-tag">From R85</span>
+                    </div>
+                    <div class="vehicle-option" data-vehicle="truck" data-rate="14.00" data-base="150" onclick="selectVehicle(this)">
+                        <span class="icon">🚛</span><span class="name">1 Tonne Truck</span><span class="price-tag">From R150</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <div><div class="card-title">Delivery Details</div><div class="card-subtitle">Enter pickup and destination</div></div>
+                </div>
+                <div class="api-status fallback" id="apiStatus"><span class="status-dot"></span><span id="apiStatusText">Ready to calculate distances</span></div>
+
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-circle-dot"></i> Pickup Location</label>
+                    <input type="text" class="form-input" id="pickup" placeholder="e.g. 45 West Street, Durban CBD" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-location-dot"></i> Drop-off Location</label>
+                    <input type="text" class="form-input" id="dropoff" placeholder="e.g. 12 Main Road, Pietermaritzburg" autocomplete="off">
+                </div>
+                <div class="input-row">
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-road"></i> Distance (km)</label>
+                        <input type="number" class="form-input" id="distance" placeholder="Auto-calculate" min="1" oninput="calculateQuote()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fab fa-whatsapp"></i> Your WhatsApp</label>
+                        <input type="tel" class="form-input" id="phone" placeholder="0676659966">
+                    </div>
+                </div>
+
+                <div class="distance-result hidden" id="distanceBox">
+                    <div class="distance-label">Estimated Driving Distance</div>
+                    <div class="distance-value"><span id="distDisplay">0</span> km</div>
+                </div>
+
+                <div class="alert alert-error" id="errorMsg"><i class="fas fa-circle-exclamation"></i><span id="errorText"></span></div>
+                <div class="alert alert-success" id="successMsg"><i class="fas fa-circle-check"></i><span id="successText"></span></div>
+
+                <div class="quote-box hidden" id="quoteBox">
+                    <div class="quote-label">Your Delivery Quote</div>
+                    <div class="quote-amount">R<span id="quoteAmount">0</span></div>
+                    <div class="quote-detail" id="quoteDetail">Motor Bike • 0 km</div>
+                </div>
+
+                <div class="breakdown hidden" id="breakdown">
+                    <div class="breakdown-row"><span>Base fee</span><span class="value" id="baseFee">R0</span></div>
+                    <div class="breakdown-row"><span>Distance charge (<span id="rateDisplay">R6.50</span>/km)</span><span class="value" id="distCharge">R0</span></div>
+                    <div class="breakdown-row"><span>Total Estimate</span><span class="value" id="totalEstimate">R0</span></div>
+                </div>
+
+                <button class="btn btn-primary" id="calcBtn" onclick="calculateDistance()">
+                    <i class="fas fa-calculator"></i> <span id="calcBtnText">Calculate Distance & Quote</span>
+                </button>
+                <button class="btn btn-secondary hidden" id="bookBtn" onclick="bookNow()">
+                    <i class="fas fa-check-circle"></i> Confirm & Book Now
+                </button>
+            </div>
+
+            <!-- Live tracking -->
+            <div class="card hidden" id="trackingCard">
+                <div class="card-header">
+                    <div class="card-icon"><i class="fas fa-location-arrow"></i></div>
+                    <div><div class="card-title">Track Your Delivery</div><div class="card-subtitle" id="trackStatusText">Waiting for driver assignment...</div></div>
+                </div>
+                <div id="trackMap"></div>
+                <div class="empty-note" id="trackNote">Map will update once your driver starts sharing location.</div>
+            </div>
+
+            <!-- Past/active bookings -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon"><i class="fas fa-clipboard-list"></i></div>
+                    <div><div class="card-title">My Bookings</div><div class="card-subtitle">Recent delivery requests</div></div>
+                </div>
+                <div id="myBookingsList"><div class="empty-note">No bookings yet.</div></div>
+            </div>
+        </div>
+
+        <!-- DRIVER VIEW -->
+        <div id="driverView" class="container hidden">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon"><i class="fas fa-truck"></i></div>
+                    <div><div class="card-title">My Jobs</div><div class="card-subtitle">Deliveries assigned to you</div></div>
+                </div>
+                <button class="btn btn-outline" onclick="loadDriverJobs()"><i class="fas fa-rotate-right"></i> Refresh</button>
+                <div id="driverJobsList" style="margin-top:14px;"><div class="empty-note">Loading jobs...</div></div>
+            </div>
+        </div>
+
+        <!-- ADMIN VIEW -->
+        <div id="adminView" class="container hidden">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon"><i class="fas fa-user-shield"></i></div>
+                    <div><div class="card-title">All Jobs</div><div class="card-subtitle">Assign drivers & monitor status</div></div>
+                </div>
+                <button class="btn btn-outline" onclick="loadAdminJobs()"><i class="fas fa-rotate-right"></i> Refresh</button>
+                <div id="adminJobsList" style="margin-top:14px;"><div class="empty-note">Loading jobs...</div></div>
+            </div>
+        </div>
+    </div>
+
+    <a href="https://wa.me/27676659966?text=Hi%20Ekoquick,%20I%20need%20help%20with%20a%20delivery." class="fab-whatsapp" target="_blank"><i class="fab fa-whatsapp"></i></a>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <div class="modal-icon">🎉</div>
+            <h3 id="modalTitle">Quote Sent!</h3>
+            <p id="modalText">Your quote has been sent to your WhatsApp.</p>
+            <button class="modal-close" onclick="closeModal()">Awesome!</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
