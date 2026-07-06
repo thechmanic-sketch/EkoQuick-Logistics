@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Driver Login</title>
+    <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+    <div class="auth-wrap">
+        <a class="auth-topbar orange" href="login.html">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+            <span>Driver Login</span>
+        </a>
+        <div class="auth-card">
+            <div class="auth-icon auth-icon-orange">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17h1a2 2 0 0 0 4 0h6a2 2 0 0 0 4 0h1a1 1 0 0 0 1-1v-3.5a1 1 0 0 0-.29-.71L17 9h-3V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1Z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg>
+            </div>
+            <h1>Driver Login</h1>
+            <p class="auth-subtitle">Enter your credentials to access your account</p>
+
+            <form id="driverLoginForm">
+                <label class="field">
+                    <svg class="field-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+                    <input type="text" id="driverId" placeholder="Driver ID" required>
+                </label>
+                <label class="field">
+                    <svg class="field-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <input type="text" id="username" placeholder="Username" autocomplete="username" required>
+                </label>
+                <label class="field">
+                    <svg class="field-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <input type="password" id="password" placeholder="Password" autocomplete="current-password" required>
+                    <button type="button" class="field-toggle" aria-label="Show password">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </label>
+
+                <button type="submit" class="btn btn-orange">Login</button>
+            </form>
+
+            <a class="auth-link" href="forgot-password.html">Forgot password?</a>
+
+            <div class="auth-divider"><span>OR</span></div>
+
+            <a class="btn btn-outline-blue" href="requirements.html">New driver? Sign Up</a>
+        </div>
+
+        <div class="auth-footer">
+            <div>© 2026 Ekoquick</div>
+            <div>This is a product of Techmanic Software and Digital Solutions</div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+</body>
+</html>
