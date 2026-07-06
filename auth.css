@@ -24,6 +24,8 @@ body {
 }
 
 .auth-wrap {
+    position: relative;
+    z-index: 1;
     max-width: 380px;
     width: 100%;
     padding: 32px 16px;
@@ -36,6 +38,43 @@ body {
     .auth-wrap {
         margin-left: 8vw;
     }
+}
+
+.hero-bg-wrap {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform-origin: center center;
+    animation: kenburns 18s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+@keyframes kenburns {
+    0% {
+        transform: scale(1.15) translateY(-3%);
+    }
+    100% {
+        transform: scale(1.3) translateY(3%);
+    }
+}
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.auth-footer-light {
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .auth-card {
