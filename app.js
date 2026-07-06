@@ -1,4 +1,5 @@
 const { useState, useEffect, useRef } = React;
+const e = React.createElement;
 
 const SUPABASE_URL = 'https://vgzkpugjdyqggpunoxod.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnemtwdWdqZHlxZ2dwdW5veG9kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxODc4NzgsImV4cCI6MjA5ODc2Mzg3OH0.0vqvpFIk5V_uUMMNDluK2jdfoE6xtVOGHePXVA0CCFo';
@@ -46,7 +47,7 @@ function whatsapp(phone, text) {
 
 function Msg({ type, text }) {
     if (!text) return null;
-    return <div className={`msg ${type}`}>{text}</div>;
+    return e('div', { className: `msg ${type}` }, text);
 }
 
 function AuthScreen({ onSignedIn }) {
@@ -92,47 +93,38 @@ function AuthScreen({ onSignedIn }) {
         }
     }
 
-    return (
-        <div className="wrap">
-            <div className="card">
-                <div className="row" style={{ marginBottom: 16 }}>
-                    <button className={`btn-tab ${tab === 'login' ? 'active' : ''}`} onClick={() => setTab('login')}>Log In</button>
-                    <button className={`btn-tab ${tab === 'signup' ? 'active' : ''}`} onClick={() => setTab('signup')}>Sign Up</button>
-                </div>
-
-                {tab === 'login' && (
-                    <div>
-                        <label>Email</label>
-                        <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" />
-                        <label>Password</label>
-                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
-                        <button className="btn-primary" onClick={login} disabled={busy}>{busy ? 'Logging in...' : 'Log In'}</button>
-                    </div>
-                )}
-
-                {tab === 'signup' && (
-                    <div>
-                        <label>I am a...</label>
-                        <div className="row" style={{ marginBottom: 12 }}>
-                            <button className={`btn-tab ${role === 'customer' ? 'active' : ''}`} onClick={() => setRole('customer')}>Customer</button>
-                            <button className={`btn-tab ${role === 'driver' ? 'active' : ''}`} onClick={() => setRole('driver')}>Driver</button>
-                        </div>
-                        <label>Full Name</label>
-                        <input value={name} onChange={e => setName(e.target.value)} placeholder="Jane Dlamini" />
-                        <label>WhatsApp Number</label>
-                        <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="0676659966" />
-                        <label>Email</label>
-                        <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" />
-                        <label>Password</label>
-                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 characters" />
-                        <button className="btn-primary" onClick={signup} disabled={busy}>{busy ? 'Creating account...' : 'Create Account'}</button>
-                    </div>
-                )}
-
-                <Msg type="error" text={error} />
-                <Msg type="success" text={success} />
-            </div>
-        </div>
+    return e('div', { className: 'wrap' },
+        e('div', { className: 'card' },
+            e('div', { className: 'row', style: { marginBottom: 16 } },
+                e('button', { className: `btn-tab ${tab === 'login' ? 'active' : ''}`, onClick: () => setTab('login') }, 'Log In'),
+                e('button', { className: `btn-tab ${tab === 'signup' ? 'active' : ''}`, onClick: () => setTab('signup') }, 'Sign Up')
+            ),
+            tab === 'login' && e('div', null,
+                e('label', null, 'Email'),
+                e('input', { type: 'email', value: email, onChange: ev => setEmail(ev.target.value), placeholder: 'you@example.com' }),
+                e('label', null, 'Password'),
+                e('input', { type: 'password', value: password, onChange: ev => setPassword(ev.target.value), placeholder: '••••••••' }),
+                e('button', { className: 'btn-primary', onClick: login, disabled: busy }, busy ? 'Logging in...' : 'Log In')
+            ),
+            tab === 'signup' && e('div', null,
+                e('label', null, 'I am a...'),
+                e('div', { className: 'row', style: { marginBottom: 12 } },
+                    e('button', { className: `btn-tab ${role === 'customer' ? 'active' : ''}`, onClick: () => setRole('customer') }, 'Customer'),
+                    e('button', { className: `btn-tab ${role === 'driver' ? 'active' : ''}`, onClick: () => setRole('driver') }, 'Driver')
+                ),
+                e('label', null, 'Full Name'),
+                e('input', { value: name, onChange: ev => setName(ev.target.value), placeholder: 'Jane Dlamini' }),
+                e('label', null, 'WhatsApp Number'),
+                e('input', { value: phone, onChange: ev => setPhone(ev.target.value), placeholder: '0676659966' }),
+                e('label', null, 'Email'),
+                e('input', { type: 'email', value: email, onChange: ev => setEmail(ev.target.value), placeholder: 'you@example.com' }),
+                e('label', null, 'Password'),
+                e('input', { type: 'password', value: password, onChange: ev => setPassword(ev.target.value), placeholder: 'Min. 6 characters' }),
+                e('button', { className: 'btn-primary', onClick: signup, disabled: busy }, busy ? 'Creating account...' : 'Create Account')
+            ),
+            e(Msg, { type: 'error', text: error }),
+            e(Msg, { type: 'success', text: success })
+        )
     );
 }
 
@@ -171,15 +163,15 @@ function CustomerView({ user }) {
             const destinations = encodeURIComponent(dropoff + ', KwaZulu-Natal, South Africa');
             const res = await fetch(`https://api.distancematrix.ai/maps/api/distancematrix/json?key=${DISTANCE_MATRIX_API_KEY}&origins=${origins}&destinations=${destinations}&mode=driving`);
             const data = await res.json();
-            const el = data?.rows?.[0]?.elements?.[0];
-            if (data.status === 'OK' && el?.status === 'OK') {
+            const el = data && data.rows && data.rows[0] && data.rows[0].elements && data.rows[0].elements[0];
+            if (data.status === 'OK' && el && el.status === 'OK') {
                 setDistance(Math.round(el.distance.value / 1000));
                 setDuration(formatDuration(el.duration.value));
                 setSuccess(`Real driving distance: ${Math.round(el.distance.value / 1000)} km`);
                 setCalculating(false);
                 return;
             }
-        } catch (e) { /* fall through to fallback */ }
+        } catch (err) { /* fall through to fallback */ }
 
         const fb = fallbackDistance(pickup, dropoff);
         if (fb) {
@@ -246,72 +238,56 @@ function CustomerView({ user }) {
         cancelled: 'Cancelled',
     };
 
-    return (
-        <div className="wrap">
-            <div className="card">
-                <h2>Choose Your Vehicle</h2>
-                <div className="grid3">
-                    {VEHICLES.map(v => (
-                        <div key={v.id} className={`vopt ${vehicle.id === v.id ? 'selected' : ''}`} onClick={() => setVehicle(v)}>
-                            <span className="icon">{v.icon}</span>{v.label}
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            <div className="card">
-                <h2>Delivery Details</h2>
-                <label>Pickup Location</label>
-                <input value={pickup} onChange={e => setPickup(e.target.value)} placeholder="e.g. 45 West Street, Durban CBD" />
-                <label>Drop-off Location</label>
-                <input value={dropoff} onChange={e => setDropoff(e.target.value)} placeholder="e.g. 12 Main Road, Pietermaritzburg" />
-                <label>Your WhatsApp</label>
-                <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="0676659966" />
-
-                <Msg type="error" text={error} />
-                <Msg type="success" text={success} />
-
-                <button className="btn-primary" onClick={calculateDistance} disabled={calculating}>
-                    {calculating ? 'Calculating...' : 'Calculate Distance & Quote'}
-                </button>
-
-                {quote > 0 && (
-                    <React.Fragment>
-                        <div className="quote">
-                            <div style={{ fontSize: 12 }}>Your Delivery Quote</div>
-                            <div className="amt">R{quote}</div>
-                            <div style={{ fontSize: 13 }}>{vehicle.label} • {distance} km{duration ? ' • ~' + duration : ''}</div>
-                        </div>
-                        <button className="btn-secondary" onClick={bookNow}>Confirm & Book Now</button>
-                    </React.Fragment>
-                )}
-            </div>
-
-            {trackedJob && (
-                <div className="card">
-                    <h2>Track Your Delivery</h2>
-                    <div style={{ fontSize: 13, marginBottom: 6 }}>{statusLabels[trackedJob.status] || trackedJob.status}</div>
-                    <div id="trackMap" ref={mapRef}></div>
-                </div>
-            )}
-
-            <div className="card">
-                <h2>My Bookings</h2>
-                {bookings.length === 0 && <div className="empty">No bookings yet.</div>}
-                {bookings.map(job => (
-                    <div key={job.id} className="job">
-                        <div className="route">{job.pickup} → {job.dropoff}</div>
-                        <div className="meta">{job.distance || 0} km • R{job.quote || 0}</div>
-                        <span className={`badge ${job.status}`}>{job.status.replace('_', ' ')}</span>
-                        {job.status !== 'delivered' && job.status !== 'cancelled' && (
-                            <div style={{ marginTop: 8 }}>
-                                <button className="btn-outline" onClick={() => trackJob(job.id)}>Track</button>
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
-        </div>
+    return e('div', { className: 'wrap' },
+        e('div', { className: 'card' },
+            e('h2', null, 'Choose Your Vehicle'),
+            e('div', { className: 'grid3' },
+                VEHICLES.map(v => e('div', {
+                    key: v.id,
+                    className: `vopt ${vehicle.id === v.id ? 'selected' : ''}`,
+                    onClick: () => setVehicle(v),
+                },
+                    e('span', { className: 'icon' }, v.icon), v.label
+                ))
+            )
+        ),
+        e('div', { className: 'card' },
+            e('h2', null, 'Delivery Details'),
+            e('label', null, 'Pickup Location'),
+            e('input', { value: pickup, onChange: ev => setPickup(ev.target.value), placeholder: 'e.g. 45 West Street, Durban CBD' }),
+            e('label', null, 'Drop-off Location'),
+            e('input', { value: dropoff, onChange: ev => setDropoff(ev.target.value), placeholder: 'e.g. 12 Main Road, Pietermaritzburg' }),
+            e('label', null, 'Your WhatsApp'),
+            e('input', { value: phone, onChange: ev => setPhone(ev.target.value), placeholder: '0676659966' }),
+            e(Msg, { type: 'error', text: error }),
+            e(Msg, { type: 'success', text: success }),
+            e('button', { className: 'btn-primary', onClick: calculateDistance, disabled: calculating }, calculating ? 'Calculating...' : 'Calculate Distance & Quote'),
+            quote > 0 && e(React.Fragment, null,
+                e('div', { className: 'quote' },
+                    e('div', { style: { fontSize: 12 } }, 'Your Delivery Quote'),
+                    e('div', { className: 'amt' }, `R${quote}`),
+                    e('div', { style: { fontSize: 13 } }, `${vehicle.label} • ${distance} km${duration ? ' • ~' + duration : ''}`)
+                ),
+                e('button', { className: 'btn-secondary', onClick: bookNow }, 'Confirm & Book Now')
+            )
+        ),
+        trackedJob && e('div', { className: 'card' },
+            e('h2', null, 'Track Your Delivery'),
+            e('div', { style: { fontSize: 13, marginBottom: 6 } }, statusLabels[trackedJob.status] || trackedJob.status),
+            e('div', { id: 'trackMap', ref: mapRef })
+        ),
+        e('div', { className: 'card' },
+            e('h2', null, 'My Bookings'),
+            bookings.length === 0 && e('div', { className: 'empty' }, 'No bookings yet.'),
+            bookings.map(job => e('div', { key: job.id, className: 'job' },
+                e('div', { className: 'route' }, `${job.pickup} → ${job.dropoff}`),
+                e('div', { className: 'meta' }, `${job.distance || 0} km • R${job.quote || 0}`),
+                e('span', { className: `badge ${job.status}` }, job.status.replace('_', ' ')),
+                job.status !== 'delivered' && job.status !== 'cancelled' && e('div', { style: { marginTop: 8 } },
+                    e('button', { className: 'btn-outline', onClick: () => trackJob(job.id) }, 'Track')
+                )
+            ))
+        )
     );
 }
 
@@ -352,27 +328,23 @@ function DriverView({ user }) {
         loadJobs();
     }
 
-    return (
-        <div className="wrap">
-            <div className="card">
-                <h2>My Jobs</h2>
-                <button className="btn-outline" onClick={loadJobs}>Refresh</button>
-                <div style={{ marginTop: 12 }}>
-                    {jobs.length === 0 && <div className="empty">No jobs assigned to you yet.</div>}
-                    {jobs.map(job => (
-                        <div key={job.id} className="job">
-                            <div className="route">{job.pickup} → {job.dropoff}</div>
-                            <div className="meta">{job.distance || 0} km • R{job.quote || 0} • Customer: {job.customer_phone}</div>
-                            <span className={`badge ${job.status}`}>{job.status.replace('_', ' ')}</span>
-                            <div style={{ marginTop: 8 }}>
-                                {job.status === 'assigned' && <button className="btn-primary" onClick={() => startTrip(job.id)}>Start Trip</button>}
-                                {job.status === 'in_progress' && <button className="btn-secondary" onClick={() => markDelivered(job.id)}>Mark Delivered</button>}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
+    return e('div', { className: 'wrap' },
+        e('div', { className: 'card' },
+            e('h2', null, 'My Jobs'),
+            e('button', { className: 'btn-outline', onClick: loadJobs }, 'Refresh'),
+            e('div', { style: { marginTop: 12 } },
+                jobs.length === 0 && e('div', { className: 'empty' }, 'No jobs assigned to you yet.'),
+                jobs.map(job => e('div', { key: job.id, className: 'job' },
+                    e('div', { className: 'route' }, `${job.pickup} → ${job.dropoff}`),
+                    e('div', { className: 'meta' }, `${job.distance || 0} km • R${job.quote || 0} • Customer: ${job.customer_phone}`),
+                    e('span', { className: `badge ${job.status}` }, job.status.replace('_', ' ')),
+                    e('div', { style: { marginTop: 8 } },
+                        job.status === 'assigned' && e('button', { className: 'btn-primary', onClick: () => startTrip(job.id) }, 'Start Trip'),
+                        job.status === 'in_progress' && e('button', { className: 'btn-secondary', onClick: () => markDelivered(job.id) }, 'Mark Delivered')
+                    )
+                ))
+            )
+        )
     );
 }
 
@@ -400,28 +372,28 @@ function AdminView({ user }) {
         loadAll();
     }
 
-    return (
-        <div className="wrap">
-            <div className="card">
-                <h2>All Jobs</h2>
-                <button className="btn-outline" onClick={loadAll}>Refresh</button>
-                <div style={{ marginTop: 12 }}>
-                    {jobs.length === 0 && <div className="empty">No jobs yet.</div>}
-                    {jobs.map(job => (
-                        <div key={job.id} className="job">
-                            <div className="route">{job.pickup} → {job.dropoff}</div>
-                            <div className="meta">{job.distance || 0} km • R{job.quote || 0} • Customer: {job.customer_phone}</div>
-                            <span className={`badge ${job.status}`}>{job.status.replace('_', ' ')}</span>
-                            <select value={selected[job.id] || ''} onChange={e => setSelected({ ...selected, [job.id]: e.target.value })} style={{ marginTop: 10 }}>
-                                <option value="">Assign a driver...</option>
-                                {drivers.map(d => <option key={d.id} value={d.id}>{d.full_name || d.id}</option>)}
-                            </select>
-                            <button className="btn-primary" onClick={() => assignDriver(job.id)}>Assign</button>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
+    return e('div', { className: 'wrap' },
+        e('div', { className: 'card' },
+            e('h2', null, 'All Jobs'),
+            e('button', { className: 'btn-outline', onClick: loadAll }, 'Refresh'),
+            e('div', { style: { marginTop: 12 } },
+                jobs.length === 0 && e('div', { className: 'empty' }, 'No jobs yet.'),
+                jobs.map(job => e('div', { key: job.id, className: 'job' },
+                    e('div', { className: 'route' }, `${job.pickup} → ${job.dropoff}`),
+                    e('div', { className: 'meta' }, `${job.distance || 0} km • R${job.quote || 0} • Customer: ${job.customer_phone}`),
+                    e('span', { className: `badge ${job.status}` }, job.status.replace('_', ' ')),
+                    e('select', {
+                        value: selected[job.id] || '',
+                        onChange: ev => setSelected({ ...selected, [job.id]: ev.target.value }),
+                        style: { marginTop: 10 },
+                    },
+                        e('option', { value: '' }, 'Assign a driver...'),
+                        drivers.map(d => e('option', { key: d.id, value: d.id }, d.full_name || d.id))
+                    ),
+                    e('button', { className: 'btn-primary', onClick: () => assignDriver(job.id) }, 'Assign')
+                ))
+            )
+        )
     );
 }
 
@@ -450,30 +422,24 @@ function App() {
         setProfile(null);
     }
 
-    if (loading) return <div className="wrap"><div className="empty">Loading...</div></div>;
+    if (loading) return e('div', { className: 'wrap' }, e('div', { className: 'empty' }, 'Loading...'));
 
-    return (
-        <div>
-            <header>
-                <h1>Ekoquick</h1>
-                <p>Instant delivery quotes. Real-time tracking.</p>
-            </header>
-
-            {!user && <AuthScreen onSignedIn={signedIn} />}
-
-            {user && profile && (
-                <React.Fragment>
-                    <div className="navbar">
-                        <div className="who">Signed in as {profile.full_name || user.email} · {profile.role}</div>
-                        <button className="btn-outline" onClick={logout}>Log Out</button>
-                    </div>
-                    {profile.role === 'customer' && <CustomerView user={user} />}
-                    {profile.role === 'driver' && <DriverView user={user} />}
-                    {profile.role === 'admin' && <AdminView user={user} />}
-                </React.Fragment>
-            )}
-        </div>
+    return e('div', null,
+        e('header', null,
+            e('h1', null, 'Ekoquick'),
+            e('p', null, 'Instant delivery quotes. Real-time tracking.')
+        ),
+        !user && e(AuthScreen, { onSignedIn: signedIn }),
+        user && profile && e(React.Fragment, null,
+            e('div', { className: 'navbar' },
+                e('div', { className: 'who' }, `Signed in as ${profile.full_name || user.email} · ${profile.role}`),
+                e('button', { className: 'btn-outline', onClick: logout }, 'Log Out')
+            ),
+            profile.role === 'customer' && e(CustomerView, { user }),
+            profile.role === 'driver' && e(DriverView, { user }),
+            profile.role === 'admin' && e(AdminView, { user })
+        )
     );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+ReactDOM.createRoot(document.getElementById('root')).render(e(App));
