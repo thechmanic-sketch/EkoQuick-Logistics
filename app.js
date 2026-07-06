@@ -224,7 +224,9 @@ function CustomerView({ user }) {
         setTrackedJob(job);
         if (job.driver_lat && job.driver_lng && mapObjRef.current) {
             const pos = [job.driver_lat, job.driver_lng];
-            if (!markerRef.current) markerRef.current = L.marker(pos).addTo(mapObjRef.current);
+            if (!markerRef.current) markerRef.current = L.marker(pos, {
+                icon: L.divIcon({ html: '🚚', className: 'driver-marker', iconSize: [28, 28] }),
+            }).addTo(mapObjRef.current);
             else markerRef.current.setLatLng(pos);
             mapObjRef.current.setView(pos, 12);
         }

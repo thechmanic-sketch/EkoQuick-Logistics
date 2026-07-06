@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ekoquick — KZN Delivery</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="vendor/leaflet.css">
     <style>
         :root {
             --blue: #1E3A5F;
@@ -101,15 +101,16 @@
         .navbar .who { font-size: 13px; color: var(--gray-600); }
         .empty { text-align: center; color: var(--gray-400); font-size: 13px; padding: 14px 0; }
         #trackMap { height: 200px; border-radius: 8px; margin-top: 10px; }
+        .driver-marker { font-size: 22px; text-align: center; line-height: 28px; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="vendor/react.production.min.js"></script>
+    <script src="vendor/react-dom.production.min.js"></script>
+    <script src="vendor/supabase.js"></script>
+    <script src="vendor/leaflet.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
