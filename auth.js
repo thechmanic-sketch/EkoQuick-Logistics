@@ -110,7 +110,7 @@ function wireAdminLogin() {
             showFormError(form, 'This account is not an admin account.');
             return;
         }
-        window.location.href = 'coming-soon.html';
+        window.location.href = 'admin-dashboard.html';
     });
 }
 
@@ -138,7 +138,7 @@ function wireDriverLogin() {
             showFormError(form, 'This account is not a driver account.');
             return;
         }
-        window.location.href = 'coming-soon.html';
+        window.location.href = 'driver-dashboard.html';
     });
 }
 

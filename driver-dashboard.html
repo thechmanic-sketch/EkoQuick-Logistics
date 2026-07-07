@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Driver Dashboard</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <div class="navbar">
+        <div class="brand">Eko<span>quick</span> Driver</div>
+        <button class="nav-logout" id="logoutBtn">Log Out</button>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h2>My Jobs</h2>
+            <button class="btn btn-outline-blue" id="refreshBtn">Refresh</button>
+            <div id="jobsList" style="margin-top: 14px;"><div class="empty">Loading...</div></div>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="driver-dashboard.js"></script>
+</body>
+</html>
