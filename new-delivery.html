@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — New Delivery</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="dashboard.html">← Eko<span>quick</span></a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h2>1. Choose Your Vehicle</h2>
+            <div class="vehicle-grid" id="vehicleGrid"></div>
+        </div>
+
+        <div class="card">
+            <h2>2. Pickup &amp; Destination</h2>
+            <label>Pickup Location</label>
+            <input class="field-plain" id="pickup" placeholder="e.g. 45 West Street, Durban CBD">
+            <label>Drop-off Location</label>
+            <input class="field-plain" id="dropoff" placeholder="e.g. 12 Main Road, Pietermaritzburg">
+            <label>Your WhatsApp</label>
+            <input class="field-plain" id="phone" placeholder="0676659966">
+
+            <div id="msgArea"></div>
+
+            <button class="btn btn-blue" id="calcBtn" style="margin-top: 10px;">3. Calculate Distance &amp; Price</button>
+
+            <div class="quote-box hidden" id="quoteBox">
+                <div style="font-size:12px;">Your Delivery Quote</div>
+                <div class="amt" id="quoteAmount">R0</div>
+                <div style="font-size:13px;" id="quoteDetail"></div>
+            </div>
+
+            <button class="btn btn-orange hidden" id="bookBtn" style="margin-top: 10px;">Confirm Delivery</button>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="delivery.js"></script>
+</body>
+</html>

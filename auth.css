@@ -305,3 +305,21 @@ h1 {
     text-align: left;
     line-height: 1.5;
 }
+
+.msg {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-top: 10px;
+    text-align: left;
+}
+
+.msg.error {
+    background: #FCE8E8;
+    color: #D93025;
+}
+
+.msg.success {
+    background: #E6F4EA;
+    color: #1E8E3E;
+}

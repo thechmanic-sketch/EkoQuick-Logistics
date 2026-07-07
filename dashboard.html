@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Dashboard</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <div class="navbar">
+        <div class="brand">Eko<span>quick</span></div>
+        <button class="nav-logout" id="logoutBtn">Log Out</button>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h2 id="welcomeText">Welcome back!</h2>
+            <a class="btn btn-blue" href="new-delivery.html">+ New Delivery</a>
+        </div>
+
+        <div class="card">
+            <h2>My Deliveries</h2>
+            <div id="jobsList"><div class="empty">Loading...</div></div>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

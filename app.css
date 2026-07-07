@@ -1,0 +1,210 @@
+body {
+    display: block;
+    background: var(--gray-100);
+}
+
+.navbar {
+    background: var(--blue);
+    color: #fff;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar .brand {
+    font-weight: 800;
+    font-size: 18px;
+}
+
+.navbar .brand span {
+    color: var(--orange);
+}
+
+.navbar .nav-logout {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.page-wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+}
+
+.card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.card h2 {
+    font-size: 15px;
+    margin: 0 0 14px;
+    color: var(--gray-600);
+}
+
+.vehicle-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.vopt {
+    border: 2px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 14px 6px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-600);
+    background: #fff;
+}
+
+.vopt .icon {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.vopt.selected {
+    border-color: var(--orange);
+    background: #FFF3EE;
+    color: var(--orange);
+}
+
+.quote-box {
+    text-align: center;
+    background: var(--orange);
+    color: #fff;
+    padding: 22px;
+    border-radius: 12px;
+    margin: 14px 0;
+}
+
+.quote-box .amt {
+    font-size: 38px;
+    font-weight: 800;
+}
+
+.job {
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+}
+
+.job .route {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.job .meta {
+    font-size: 12px;
+    color: var(--gray-400);
+    margin-bottom: 8px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.badge.pending { background: #FFF0EB; color: var(--orange); }
+.badge.assigned { background: #E8F0FE; color: var(--blue); }
+.badge.in_progress { background: #FFF4CE; color: #8A6D00; }
+.badge.delivered { background: #E6F4EA; color: #1E8E3E; }
+.badge.cancelled { background: #FCE8E8; color: #D93025; }
+
+.empty {
+    text-align: center;
+    color: var(--gray-400);
+    font-size: 13px;
+    padding: 16px 0;
+}
+
+#trackMap {
+    height: 220px;
+    border-radius: 10px;
+    margin-top: 12px;
+}
+
+.star-rating {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    font-size: 34px;
+    margin: 16px 0;
+}
+
+.star-rating .star {
+    cursor: pointer;
+    color: var(--gray-200);
+    transition: color 0.15s;
+}
+
+.star-rating .star.filled {
+    color: var(--orange);
+}
+
+.center {
+    text-align: center;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.driver-marker {
+    font-size: 22px;
+    text-align: center;
+    line-height: 28px;
+}
+
+.card label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-600);
+    margin-bottom: 4px;
+}
+
+.field-plain {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    margin-bottom: 12px;
+}
+
+.field-plain:focus {
+    outline: none;
+    border-color: var(--blue);
+}
+
+.icon-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+}

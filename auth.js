@@ -24,19 +24,243 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Forms not yet wired to Supabase: prevent the real submit, and if
-    // the form has data-redirect, simulate success by navigating there.
-    document.querySelectorAll('form[data-redirect]').forEach(function (form) {
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            window.location.href = form.getAttribute('data-redirect');
-        });
-    });
-
-    document.querySelectorAll('form:not([data-redirect])').forEach(function (form) {
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            alert('Not wired up yet.');
-        });
-    });
+    wireCustomerLogin();
+    wireAdminLogin();
+    wireDriverLogin();
+    wireSignup();
+    wireDriverSignup();
+    wireForgotPassword();
+    wireResetPassword();
 });
+
+function fieldValue(id) {
+    var el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+}
+
+function showFormError(form, message) {
+    var existing = form.querySelector('.form-error');
+    if (existing) existing.remove();
+    var div = document.createElement('div');
+    div.className = 'msg error form-error';
+    div.textContent = message;
+    form.appendChild(div);
+}
+
+function setBusy(button, busyText, originalText) {
+    button.disabled = !!busyText;
+    button.textContent = busyText || originalText;
+}
+
+async function loginWithUsername(username, password) {
+    var { data: email, error } = await supabase.rpc('get_email_by_username', { uname: username });
+    if (error || !email) return { error: { message: 'Invalid username or password' } };
+    return supabase.auth.signInWithPassword({ email: email, password: password });
+}
+
+function wireCustomerLogin() {
+    var form = document.getElementById('customerLoginForm');
+    if (!form) return;
+    var btn = form.querySelector('button[type="submit"]');
+    var btnText = btn.textContent;
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var username = fieldValue('username');
+        var password = fieldValue('password');
+        if (!username || !password) { showFormError(form, 'Please fill in all fields'); return; }
+
+        setBusy(btn, 'Logging in...');
+        var { data, error } = await loginWithUsername(username, password);
+        setBusy(btn, null, btnText);
+
+        if (error) { showFormError(form, error.message); return; }
+
+        var profile = await getProfile(data.user.id);
+        if (!profile || profile.role !== 'customer') {
+            await supabase.auth.signOut();
+            showFormError(form, 'This account is not a customer account.');
+            return;
+        }
+        window.location.href = 'dashboard.html';
+    });
+}
+
+function wireAdminLogin() {
+    var form = document.getElementById('adminLoginForm');
+    if (!form) return;
+    var btn = form.querySelector('button[type="submit"]');
+    var btnText = btn.textContent;
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var username = fieldValue('username');
+        var password = fieldValue('password');
+        if (!username || !password) { showFormError(form, 'Please fill in all fields'); return; }
+
+        setBusy(btn, 'Logging in...');
+        var { data, error } = await loginWithUsername(username, password);
+        setBusy(btn, null, btnText);
+
+        if (error) { showFormError(form, error.message); return; }
+
+        var profile = await getProfile(data.user.id);
+        if (!profile || profile.role !== 'admin') {
+            await supabase.auth.signOut();
+            showFormError(form, 'This account is not an admin account.');
+            return;
+        }
+        window.location.href = 'coming-soon.html';
+    });
+}
+
+function wireDriverLogin() {
+    var form = document.getElementById('driverLoginForm');
+    if (!form) return;
+    var btn = form.querySelector('button[type="submit"]');
+    var btnText = btn.textContent;
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var driverId = fieldValue('driverId');
+        var password = fieldValue('password');
+        if (!driverId || !password) { showFormError(form, 'Please fill in all fields'); return; }
+
+        setBusy(btn, 'Logging in...');
+        var { data, error } = await loginWithUsername(driverId, password);
+        setBusy(btn, null, btnText);
+
+        if (error) { showFormError(form, error.message); return; }
+
+        var profile = await getProfile(data.user.id);
+        if (!profile || profile.role !== 'driver') {
+            await supabase.auth.signOut();
+            showFormError(form, 'This account is not a driver account.');
+            return;
+        }
+        window.location.href = 'coming-soon.html';
+    });
+}
+
+function wireSignup() {
+    var form = document.getElementById('signupForm');
+    if (!form) return;
+    var btn = form.querySelector('button[type="submit"]');
+    var btnText = btn.textContent;
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var fullName = fieldValue('fullName');
+        var username = fieldValue('username');
+        var email = fieldValue('email');
+        var password = fieldValue('password');
+        var confirmPassword = fieldValue('confirmPassword');
+
+        if (!fullName || !username || !email || !password) { showFormError(form, 'Please fill in all fields'); return; }
+        if (password !== confirmPassword) { showFormError(form, 'Passwords do not match'); return; }
+        if (password.length < 6) { showFormError(form, 'Password must be at least 6 characters'); return; }
+
+        setBusy(btn, 'Creating account...');
+        var { data, error } = await supabase.auth.signUp({ email: email, password: password });
+        if (error) { setBusy(btn, null, btnText); showFormError(form, error.message); return; }
+
+        if (data.user) {
+            var { error: profileError } = await supabase.from('profiles').insert({
+                id: data.user.id, role: 'customer', full_name: fullName, username: username, email: email,
+            });
+            if (profileError) {
+                setBusy(btn, null, btnText);
+                showFormError(form, 'Account created but profile setup failed: ' + profileError.message);
+                return;
+            }
+        }
+        setBusy(btn, null, btnText);
+        window.location.href = 'signup-success.html';
+    });
+}
+
+function wireDriverSignup() {
+    var form = document.getElementById('driverSignupForm');
+    if (!form) return;
+    var btn = form.querySelector('button[type="submit"]');
+    var btnText = btn.textContent;
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var fullName = fieldValue('fullName');
+        var driverId = fieldValue('driverId');
+        var email = fieldValue('email');
+        var phone = fieldValue('phone');
+        var password = fieldValue('password');
+        var confirmPassword = fieldValue('confirmPassword');
+
+        if (!fullName || !driverId || !email || !phone || !password) { showFormError(form, 'Please fill in all fields'); return; }
+        if (password !== confirmPassword) { showFormError(form, 'Passwords do not match'); return; }
+        if (password.length < 6) { showFormError(form, 'Password must be at least 6 characters'); return; }
+
+        setBusy(btn, 'Creating account...');
+        var { data, error } = await supabase.auth.signUp({ email: email, password: password });
+        if (error) { setBusy(btn, null, btnText); showFormError(form, error.message); return; }
+
+        if (data.user) {
+            var { error: profileError } = await supabase.from('profiles').insert({
+                id: data.user.id, role: 'driver', full_name: fullName, username: driverId, email: email, phone: phone,
+            });
+            if (profileError) {
+                setBusy(btn, null, btnText);
+                showFormError(form, 'Account created but profile setup failed: ' + profileError.message);
+                return;
+            }
+        }
+        setBusy(btn, null, btnText);
+        window.location.href = 'signup-success.html';
+    });
+}
+
+function wireForgotPassword() {
+    var form = document.getElementById('forgotPasswordForm');
+    if (!form) return;
+    var btn = form.querySelector('button[type="submit"]');
+    var btnText = btn.textContent;
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var username = fieldValue('username');
+        if (!username) { showFormError(form, 'Please enter your username'); return; }
+
+        setBusy(btn, 'Sending...');
+        var { data: email, error } = await supabase.rpc('get_email_by_username', { uname: username });
+        if (error || !email) {
+            setBusy(btn, null, btnText);
+            showFormError(form, 'No account found for that username');
+            return;
+        }
+        var { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + window.location.pathname.replace('forgot-password.html', 'reset-password.html'),
+        });
+        setBusy(btn, null, btnText);
+        if (resetError) { showFormError(form, resetError.message); return; }
+        window.location.href = 'reset-link-sent.html';
+    });
+}
+
+function wireResetPassword() {
+    var form = document.getElementById('resetPasswordForm');
+    if (!form) return;
+    var btn = form.querySelector('button[type="submit"]');
+    var btnText = btn.textContent;
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var newPassword = fieldValue('newPassword');
+        var confirmNewPassword = fieldValue('confirmNewPassword');
+        if (!newPassword || newPassword !== confirmNewPassword) { showFormError(form, 'Passwords do not match'); return; }
+        if (newPassword.length < 6) { showFormError(form, 'Password must be at least 6 characters'); return; }
+
+        setBusy(btn, 'Saving...');
+        var { error } = await supabase.auth.updateUser({ password: newPassword });
+        setBusy(btn, null, btnText);
+        if (error) { showFormError(form, error.message); return; }
+        window.location.href = 'login.html';
+    });
+}

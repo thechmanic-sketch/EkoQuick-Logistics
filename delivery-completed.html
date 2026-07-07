@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Delivery Completed</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="dashboard.html">← Eko<span>quick</span></a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card center">
+            <div class="icon-circle auth-icon-green">
+                <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+            <h1>Delivery Completed!</h1>
+            <p class="auth-subtitle">Your package has arrived safely. Thanks for using Ekoquick.</p>
+            <a class="btn btn-blue" id="rateBtn" href="#">Rate Your Driver</a>
+            <a class="btn btn-outline-blue" href="dashboard.html" style="margin-top: 10px;">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            const user = await requireSession('login.html');
+            if (!user) return;
+            const jobId = new URLSearchParams(window.location.search).get('job');
+            if (jobId) document.getElementById('rateBtn').href = 'rate-driver.html?job=' + jobId;
+        });
+    </script>
+</body>
+</html>

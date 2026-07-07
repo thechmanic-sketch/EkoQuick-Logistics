@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Driver Assigned</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="dashboard.html">← Eko<span>quick</span></a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card center">
+            <div class="icon-circle auth-icon-blue">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17h1a2 2 0 0 0 4 0h6a2 2 0 0 0 4 0h1a1 1 0 0 0 1-1v-3.5a1 1 0 0 0-.29-.71L17 9h-3V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1Z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg>
+            </div>
+            <h1 id="statusTitle">Waiting for driver assignment...</h1>
+            <p class="auth-subtitle" id="statusSubtitle">We're finding a driver for your delivery.</p>
+
+            <div id="driverInfo" class="hidden">
+                <div class="job">
+                    <div class="route" id="driverName"></div>
+                    <div class="meta" id="jobRoute"></div>
+                </div>
+            </div>
+
+            <a class="btn btn-blue hidden" id="trackBtn" href="#">Track Delivery</a>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="driver-assigned.js"></script>
+</body>
+</html>
