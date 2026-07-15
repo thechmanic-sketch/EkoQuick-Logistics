@@ -1,0 +1,208 @@
+body {
+    display: block;
+}
+
+.site-nav {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.site-nav-logo {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+}
+
+.site-nav-logo span {
+    color: var(--orange);
+}
+
+.site-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.site-nav-links a {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.site-nav-links a:hover {
+    color: #fff;
+}
+
+.site-nav-cta {
+    border: 1px solid var(--orange);
+    border-radius: 8px;
+    padding: 8px 18px !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+}
+
+.hero-login-wrap {
+    position: relative;
+    z-index: 2;
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 16px;
+}
+
+.glass-card {
+    width: 100%;
+    max-width: 380px;
+    background: rgba(10, 12, 18, 0.55);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 32px 28px;
+    text-align: center;
+}
+
+.glass-card h1 {
+    color: #fff;
+    font-size: 24px;
+    margin: 0 0 6px;
+}
+
+.glass-card .auth-subtitle {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.glass-card .auth-icon {
+    background: rgba(255, 107, 53, 0.15);
+    color: var(--orange);
+}
+
+.glass-card .role-tile {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.glass-card .role-tile-selected,
+.glass-card .role-tile:hover {
+    border-color: var(--orange);
+    background: rgba(255, 107, 53, 0.15);
+    color: #fff;
+}
+
+.glass-card .auth-divider {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.glass-card .auth-divider::before,
+.glass-card .auth-divider::after {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.glass-card .field {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.glass-card .field:focus-within {
+    border-color: var(--orange);
+}
+
+.glass-card .field input {
+    background: transparent;
+    color: #fff;
+}
+
+.glass-card .field input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.glass-card .field-icon,
+.glass-card .field-toggle {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.glass-card .auth-link {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.btn-gradient {
+    background: linear-gradient(90deg, var(--orange), #FF3D81);
+    color: #fff !important;
+    border: none;
+}
+
+.btn-outline-light {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.site-footer {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    padding: 40px 32px 20px;
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.footer-col {
+    min-width: 160px;
+}
+
+.footer-brand {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 8px;
+}
+
+.footer-brand span {
+    color: var(--orange);
+}
+
+.footer-col p {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.footer-col h4 {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0 0 12px;
+    font-weight: 600;
+}
+
+.footer-col a {
+    display: block;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.footer-col a:hover {
+    color: var(--orange);
+}
+
+.footer-bottom {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.35);
+}

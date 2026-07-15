@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ekoquick — Log In</title>
     <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="hero-page.css">
 </head>
 <body>
     <div class="hero-bg-wrap">
@@ -12,9 +13,19 @@
         <div class="hero-overlay"></div>
     </div>
 
-    <div class="auth-wrap">
-        <div class="auth-card">
-            <div class="auth-icon auth-icon-blue">
+    <nav class="site-nav">
+        <div class="site-nav-logo">Eko<span>quick</span></div>
+        <div class="site-nav-links">
+            <a href="index.html">Home</a>
+            <a href="requirements.html">Become a Driver</a>
+            <a href="login.html">Login</a>
+            <a class="site-nav-cta" href="signup.html">Get Started</a>
+        </div>
+    </nav>
+
+    <div class="hero-login-wrap">
+        <div class="glass-card">
+            <div class="auth-icon">
                 <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </div>
             <h1>Login As</h1>
@@ -50,21 +61,38 @@
                     </button>
                 </label>
 
-                <button type="submit" class="btn btn-blue">Login</button>
+                <button type="submit" class="btn btn-gradient">Login</button>
             </form>
 
             <a class="auth-link" href="forgot-password.html">Forgot password?</a>
 
             <div class="auth-divider"><span>OR</span></div>
 
-            <a class="btn btn-outline-blue" href="signup.html">Sign Up</a>
-        </div>
-
-        <div class="auth-footer auth-footer-light">
-            <div>© 2026 Ekoquick</div>
-            <div>This is a product of Techmanic Software and Digital Solutions</div>
+            <a class="btn btn-outline-light" href="signup.html">Sign Up</a>
         </div>
     </div>
+
+    <footer class="site-footer">
+        <div class="footer-col">
+            <div class="footer-brand">Eko<span>quick</span></div>
+            <p>Fast, reliable delivery across KwaZulu-Natal — for customers, drivers, and businesses alike.</p>
+        </div>
+        <div class="footer-col">
+            <h4>Company</h4>
+            <a href="login.html">Login</a>
+            <a href="signup.html">Sign Up</a>
+            <a href="requirements.html">Become a Driver</a>
+        </div>
+        <div class="footer-col">
+            <h4>Support</h4>
+            <a href="https://wa.me/27676659966" target="_blank">Contact Us</a>
+        </div>
+        <div class="footer-col">
+            <h4>About</h4>
+            <p>A product of Techmanic Software and Digital Solutions</p>
+        </div>
+    </footer>
+    <div class="footer-bottom">© 2026 Ekoquick. All Rights Reserved.</div>
 
     <script src="vendor/supabase.js"></script>
     <script src="config.js"></script>
