@@ -5,6 +5,7 @@
     <style>html{background:#0B0F16}</style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ekoquick — Driver Dashboard</title>
+    <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="auth.css">
     <link rel="stylesheet" href="app.css">
     <link rel="stylesheet" href="support-widget.css">
@@ -22,8 +23,15 @@
             <button class="btn btn-outline-blue" id="refreshBtn">Refresh</button>
             <div id="jobsList" style="margin-top: 14px;"><div class="empty">Loading...</div></div>
         </div>
+
+        <div class="card">
+            <h2>History</h2>
+            <div id="statTotalEarned" class="meta" style="margin-bottom: 10px;"></div>
+            <div id="historyList"><div class="empty">Loading...</div></div>
+        </div>
     </div>
 
+    <script src="vendor/leaflet.js"></script>
     <script src="vendor/supabase.js"></script>
     <script src="config.js"></script>
     <script src="driver-dashboard.js"></script>
