@@ -294,6 +294,15 @@ a { color: inherit; }
     position: relative;
     overflow: hidden;
     border-left: 2px solid var(--ink);
+    background: var(--ink-2);
+}
+
+.hero-photo img {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+.hero-photo img.eq-loaded {
+    opacity: 1;
 }
 
 .hero-photo img {

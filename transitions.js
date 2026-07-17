@@ -1,14 +1,29 @@
 (function () {
     var style = document.createElement('style');
     style.textContent =
-        'body{opacity:0;transition:opacity .22s ease;}' +
+        'body{opacity:0;transition:opacity .32s ease;}' +
         'body.eq-ready{opacity:1;}' +
-        'body.eq-leaving{opacity:0;}';
+        'body.eq-leaving{opacity:0;transition:opacity .2s ease;}';
     document.head.appendChild(style);
 
+    function markImage(img) {
+        if (img.complete && img.naturalWidth) {
+            img.classList.add('eq-loaded');
+        } else {
+            img.addEventListener('load', function () {
+                img.classList.add('eq-loaded');
+            });
+        }
+    }
+
     function ready() {
+        var imgs = document.querySelectorAll('.hero-bg, .hero-photo img');
+        for (var i = 0; i < imgs.length; i++) markImage(imgs[i]);
+
         requestAnimationFrame(function () {
-            document.body.classList.add('eq-ready');
+            requestAnimationFrame(function () {
+                document.body.classList.add('eq-ready');
+            });
         });
     }
     if (document.readyState === 'loading') {
@@ -30,7 +45,7 @@
         document.body.classList.add('eq-leaving');
         setTimeout(function () {
             window.location.href = href;
-        }, 180);
+        }, 200);
     });
 
     window.addEventListener('pageshow', function (e) {

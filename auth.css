@@ -129,6 +129,7 @@ body {
     inset: 0;
     overflow: hidden;
     z-index: 0;
+    background: var(--ink);
 }
 
 .hero-bg {
@@ -140,7 +141,12 @@ body {
     filter: grayscale(1) contrast(1.15) brightness(0.55);
     transform-origin: center center;
     animation: kenburns 18s ease-in-out infinite alternate;
-    will-change: transform;
+    will-change: transform, opacity;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+.hero-bg.eq-loaded {
+    opacity: 1;
 }
 
 @keyframes kenburns {
