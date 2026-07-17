@@ -58,6 +58,37 @@ $$;
 
 grant execute on function get_email_by_username(text) to anon, authenticated;
 
+-- Auto-create a profiles row whenever a new auth user signs up, reading
+-- the role/full_name/username/phone that the client passed as signUp()
+-- metadata. Runs as security definer so it isn't blocked by RLS even
+-- when the client has no active session yet (e.g. email confirmation
+-- pending) — this is what actually lets signup work.
+create or replace function handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into profiles (id, role, full_name, username, email, phone)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'role', 'customer'),
+    coalesce(new.raw_user_meta_data->>'full_name', ''),
+    new.raw_user_meta_data->>'username',
+    new.email,
+    new.raw_user_meta_data->>'phone'
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function handle_new_user();
+
 -- ---------------------------------------------------------------------
 -- jobs
 -- ---------------------------------------------------------------------

@@ -174,18 +174,12 @@ function wireSignup() {
 
         setBusy(btn, 'Creating account...');
         try {
-            var { data, error } = await supabase.auth.signUp({ email: email, password: password });
+            var { data, error } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+                options: { data: { role: 'customer', full_name: fullName, username: username } },
+            });
             if (error) { showFormError(form, error.message); return; }
-
-            if (data.user) {
-                var { error: profileError } = await supabase.from('profiles').insert({
-                    id: data.user.id, role: 'customer', full_name: fullName, username: username, email: email,
-                });
-                if (profileError) {
-                    showFormError(form, 'Account created but profile setup failed: ' + profileError.message);
-                    return;
-                }
-            }
             window.location.href = 'signup-success.html';
         } catch (err) {
             showFormError(form, 'Something went wrong: ' + (err && err.message ? err.message : err));
@@ -216,18 +210,12 @@ function wireDriverSignup() {
 
         setBusy(btn, 'Creating account...');
         try {
-            var { data, error } = await supabase.auth.signUp({ email: email, password: password });
+            var { data, error } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+                options: { data: { role: 'driver', full_name: fullName, username: driverId, phone: phone } },
+            });
             if (error) { showFormError(form, error.message); return; }
-
-            if (data.user) {
-                var { error: profileError } = await supabase.from('profiles').insert({
-                    id: data.user.id, role: 'driver', full_name: fullName, username: driverId, email: email, phone: phone,
-                });
-                if (profileError) {
-                    showFormError(form, 'Account created but profile setup failed: ' + profileError.message);
-                    return;
-                }
-            }
             window.location.href = 'signup-success.html';
         } catch (err) {
             showFormError(form, 'Something went wrong: ' + (err && err.message ? err.message : err));
