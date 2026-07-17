@@ -1,0 +1,42 @@
+(function () {
+    var style = document.createElement('style');
+    style.textContent =
+        'body{opacity:0;transition:opacity .22s ease;}' +
+        'body.eq-ready{opacity:1;}' +
+        'body.eq-leaving{opacity:0;}';
+    document.head.appendChild(style);
+
+    function ready() {
+        requestAnimationFrame(function () {
+            document.body.classList.add('eq-ready');
+        });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', ready);
+    } else {
+        ready();
+    }
+
+    document.addEventListener('click', function (e) {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        var a = e.target.closest('a');
+        if (!a) return;
+        var href = a.getAttribute('href');
+        if (!href || href.charAt(0) === '#' || a.target === '_blank' || a.hasAttribute('download')) return;
+        if (href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0 || href.indexOf('http') === 0) return;
+
+        e.preventDefault();
+        document.body.classList.remove('eq-ready');
+        document.body.classList.add('eq-leaving');
+        setTimeout(function () {
+            window.location.href = href;
+        }, 180);
+    });
+
+    window.addEventListener('pageshow', function (e) {
+        if (e.persisted) {
+            document.body.classList.remove('eq-leaving');
+            document.body.classList.add('eq-ready');
+        }
+    });
+})();
