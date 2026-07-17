@@ -71,18 +71,22 @@ function wireCustomerLogin() {
         if (!username || !password) { showFormError(form, 'Please fill in all fields'); return; }
 
         setBusy(btn, 'Logging in...');
-        var { data, error } = await loginWithUsername(username, password);
-        setBusy(btn, null, btnText);
+        try {
+            var { data, error } = await loginWithUsername(username, password);
+            if (error) { showFormError(form, error.message); return; }
 
-        if (error) { showFormError(form, error.message); return; }
-
-        var profile = await getProfile(data.user.id);
-        if (!profile || profile.role !== 'customer') {
-            await supabase.auth.signOut();
-            showFormError(form, 'This account is not a customer account.');
-            return;
+            var profile = await getProfile(data.user.id);
+            if (!profile || profile.role !== 'customer') {
+                await supabase.auth.signOut();
+                showFormError(form, 'This account is not a customer account.');
+                return;
+            }
+            window.location.href = 'dashboard.html';
+        } catch (err) {
+            showFormError(form, 'Something went wrong: ' + (err && err.message ? err.message : err));
+        } finally {
+            setBusy(btn, null, btnText);
         }
-        window.location.href = 'dashboard.html';
     });
 }
 
@@ -99,18 +103,22 @@ function wireAdminLogin() {
         if (!username || !password) { showFormError(form, 'Please fill in all fields'); return; }
 
         setBusy(btn, 'Logging in...');
-        var { data, error } = await loginWithUsername(username, password);
-        setBusy(btn, null, btnText);
+        try {
+            var { data, error } = await loginWithUsername(username, password);
+            if (error) { showFormError(form, error.message); return; }
 
-        if (error) { showFormError(form, error.message); return; }
-
-        var profile = await getProfile(data.user.id);
-        if (!profile || profile.role !== 'admin') {
-            await supabase.auth.signOut();
-            showFormError(form, 'This account is not an admin account.');
-            return;
+            var profile = await getProfile(data.user.id);
+            if (!profile || profile.role !== 'admin') {
+                await supabase.auth.signOut();
+                showFormError(form, 'This account is not an admin account.');
+                return;
+            }
+            window.location.href = 'admin-dashboard.html';
+        } catch (err) {
+            showFormError(form, 'Something went wrong: ' + (err && err.message ? err.message : err));
+        } finally {
+            setBusy(btn, null, btnText);
         }
-        window.location.href = 'admin-dashboard.html';
     });
 }
 
@@ -127,18 +135,22 @@ function wireDriverLogin() {
         if (!driverId || !password) { showFormError(form, 'Please fill in all fields'); return; }
 
         setBusy(btn, 'Logging in...');
-        var { data, error } = await loginWithUsername(driverId, password);
-        setBusy(btn, null, btnText);
+        try {
+            var { data, error } = await loginWithUsername(driverId, password);
+            if (error) { showFormError(form, error.message); return; }
 
-        if (error) { showFormError(form, error.message); return; }
-
-        var profile = await getProfile(data.user.id);
-        if (!profile || profile.role !== 'driver') {
-            await supabase.auth.signOut();
-            showFormError(form, 'This account is not a driver account.');
-            return;
+            var profile = await getProfile(data.user.id);
+            if (!profile || profile.role !== 'driver') {
+                await supabase.auth.signOut();
+                showFormError(form, 'This account is not a driver account.');
+                return;
+            }
+            window.location.href = 'driver-dashboard.html';
+        } catch (err) {
+            showFormError(form, 'Something went wrong: ' + (err && err.message ? err.message : err));
+        } finally {
+            setBusy(btn, null, btnText);
         }
-        window.location.href = 'driver-dashboard.html';
     });
 }
 
@@ -161,21 +173,25 @@ function wireSignup() {
         if (password.length < 6) { showFormError(form, 'Password must be at least 6 characters'); return; }
 
         setBusy(btn, 'Creating account...');
-        var { data, error } = await supabase.auth.signUp({ email: email, password: password });
-        if (error) { setBusy(btn, null, btnText); showFormError(form, error.message); return; }
+        try {
+            var { data, error } = await supabase.auth.signUp({ email: email, password: password });
+            if (error) { showFormError(form, error.message); return; }
 
-        if (data.user) {
-            var { error: profileError } = await supabase.from('profiles').insert({
-                id: data.user.id, role: 'customer', full_name: fullName, username: username, email: email,
-            });
-            if (profileError) {
-                setBusy(btn, null, btnText);
-                showFormError(form, 'Account created but profile setup failed: ' + profileError.message);
-                return;
+            if (data.user) {
+                var { error: profileError } = await supabase.from('profiles').insert({
+                    id: data.user.id, role: 'customer', full_name: fullName, username: username, email: email,
+                });
+                if (profileError) {
+                    showFormError(form, 'Account created but profile setup failed: ' + profileError.message);
+                    return;
+                }
             }
+            window.location.href = 'signup-success.html';
+        } catch (err) {
+            showFormError(form, 'Something went wrong: ' + (err && err.message ? err.message : err));
+        } finally {
+            setBusy(btn, null, btnText);
         }
-        setBusy(btn, null, btnText);
-        window.location.href = 'signup-success.html';
     });
 }
 
@@ -199,21 +215,25 @@ function wireDriverSignup() {
         if (password.length < 6) { showFormError(form, 'Password must be at least 6 characters'); return; }
 
         setBusy(btn, 'Creating account...');
-        var { data, error } = await supabase.auth.signUp({ email: email, password: password });
-        if (error) { setBusy(btn, null, btnText); showFormError(form, error.message); return; }
+        try {
+            var { data, error } = await supabase.auth.signUp({ email: email, password: password });
+            if (error) { showFormError(form, error.message); return; }
 
-        if (data.user) {
-            var { error: profileError } = await supabase.from('profiles').insert({
-                id: data.user.id, role: 'driver', full_name: fullName, username: driverId, email: email, phone: phone,
-            });
-            if (profileError) {
-                setBusy(btn, null, btnText);
-                showFormError(form, 'Account created but profile setup failed: ' + profileError.message);
-                return;
+            if (data.user) {
+                var { error: profileError } = await supabase.from('profiles').insert({
+                    id: data.user.id, role: 'driver', full_name: fullName, username: driverId, email: email, phone: phone,
+                });
+                if (profileError) {
+                    showFormError(form, 'Account created but profile setup failed: ' + profileError.message);
+                    return;
+                }
             }
+            window.location.href = 'signup-success.html';
+        } catch (err) {
+            showFormError(form, 'Something went wrong: ' + (err && err.message ? err.message : err));
+        } finally {
+            setBusy(btn, null, btnText);
         }
-        setBusy(btn, null, btnText);
-        window.location.href = 'signup-success.html';
     });
 }
 
@@ -229,18 +249,22 @@ function wireForgotPassword() {
         if (!username) { showFormError(form, 'Please enter your username'); return; }
 
         setBusy(btn, 'Sending...');
-        var { data: email, error } = await supabase.rpc('get_email_by_username', { uname: username });
-        if (error || !email) {
+        try {
+            var { data: email, error } = await supabase.rpc('get_email_by_username', { uname: username });
+            if (error || !email) {
+                showFormError(form, 'No account found for that username');
+                return;
+            }
+            var { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + window.location.pathname.replace('forgot-password.html', 'reset-password.html'),
+            });
+            if (resetError) { showFormError(form, resetError.message); return; }
+            window.location.href = 'reset-link-sent.html';
+        } catch (err) {
+            showFormError(form, 'Something went wrong: ' + (err && err.message ? err.message : err));
+        } finally {
             setBusy(btn, null, btnText);
-            showFormError(form, 'No account found for that username');
-            return;
         }
-        var { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin + window.location.pathname.replace('forgot-password.html', 'reset-password.html'),
-        });
-        setBusy(btn, null, btnText);
-        if (resetError) { showFormError(form, resetError.message); return; }
-        window.location.href = 'reset-link-sent.html';
     });
 }
 
@@ -258,9 +282,14 @@ function wireResetPassword() {
         if (newPassword.length < 6) { showFormError(form, 'Password must be at least 6 characters'); return; }
 
         setBusy(btn, 'Saving...');
-        var { error } = await supabase.auth.updateUser({ password: newPassword });
-        setBusy(btn, null, btnText);
-        if (error) { showFormError(form, error.message); return; }
-        window.location.href = 'login.html';
+        try {
+            var { error } = await supabase.auth.updateUser({ password: newPassword });
+            if (error) { showFormError(form, error.message); return; }
+            window.location.href = 'login.html';
+        } catch (err) {
+            showFormError(form, 'Something went wrong: ' + (err && err.message ? err.message : err));
+        } finally {
+            setBusy(btn, null, btnText);
+        }
     });
 }
