@@ -85,12 +85,18 @@ function calculateQuote() {
     document.getElementById('bookBtn').classList.remove('hidden');
 }
 
+function generateCode() {
+    return String(Math.floor(1000 + Math.random() * 9000));
+}
+
 async function bookNow() {
     const pickup = document.getElementById('pickup').value.trim();
     const dropoff = document.getElementById('dropoff').value.trim();
     const phone = document.getElementById('phone').value.trim();
+    const receiverName = document.getElementById('receiverName').value.trim();
+    const receiverPhone = document.getElementById('receiverPhone').value.trim();
 
-    if (!pickup || !dropoff || !phone || currentQuote <= 0) {
+    if (!pickup || !dropoff || !phone || !receiverName || !receiverPhone || currentQuote <= 0) {
         showMsg('error', 'Please fill in all fields and calculate a price first');
         return;
     }
@@ -108,6 +114,10 @@ async function bookNow() {
         duration: currentDuration,
         quote: currentQuote,
         customer_phone: phone,
+        receiver_name: receiverName,
+        receiver_phone: receiverPhone,
+        collection_code: generateCode(),
+        delivery_code: generateCode(),
         status: 'pending',
     }).select().single();
 

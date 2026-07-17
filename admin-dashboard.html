@@ -5,6 +5,7 @@
     <style>html{background:#0B0F16}</style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ekoquick — Admin Dashboard</title>
+    <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="auth.css">
     <link rel="stylesheet" href="app.css">
     <link rel="stylesheet" href="support-widget.css">
@@ -18,12 +19,27 @@
 
     <div class="page-wrap">
         <div class="card">
+            <h2>Overview</h2>
+            <div id="statsRow" style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div><div class="quote-box" style="padding: 12px 18px; margin: 0;"><div class="amt" id="statRevenue" style="font-size: 22px;">R0</div><div style="font-size: 11px;">Revenue (delivered)</div></div></div>
+                <div><div class="quote-box" style="padding: 12px 18px; margin: 0;"><div class="amt" id="statTrips" style="font-size: 22px;">0</div><div style="font-size: 11px;">Completed trips</div></div></div>
+                <div><div class="quote-box" style="padding: 12px 18px; margin: 0;"><div class="amt" id="statRating" style="font-size: 22px;">—</div><div style="font-size: 11px;">Avg. rating</div></div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Live Fleet Map</h2>
+            <div id="fleetMap" style="height: 260px; border: 1px solid var(--line);"></div>
+        </div>
+
+        <div class="card">
             <h2>All Jobs</h2>
             <button class="btn btn-outline-blue" id="refreshBtn">Refresh</button>
             <div id="jobsList" style="margin-top: 14px;"><div class="empty">Loading...</div></div>
         </div>
     </div>
 
+    <script src="vendor/leaflet.js"></script>
     <script src="vendor/supabase.js"></script>
     <script src="config.js"></script>
     <script src="admin-dashboard.js"></script>

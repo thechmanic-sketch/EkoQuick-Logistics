@@ -26,8 +26,18 @@
             <div id="driverInfo" class="hidden">
                 <div class="job">
                     <div class="route" id="driverName"></div>
+                    <div class="meta" id="driverPhone"></div>
                     <div class="meta" id="jobRoute"></div>
                 </div>
+            </div>
+
+            <div id="codesInfo" class="hidden">
+                <div class="job">
+                    <div class="route">Pickup code (give to your sender): <span id="collectionCode"></span></div>
+                    <div class="route" style="margin-top: 8px;">Delivery code (give to the receiver): <span id="deliveryCode"></span></div>
+                    <div class="meta" style="margin-top: 8px;">The driver must be given these codes before starting and completing the trip.</div>
+                </div>
+                <button class="btn btn-blue" id="sendCodeBtn" style="margin-bottom: 12px;">Send delivery code via WhatsApp</button>
             </div>
 
             <a class="btn btn-blue hidden" id="trackBtn" href="#">Track Delivery</a>

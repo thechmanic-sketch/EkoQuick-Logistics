@@ -103,6 +103,10 @@ create table if not exists jobs (
   duration numeric,
   quote numeric not null,
   customer_phone text,
+  receiver_name text,
+  receiver_phone text,
+  collection_code text,
+  delivery_code text,
   status text not null default 'pending'
     check (status in ('pending', 'assigned', 'in_progress', 'delivered', 'cancelled')),
   driver_lat double precision,
