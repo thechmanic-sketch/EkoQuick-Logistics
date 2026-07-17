@@ -4,9 +4,11 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const VEHICLES = [
-    { id: 'bike', label: 'Motor Bike', icon: '🏍️', rate: 6.50, base: 45 },
-    { id: 'bakkie', label: 'Bakkie', icon: '🛻', rate: 9.50, base: 85 },
-    { id: 'truck', label: '1 Tonne Truck', icon: '🚛', rate: 14.00, base: 150 },
+    { id: 'bike', label: 'Bike', icon: '🏍️', rate: 5.00, base: 25 },
+    { id: 'smallcar', label: 'Small Car', icon: '🚗', rate: 7.00, base: 35 },
+    { id: 'bakkie', label: 'Bakkie', icon: '🛻', rate: 12.00, base: 80 },
+    { id: 'truck12', label: '1–2 Ton Truck', icon: '🚚', rate: 18.00, base: 150 },
+    { id: 'truck7', label: '7 Ton Truck', icon: '🚛', rate: 25.00, base: 250 },
 ];
 
 const DISTANCE_MATRIX_API_KEY = 'BE2w7PoMQ4xmiDE0VXaN2zHdTqiOpy8ECtEStW9QCdW7O68yH33SOwZ31ASLDZ67';
