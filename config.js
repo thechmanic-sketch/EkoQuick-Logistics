@@ -13,6 +13,15 @@ const VEHICLES = [
 
 const DISTANCE_MATRIX_API_KEY = 'BE2w7PoMQ4xmiDE0VXaN2zHdTqiOpy8ECtEStW9QCdW7O68yH33SOwZ31ASLDZ67';
 
+// Driver keeps 85% of the quoted fare; Ekoquick's commission is the rest.
+const DRIVER_SHARE = 0.85;
+function driverEarning(quote) { return Math.round((Number(quote) || 0) * DRIVER_SHARE * 100) / 100; }
+function platformFee(quote) { return Math.round((Number(quote) || 0) * (1 - DRIVER_SHARE) * 100) / 100; }
+
+function mapsDirectionsUrl(lat, lng) {
+    return 'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng;
+}
+
 const KZN_DISTANCES = {
     durban: { pietermaritzburg: 78, umhlanga: 16, ballito: 40, richardsbay: 180, newcastle: 270, ladysmith: 190, portshepstone: 120 },
     pietermaritzburg: { durban: 78, umhlanga: 85, ballito: 100, richardsbay: 240, newcastle: 200, ladysmith: 120, portshepstone: 170 },

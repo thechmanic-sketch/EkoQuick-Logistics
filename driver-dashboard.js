@@ -23,6 +23,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     beginPresence();
     loadJobs();
+
+    supabase
+        .channel('driver-jobs-' + currentUser.id)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs', filter: 'driver_id=eq.' + currentUser.id }, loadJobs)
+        .subscribe();
 });
 
 let presenceWatchId = null;
@@ -53,8 +58,9 @@ function escapeHtml(s) {
 
 const STATUS_LABELS = {
     pending: 'Pending',
-    assigned: 'Assigned',
-    in_progress: 'In Progress',
+    offered: 'New job — respond below',
+    to_pickup: 'Heading to pickup',
+    to_dropoff: 'Heading to drop-off',
     delivered: 'Delivered',
     cancelled: 'Cancelled',
 };
@@ -67,24 +73,36 @@ async function loadJobs() {
 
     list.innerHTML = jobs.map(function (job) {
         let actionArea = '';
-        if (job.status === 'assigned') {
+
+        if (job.status === 'offered') {
             actionArea =
+                '<button class="btn btn-blue" data-job="' + job.id + '" data-action="accept">Accept job</button>' +
+                '<button class="btn btn-outline-blue" data-job="' + job.id + '" style="margin-top: 8px;" data-action="decline">Decline</button>';
+        } else if (job.status === 'to_pickup') {
+            actionArea =
+                (job.pickup_lat && job.pickup_lng
+                    ? '<a class="btn btn-outline-blue" href="' + mapsDirectionsUrl(job.pickup_lat, job.pickup_lng) + '" target="_blank" rel="noopener" style="margin-bottom: 8px;">Get directions to pickup</a>'
+                    : '') +
                 '<label>Pickup code (ask the sender)</label>' +
                 '<input class="field-plain" id="collectionInput-' + job.id + '" placeholder="4-digit code">' +
                 '<div class="msg error hidden" id="collectionError-' + job.id + '"></div>' +
-                '<button class="btn btn-blue" data-job="' + job.id + '" data-action="start">Start Trip</button>';
-        } else if (job.status === 'in_progress') {
+                '<div class="msg error hidden" id="locError-' + job.id + '"></div>' +
+                '<button class="btn btn-blue" data-job="' + job.id + '" data-action="confirm-pickup">Confirm pickup</button>';
+        } else if (job.status === 'to_dropoff') {
             actionArea =
+                (job.dropoff_lat && job.dropoff_lng
+                    ? '<a class="btn btn-outline-blue" href="' + mapsDirectionsUrl(job.dropoff_lat, job.dropoff_lng) + '" target="_blank" rel="noopener" style="margin-bottom: 8px;">Get directions to drop-off</a>'
+                    : '') +
                 '<label>Delivery code (ask the receiver)</label>' +
                 '<input class="field-plain" id="deliveryInput-' + job.id + '" placeholder="4-digit code">' +
                 '<div class="msg error hidden" id="deliveryError-' + job.id + '"></div>' +
-                '<div class="msg error hidden" id="locError-' + job.id + '"></div>' +
                 '<button class="btn btn-outline-blue" data-job="' + job.id + '" data-action="deliver">Mark Delivered</button>';
         }
+
         return (
             '<div class="job">' +
                 '<div class="route">' + escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff) + '</div>' +
-                '<div class="meta">' + (job.distance || 0) + ' km • R' + (job.quote || 0) + '</div>' +
+                '<div class="meta">' + (job.distance || 0) + ' km • You earn R' + driverEarning(job.quote).toFixed(2) + '</div>' +
                 '<div class="meta">Sender: ' + escapeHtml(job.customer_phone || '') + '</div>' +
                 '<div class="meta">Receiver: ' + escapeHtml(job.receiver_name || '') + (job.receiver_phone ? ' (' + escapeHtml(job.receiver_phone) + ')' : '') + '</div>' +
                 '<span class="badge ' + job.status + '">' + (STATUS_LABELS[job.status] || job.status) + '</span>' +
@@ -93,8 +111,14 @@ async function loadJobs() {
         );
     }).join('');
 
-    list.querySelectorAll('button[data-action="start"]').forEach(function (btn) {
-        btn.addEventListener('click', function () { startTrip(btn.dataset.job); });
+    list.querySelectorAll('button[data-action="accept"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { acceptJob(btn.dataset.job); });
+    });
+    list.querySelectorAll('button[data-action="decline"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { declineJob(btn.dataset.job); });
+    });
+    list.querySelectorAll('button[data-action="confirm-pickup"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { confirmPickup(btn.dataset.job); });
     });
     list.querySelectorAll('button[data-action="deliver"]').forEach(function (btn) {
         btn.addEventListener('click', function () { markDelivered(btn.dataset.job); });
@@ -108,7 +132,20 @@ function showJobError(id, message) {
     el.classList.remove('hidden');
 }
 
-async function startTrip(jobId) {
+async function acceptJob(jobId) {
+    const { error } = await supabase.from('jobs').update({ status: 'to_pickup' }).eq('id', jobId);
+    if (error) { alert('Failed to accept job: ' + error.message); return; }
+    beginTracking(jobId);
+    loadJobs();
+}
+
+async function declineJob(jobId) {
+    const { error } = await supabase.from('jobs').update({ status: 'pending', driver_id: null }).eq('id', jobId);
+    if (error) { alert('Failed to decline job: ' + error.message); return; }
+    loadJobs();
+}
+
+async function confirmPickup(jobId) {
     const { data: job } = await supabase.from('jobs').select('collection_code').eq('id', jobId).single();
     const entered = (document.getElementById('collectionInput-' + jobId).value || '').trim();
 
@@ -117,9 +154,8 @@ async function startTrip(jobId) {
         return;
     }
 
-    const { error } = await supabase.from('jobs').update({ status: 'in_progress' }).eq('id', jobId);
-    if (error) { alert('Failed to start trip: ' + error.message); return; }
-    beginTracking(jobId);
+    const { error } = await supabase.from('jobs').update({ status: 'to_dropoff' }).eq('id', jobId);
+    if (error) { alert('Failed to update: ' + error.message); return; }
     loadJobs();
 }
 
@@ -139,7 +175,7 @@ function beginTracking(jobId) {
         },
         function (err) {
             var message = err && err.code === 1
-                ? 'Location permission was denied — the customer will not see your live position. Please enable location access and start the trip again.'
+                ? 'Location permission was denied — the customer will not see your live position. Please enable location access and accept the job again.'
                 : 'Could not get your location (' + (err ? err.message : 'unknown error') + ') — live tracking may not work.';
             var errEl = document.getElementById('locError-' + jobId);
             if (errEl) { errEl.textContent = message; errEl.classList.remove('hidden'); }

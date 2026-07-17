@@ -40,8 +40,9 @@ function escapeHtml(s) {
 
 const STATUS_LABELS = {
     pending: 'Pending',
-    assigned: 'Assigned',
-    in_progress: 'In Progress',
+    offered: 'Awaiting driver',
+    to_pickup: 'Heading to pickup',
+    to_dropoff: 'Heading to drop-off',
     delivered: 'Delivered',
     cancelled: 'Cancelled',
 };
@@ -49,6 +50,8 @@ const STATUS_LABELS = {
 function renderStats(jobs) {
     const delivered = jobs.filter(function (j) { return j.status === 'delivered'; });
     const revenue = delivered.reduce(function (sum, j) { return sum + (Number(j.quote) || 0); }, 0);
+    const driverPayouts = delivered.reduce(function (sum, j) { return sum + driverEarning(j.quote); }, 0);
+    const platformRevenue = delivered.reduce(function (sum, j) { return sum + platformFee(j.quote); }, 0);
     const rated = jobs.filter(function (j) { return j.rating; });
     const avgRating = rated.length
         ? (rated.reduce(function (sum, j) { return sum + j.rating; }, 0) / rated.length).toFixed(1)
@@ -57,10 +60,14 @@ function renderStats(jobs) {
     document.getElementById('statRevenue').textContent = 'R' + revenue.toLocaleString();
     document.getElementById('statTrips').textContent = delivered.length;
     document.getElementById('statRating').textContent = avgRating === '—' ? '—' : avgRating + ' ★';
+    document.getElementById('statPlatform').textContent = 'R' + platformRevenue.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    document.getElementById('statDrivers').textContent = 'R' + driverPayouts.toLocaleString(undefined, { maximumFractionDigits: 2 });
 }
 
 function renderFleetMap(jobs) {
-    const active = jobs.filter(function (j) { return j.status === 'in_progress' && j.driver_lat && j.driver_lng; });
+    const active = jobs.filter(function (j) {
+        return (j.status === 'to_pickup' || j.status === 'to_dropoff') && j.driver_lat && j.driver_lng;
+    });
     const seen = {};
 
     active.forEach(function (job) {
@@ -91,7 +98,7 @@ async function autoAssignPending(jobs) {
     autoAssigning = true;
     try {
         const busyDriverIds = jobs
-            .filter(function (j) { return j.driver_id && (j.status === 'assigned' || j.status === 'in_progress'); })
+            .filter(function (j) { return j.driver_id && (j.status === 'offered' || j.status === 'to_pickup' || j.status === 'to_dropoff'); })
             .map(function (j) { return j.driver_id; });
 
         for (const job of unassigned) {
@@ -111,7 +118,7 @@ async function autoAssignPending(jobs) {
                 if (withDistance.length) chosen = withDistance[0].driver;
             }
 
-            const { error } = await supabase.from('jobs').update({ driver_id: chosen.id, status: 'assigned' }).eq('id', job.id);
+            const { error } = await supabase.from('jobs').update({ driver_id: chosen.id, status: 'offered' }).eq('id', job.id);
             if (!error) busyDriverIds.push(chosen.id);
         }
     } finally {
@@ -155,7 +162,9 @@ async function loadJobs() {
         return (
             '<div class="job">' +
                 '<div class="route">' + escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff) + '</div>' +
-                '<div class="meta">' + vehicleLabel(job.vehicle) + ' • ' + (job.distance || 0) + ' km • R' + (job.quote || 0) + ' • Customer: ' + escapeHtml(job.customer_phone || '') + '</div>' +
+                '<div class="meta">' + vehicleLabel(job.vehicle) + ' • ' + (job.distance || 0) + ' km • R' + (job.quote || 0) +
+                    ' (driver R' + driverEarning(job.quote).toFixed(2) + ' / us R' + platformFee(job.quote).toFixed(2) + ')' +
+                    ' • Customer: ' + escapeHtml(job.customer_phone || '') + '</div>' +
                 (job.receiver_name ? '<div class="meta">Receiver: ' + escapeHtml(job.receiver_name) + '</div>' : '') +
                 '<span class="badge ' + job.status + '">' + (STATUS_LABELS[job.status] || job.status) + '</span>' +
                 (job.rating ? '<div class="meta" style="margin-top: 6px;">Rating: ' + '★'.repeat(job.rating) + (job.rating_comment ? ' — "' + escapeHtml(job.rating_comment) + '"' : '') + '</div>' : '') +
@@ -186,7 +195,7 @@ async function assignDriver(jobId) {
     const sel = document.getElementById('driverSelect-' + jobId);
     const driverId = sel.value;
     if (!driverId) { alert('Please select a driver'); return; }
-    const { error } = await supabase.from('jobs').update({ driver_id: driverId, status: 'assigned' }).eq('id', jobId);
+    const { error } = await supabase.from('jobs').update({ driver_id: driverId, status: 'offered' }).eq('id', jobId);
     if (error) { alert('Failed to assign driver: ' + error.message); return; }
     loadJobs();
 }

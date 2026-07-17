@@ -89,15 +89,15 @@ function generateCode() {
     return String(Math.floor(1000 + Math.random() * 9000));
 }
 
-async function geocodePickup(pickup) {
+async function geocodeAddress(address) {
     try {
-        const q = encodeURIComponent(pickup + ', KwaZulu-Natal, South Africa');
+        const q = encodeURIComponent(address + ', KwaZulu-Natal, South Africa');
         const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + q);
         const results = await res.json();
         if (results && results[0]) {
             return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
         }
-    } catch (err) { /* best effort — auto-assign falls back to any available driver */ }
+    } catch (err) { /* best effort — falls back gracefully with no coordinates */ }
     return null;
 }
 
@@ -117,7 +117,7 @@ async function bookNow() {
     btn.disabled = true;
     btn.textContent = 'Booking...';
 
-    const pickupCoords = await geocodePickup(pickup);
+    const [pickupCoords, dropoffCoords] = await Promise.all([geocodeAddress(pickup), geocodeAddress(dropoff)]);
 
     const { data, error } = await supabase.from('jobs').insert({
         customer_id: currentUser.id,
@@ -125,6 +125,8 @@ async function bookNow() {
         pickup_lat: pickupCoords ? pickupCoords.lat : null,
         pickup_lng: pickupCoords ? pickupCoords.lng : null,
         dropoff: dropoff,
+        dropoff_lat: dropoffCoords ? dropoffCoords.lat : null,
+        dropoff_lng: dropoffCoords ? dropoffCoords.lng : null,
         vehicle: selectedVehicle.id,
         distance: currentDistance,
         duration: currentDuration,

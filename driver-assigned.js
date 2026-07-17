@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const { data: job } = await supabase.from('jobs').select('*').eq('id', jobId).single();
         if (!job) return;
 
-        if (job.status === 'in_progress') {
+        if (job.status === 'to_pickup' || job.status === 'to_dropoff') {
             window.location.href = 'live-tracking.html?job=' + jobId;
             return;
         }
@@ -42,13 +42,15 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         if (job.driver_id) {
             const { data: driver } = await supabase.from('profiles').select('full_name, phone').eq('id', job.driver_id).single();
-            document.getElementById('statusTitle').textContent = 'Driver Assigned!';
-            document.getElementById('statusSubtitle').textContent = 'Your driver is preparing for pickup.';
+            document.getElementById('statusTitle').textContent = job.status === 'offered' ? 'Driver Found!' : 'Driver Assigned!';
+            document.getElementById('statusSubtitle').textContent = job.status === 'offered'
+                ? 'Waiting for the driver to accept your job.'
+                : 'Your driver is preparing for pickup.';
             document.getElementById('driverName').textContent = driver ? driver.full_name : 'Your driver';
             document.getElementById('driverPhone').textContent = driver && driver.phone ? 'Contact: ' + driver.phone : '';
             document.getElementById('jobRoute').textContent = job.pickup + ' → ' + job.dropoff;
             document.getElementById('driverInfo').classList.remove('hidden');
-            document.getElementById('trackBtn').classList.remove('hidden');
+            if (job.status !== 'offered') document.getElementById('trackBtn').classList.remove('hidden');
         }
     }
 

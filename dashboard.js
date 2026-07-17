@@ -25,8 +25,9 @@ function escapeHtml(s) {
 
 const STATUS_LABELS = {
     pending: 'Waiting for driver assignment',
-    assigned: 'Driver assigned',
-    in_progress: 'Driver on the way',
+    offered: 'Waiting for driver to accept',
+    to_pickup: 'Driver heading to pickup',
+    to_dropoff: 'Driver on the way to you',
     delivered: 'Delivered',
     cancelled: 'Cancelled',
 };
@@ -40,9 +41,9 @@ async function loadJobs() {
 
     list.innerHTML = data.map(function (job) {
         let actionHtml = '';
-        if (job.status === 'assigned') {
+        if (job.status === 'offered') {
             actionHtml = '<a class="btn btn-outline-blue" href="driver-assigned.html?job=' + job.id + '">View Driver</a>';
-        } else if (job.status === 'in_progress') {
+        } else if (job.status === 'to_pickup' || job.status === 'to_dropoff') {
             actionHtml = '<a class="btn btn-outline-blue" href="live-tracking.html?job=' + job.id + '">Track Delivery</a>';
         } else if (job.status === 'delivered' && !job.rating) {
             actionHtml = '<a class="btn btn-outline-blue" href="rate-driver.html?job=' + job.id + '">Rate Driver</a>';

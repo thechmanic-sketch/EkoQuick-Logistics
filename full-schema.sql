@@ -104,6 +104,8 @@ create table if not exists jobs (
   pickup_lat double precision,
   pickup_lng double precision,
   dropoff text not null,
+  dropoff_lat double precision,
+  dropoff_lng double precision,
   vehicle text not null,
   distance numeric,
   duration numeric,
@@ -114,7 +116,7 @@ create table if not exists jobs (
   collection_code text,
   delivery_code text,
   status text not null default 'pending'
-    check (status in ('pending', 'assigned', 'in_progress', 'delivered', 'cancelled')),
+    check (status in ('pending', 'offered', 'to_pickup', 'to_dropoff', 'delivered', 'cancelled')),
   driver_lat double precision,
   driver_lng double precision,
   rating int2 check (rating between 1 and 5),
