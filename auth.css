@@ -198,9 +198,6 @@ body {
     padding: 20px 16px 40px;
 }
 
-@media (min-width: 768px) {
-    .auth-main { justify-content: flex-start; padding-left: 8vw; }
-}
 
 .auth-wrap {
     max-width: 400px;
