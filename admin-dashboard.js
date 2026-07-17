@@ -126,6 +126,54 @@ async function autoAssignPending(jobs) {
     }
 }
 
+function vehicleLabel(id) {
+    const v = (typeof VEHICLES !== 'undefined' ? VEHICLES : []).find(function (x) { return x.id === id; });
+    return v ? v.icon + ' ' + v.label : '';
+}
+
+function renderDrivers() {
+    const el = document.getElementById('driversList');
+    if (!el) return;
+    if (!driversCache.length) { el.innerHTML = '<div class="empty">No drivers signed up yet.</div>'; return; }
+
+    const vehicleOptions = (typeof VEHICLES !== 'undefined' ? VEHICLES : [])
+        .map(function (v) { return '<option value="' + v.id + '">' + v.icon + ' ' + v.label + '</option>'; })
+        .join('');
+
+    el.innerHTML = driversCache.map(function (d) {
+        return (
+            '<div class="job">' +
+                '<div class="route">' + escapeHtml(d.full_name || d.id) + '</div>' +
+                '<div style="margin-top: 8px;">' +
+                    '<select class="field-plain" id="vehicleSelect-' + d.id + '" style="margin-bottom: 8px;">' +
+                        '<option value="">No vehicle class set</option>' +
+                        vehicleOptions +
+                    '</select>' +
+                    '<button class="btn btn-blue" data-driver="' + d.id + '" data-action="save-vehicle">Save</button>' +
+                '</div>' +
+            '</div>'
+        );
+    }).join('');
+
+    driversCache.forEach(function (d) {
+        const sel = document.getElementById('vehicleSelect-' + d.id);
+        if (sel && d.vehicle_class) sel.value = d.vehicle_class;
+    });
+
+    el.querySelectorAll('button[data-action="save-vehicle"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { saveDriverVehicle(btn.dataset.driver); });
+    });
+}
+
+async function saveDriverVehicle(driverId) {
+    const sel = document.getElementById('vehicleSelect-' + driverId);
+    const vehicleClass = sel.value;
+    if (!vehicleClass) { alert('Please choose a vehicle class'); return; }
+    const { error } = await supabase.from('profiles').update({ vehicle_class: vehicleClass }).eq('id', driverId);
+    if (error) { alert('Failed to save: ' + error.message); return; }
+    loadJobs();
+}
+
 function haversineKm(lat1, lng1, lat2, lng2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -145,14 +193,10 @@ async function loadJobs() {
 
     renderStats(jobs || []);
     renderFleetMap(jobs || []);
+    renderDrivers();
     await autoAssignPending(jobs || []);
 
     if (!jobs || jobs.length === 0) { list.innerHTML = '<div class="empty">No jobs yet.</div>'; return; }
-
-    function vehicleLabel(id) {
-        const v = (typeof VEHICLES !== 'undefined' ? VEHICLES : []).find(function (x) { return x.id === id; });
-        return v ? v.icon + ' ' + v.label : (id || '');
-    }
 
     const driverOptions = driversCache.map(function (d) {
         return '<option value="' + d.id + '">' + escapeHtml(d.full_name || d.id) + ' — ' + vehicleLabel(d.vehicle_class) + '</option>';
