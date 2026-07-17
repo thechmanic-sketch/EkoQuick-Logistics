@@ -807,3 +807,30 @@ footer { padding: var(--sp-6) 0 var(--sp-4); }
     padding: var(--sp-6) 0;
 }
 .page-cta .wrap { max-width: 900px; }
+
+.field-plain-wrap {
+    display: block;
+    margin-bottom: var(--sp-3);
+}
+.biz-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+.field-plain {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--line);
+    border-radius: 0;
+    font-size: 14px;
+    font-family: var(--font-mono);
+    background: var(--ink-2);
+    color: var(--paper);
+}
+.field-plain::placeholder { color: var(--muted-dim); }
+.field-plain:focus { outline: none; border-color: var(--orange); }
+textarea.field-plain { resize: vertical; }
