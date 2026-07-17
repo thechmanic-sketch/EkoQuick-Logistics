@@ -13,11 +13,25 @@
         <img class="hero-bg" src="hero.png" alt="">
         <div class="hero-overlay"></div>
     </div>
-    <div class="auth-wrap">
-        <a class="auth-logo-link" href="index.html">
-            <span class="logo">Eko<span>quick</span></span>
-            <span class="auth-logo-tag">KZN</span>
-        </a>
+    <div class="auth-shell">
+        <header class="auth-topbar-nav">
+            <a class="auth-logo-link" href="index.html">
+                <span class="logo">Eko<span>quick</span></span>
+                <span class="auth-logo-tag">KZN</span>
+            </a>
+            <button class="hamburger" id="hamburgerBtn" aria-label="Menu" aria-expanded="false">
+                <span class="hamburger-lines"><span></span></span>
+            </button>
+        </header>
+        <nav class="auth-mobile-menu" id="authMobileMenu">
+            <a href="index.html">Home</a>
+            <a href="how-it-works.html">Manifest</a>
+            <a href="pricing.html">Tariff</a>
+            <a href="coverage.html">Coverage</a>
+            <a href="become-a-driver.html">Drive</a>
+        </nav>
+        <main class="auth-main">
+        <div class="auth-wrap">
         <a class="auth-topbar orange" href="forgot-password.html">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
             <span>Reset Link Sent</span>
@@ -32,10 +46,38 @@
             <a class="btn btn-orange" href="login.html">Back to Login</a>
         </div>
 
-        <div class="auth-footer auth-footer-light">
-            <div>© 2026 Ekoquick</div>
-            <div>This is a product of Techmanic Software and Digital Solutions</div>
         </div>
+        </main>
+        <footer class="auth-footer-full">
+            <div class="wrap">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <a class="auth-logo-link" href="index.html">
+                            <span class="logo">Eko<span>quick</span></span>
+                        </a>
+                        <p>Fast, reliable delivery across KwaZulu-Natal — for customers, drivers and businesses alike.</p>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Account</h4>
+                        <a href="login.html">Login</a>
+                        <a href="signup.html">Sign up</a>
+                        <a href="become-a-driver.html">Become a driver</a>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Support</h4>
+                        <a href="https://wa.me/27676659966" target="_blank" rel="noopener">WhatsApp us</a>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Made by</h4>
+                        <span style="display:block; color: var(--muted); font-size: 13px;">Techmanic Software and Digital Solutions</span>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <span>© 2026 EKOQUICK — WAYBILL EQ-2026-00417</span>
+                    <span>BUILT FOR THE ROAD</span>
+                </div>
+            </div>
+        </footer>
     </div>
     <script src="support-widget.js"></script>
 </body>

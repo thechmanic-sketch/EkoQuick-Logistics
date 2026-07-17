@@ -32,6 +32,18 @@
         ready();
     }
 
+    document.addEventListener('DOMContentLoaded', function () {
+        var btn = document.getElementById('hamburgerBtn');
+        var menu = document.getElementById('authMobileMenu');
+        if (btn && menu) {
+            btn.addEventListener('click', function () {
+                var open = menu.classList.toggle('open');
+                btn.classList.toggle('open', open);
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+        }
+    });
+
     document.addEventListener('click', function (e) {
         if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         var a = e.target.closest('a');
