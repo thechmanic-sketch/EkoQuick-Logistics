@@ -3,101 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ekoquick — Log In</title>
-    <link rel="stylesheet" href="auth.css">
-    <link rel="stylesheet" href="hero-page.css">
+    <title>Ekoquick — Get it there, today.</title>
+    <link rel="stylesheet" href="homepage.css">
     <link rel="stylesheet" href="support-widget.css">
 </head>
 <body>
-    <div class="hero-bg-wrap">
-        <img class="hero-bg" src="hero.png" alt="">
-        <div class="hero-overlay"></div>
+    <div class="ticker-bar">
+        <div class="ticker-track">
+            <span>DBN → PMB → HWK → BAL → RBY → NCT → LDS → PSP → PIN → WVL</span>
+            <span>DBN → PMB → HWK → BAL → RBY → NCT → LDS → PSP → PIN → WVL</span>
+        </div>
     </div>
 
-    <nav class="site-nav">
-        <div class="site-nav-logo">Eko<span>quick</span></div>
-        <div class="site-nav-links">
-            <a href="index.html">Home</a>
-            <a href="requirements.html">Become a Driver</a>
-            <a href="login.html">Login</a>
-            <a class="site-nav-cta" href="signup.html">Get Started</a>
+    <nav>
+        <div class="nav-inner">
+            <div class="logo-block">
+                <a class="logo" href="index.html">Eko<span>quick</span></a>
+                <span class="logo-meta">WAYBILL NO. EQ-2026-00417 · KZN</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#how">Manifest</a></li>
+                <li><a href="#tariff">Tariff</a></li>
+                <li><a href="#coverage">Coverage</a></li>
+                <li><a href="#driver">Drive</a></li>
+            </ul>
+            <div class="nav-cta-group">
+                <a class="btn btn-ghost btn-sm" href="login.html">Login</a>
+                <a class="btn btn-primary btn-sm" href="signup.html">Book now</a>
+            </div>
         </div>
     </nav>
 
-    <div class="hero-login-wrap">
-        <div class="glass-card">
-            <div class="auth-icon">
-                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <header class="hero" id="top">
+        <div class="hero-copy">
+            <p class="manifest-no">ORIGIN <b>ANY KZN ADDRESS</b> — DESTINATION <b>ANY KZN ADDRESS</b></p>
+            <h1>Get it<br>there,<br><span class="accent">today.</span></h1>
+            <p class="hero-sub">Bikes, bakkies and one-tonne trucks on call across KwaZulu-Natal. Enter a route, get a price, and watch it move.</p>
+            <div class="hero-ctas">
+                <a class="btn btn-primary" href="signup.html">Book a delivery</a>
+                <a class="btn btn-ghost" href="requirements.html">Become a driver</a>
             </div>
-            <h1>Login As</h1>
-            <p class="auth-subtitle">Select your role to continue</p>
-
-            <div class="role-grid">
-                <a class="role-tile" href="admin-login.html" data-role="admin">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
-                    <span>Admin</span>
-                </a>
-                <a class="role-tile" href="driver-login.html" data-role="driver">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17h1a2 2 0 0 0 4 0h6a2 2 0 0 0 4 0h1a1 1 0 0 0 1-1v-3.5a1 1 0 0 0-.29-.71L17 9h-3V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1Z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg>
-                    <span>Driver</span>
-                </a>
-                <button type="button" class="role-tile role-tile-selected" data-role="customer">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    <span>Customer</span>
-                </button>
+            <div class="stat-line">
+                <div><b>18</b><span>Towns on file</span></div>
+                <div><b>03</b><span>Vehicle classes</span></div>
+                <div><b>R45</b><span>Fare from</span></div>
             </div>
-
-            <div class="auth-divider"><span>OR</span></div>
-
-            <form id="customerLoginForm">
-                <label class="field">
-                    <svg class="field-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    <input type="text" id="username" placeholder="Username" autocomplete="username" required>
-                </label>
-                <label class="field">
-                    <svg class="field-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    <input type="password" id="password" placeholder="Password" autocomplete="current-password" required>
-                    <button type="button" class="field-toggle" aria-label="Show password">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
-                    </button>
-                </label>
-
-                <button type="submit" class="btn btn-gradient">Login</button>
-            </form>
-
-            <a class="auth-link" href="forgot-password.html">Forgot password?</a>
-
-            <div class="auth-divider"><span>OR</span></div>
-
-            <a class="btn btn-outline-light" href="signup.html">Sign Up</a>
         </div>
-    </div>
+        <div class="hero-photo">
+            <img src="hero.png" alt="Ekoquick delivery van on a KwaZulu-Natal highway">
+            <div class="postmark">KZN<b>ALL<br>ROUTES</b>SINCE 2026</div>
+        </div>
+    </header>
 
-    <footer class="site-footer">
-        <div class="footer-col">
-            <div class="footer-brand">Eko<span>quick</span></div>
-            <p>Fast, reliable delivery across KwaZulu-Natal — for customers, drivers, and businesses alike.</p>
+    <section id="how">
+        <div class="wrap">
+            <div class="sec-head">
+                <div>
+                    <p class="sec-tag">Manifest</p>
+                    <h2>How a job moves</h2>
+                </div>
+                <p class="sec-note">Four line items, start to finish — no dispatcher required.</p>
+            </div>
+            <table class="manifest-table">
+                <tbody>
+                    <tr>
+                        <td class="m-code">STEP/01</td>
+                        <td class="m-action">Enter the route</td>
+                        <td class="m-detail">Type pickup and drop-off — we work out the real driving distance in KZN.</td>
+                    </tr>
+                    <tr>
+                        <td class="m-code">STEP/02</td>
+                        <td class="m-action">Read the tariff</td>
+                        <td class="m-detail">Pick bike, bakkie or truck and see the full fare before you confirm.</td>
+                    </tr>
+                    <tr>
+                        <td class="m-code">STEP/03</td>
+                        <td class="m-action">Driver dispatched</td>
+                        <td class="m-detail">The nearest available driver takes the job and heads to collect.</td>
+                    </tr>
+                    <tr>
+                        <td class="m-code">STEP/04</td>
+                        <td class="m-action">Tracked live</td>
+                        <td class="m-detail">Watch the driver move on the map, door to door, until it's signed for.</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-        <div class="footer-col">
-            <h4>Company</h4>
-            <a href="login.html">Login</a>
-            <a href="signup.html">Sign Up</a>
-            <a href="requirements.html">Become a Driver</a>
+    </section>
+
+    <section id="tariff">
+        <div class="wrap">
+            <div class="sec-head">
+                <div>
+                    <p class="sec-tag">Tariff sheet</p>
+                    <h2>Priced by the kilometre</h2>
+                </div>
+                <p class="sec-note">Base fee plus distance. No surge, no surprises at drop-off.</p>
+            </div>
+            <table class="tariff">
+                <thead>
+                    <tr>
+                        <th>Vehicle</th>
+                        <th>Base fare</th>
+                        <th>Rate / km</th>
+                        <th>Suited for</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="veh">🏍️ Motor Bike</td>
+                        <td class="num">R45</td>
+                        <td class="num">R6.50</td>
+                        <td class="fit">Documents, parcels, anything that fits a top-box</td>
+                    </tr>
+                    <tr>
+                        <td class="veh">🛻 Bakkie</td>
+                        <td class="num">R85</td>
+                        <td class="num">R9.50</td>
+                        <td class="fit">Boxes, furniture pieces, small business runs</td>
+                    </tr>
+                    <tr>
+                        <td class="veh">🚛 1 Tonne Truck</td>
+                        <td class="num">R150</td>
+                        <td class="num">R14.00</td>
+                        <td class="fit">Full loads, pallets, home or office moves</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-        <div class="footer-col">
-            <h4>Support</h4>
-            <a href="https://wa.me/27676659966" target="_blank">Contact Us</a>
+    </section>
+
+    <section id="coverage">
+        <div class="wrap">
+            <div class="sec-head">
+                <div>
+                    <p class="sec-tag">Coverage</p>
+                    <h2>Coast to Midlands</h2>
+                </div>
+                <p class="sec-note">If it's got a KZN postal code, a driver can reach it.</p>
+            </div>
+            <p class="route-strip">
+                <span class="code">DBN</span> Durban <span class="arrow">→</span>
+                <span class="code">PMB</span> Pietermaritzburg <span class="arrow">→</span>
+                <span class="code">UML</span> Umhlanga <span class="arrow">→</span>
+                <span class="code">BAL</span> Ballito <span class="arrow">→</span>
+                <span class="code">RBY</span> Richards Bay <span class="arrow">→</span>
+                <span class="code">NCT</span> Newcastle <span class="arrow">→</span>
+                <span class="code">LDS</span> Ladysmith <span class="arrow">→</span>
+                <span class="code">PSP</span> Port Shepstone <span class="arrow">→</span>
+                <span class="code">PIN</span> Pinetown <span class="arrow">→</span>
+                <span class="code">WVL</span> Westville <span class="arrow">→</span>
+                <span class="code">HIL</span> Hillcrest <span class="arrow">→</span>
+                <span class="code">HWK</span> Howick <span class="arrow">→</span>
+                <span class="code">ATT</span> Amanzimtoti <span class="arrow">→</span>
+                <span class="code">STG</span> Stanger <span class="arrow">→</span>
+                <span class="code">EMP</span> Empangeni <span class="arrow">→</span>
+                <span class="code">MGT</span> Margate <span class="arrow">→</span>
+                <span class="code">KOK</span> Kokstad <span class="arrow">→</span>
+                <span class="code">VRY</span> Vryheid <span class="arrow">→</span>
+                <span class="code">EST</span> Estcourt <span class="arrow">+ more</span>
+            </p>
         </div>
-        <div class="footer-col">
-            <h4>About</h4>
-            <p>A product of Techmanic Software and Digital Solutions</p>
+    </section>
+
+    <section id="driver">
+        <div class="wrap cta-band">
+            <div>
+                <h2>Own a vehicle?<br>Start earning.</h2>
+                <p>Set your own hours, get paid per job, pick up work anywhere in KZN.</p>
+            </div>
+            <a class="stamp-btn" href="requirements.html">See driver requirements →</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a class="logo" href="index.html">Eko<span>quick</span></a>
+                    <p>Fast, reliable delivery across KwaZulu-Natal — for customers, drivers and businesses alike.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Account</h4>
+                    <a href="login.html">Login</a>
+                    <a href="signup.html">Sign up</a>
+                    <a href="requirements.html">Become a driver</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <a href="https://wa.me/27676659966" target="_blank" rel="noopener">WhatsApp us</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Made by</h4>
+                    <span style="display:block; color: var(--muted); font-size: 13px;">Techmanic Software and Digital Solutions</span>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 EKOQUICK — WAYBILL EQ-2026-00417</span>
+                <span>BUILT FOR THE ROAD</span>
+            </div>
         </div>
     </footer>
-    <div class="footer-bottom">© 2026 Ekoquick. All Rights Reserved.</div>
 
-    <script src="vendor/supabase.js"></script>
-    <script src="config.js"></script>
-    <script src="auth.js"></script>
     <script src="support-widget.js"></script>
 </body>
 </html>
