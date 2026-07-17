@@ -377,6 +377,9 @@ h1 {
     font-size: 10px;
     letter-spacing: 0.04em;
     color: var(--muted-dim);
+}
+.auth-footer.auth-footer-light {
+    color: rgba(236, 239, 243, 0.7);
     margin-top: 24px;
     line-height: 1.8;
 }
