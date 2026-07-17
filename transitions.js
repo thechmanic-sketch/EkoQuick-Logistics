@@ -6,19 +6,49 @@
         'body.eq-leaving{opacity:0;transition:opacity .08s ease;}';
     document.head.appendChild(style);
 
-    function markImage(img) {
+    function onLoaded(img, cb) {
         if (img.complete && img.naturalWidth) {
-            img.classList.add('eq-loaded');
+            cb();
         } else {
-            img.addEventListener('load', function () {
-                img.classList.add('eq-loaded');
-            });
+            img.addEventListener('load', cb);
         }
     }
 
+    function markImage(img) {
+        onLoaded(img, function () {
+            img.classList.add('eq-loaded');
+        });
+    }
+
+    function wireBgRotation(wrap) {
+        var imgs = wrap.querySelectorAll('.hero-bg');
+        if (!imgs.length) return;
+
+        if (imgs.length === 1) {
+            onLoaded(imgs[0], function () {
+                imgs[0].classList.add('eq-active');
+            });
+            return;
+        }
+
+        var idx = 0;
+        onLoaded(imgs[0], function () {
+            imgs[0].classList.add('eq-active');
+            setInterval(function () {
+                var next = (idx + 1) % imgs.length;
+                imgs[next].classList.add('eq-active');
+                imgs[idx].classList.remove('eq-active');
+                idx = next;
+            }, 7000);
+        });
+    }
+
     function ready() {
-        var imgs = document.querySelectorAll('.hero-bg, .hero-photo img');
-        for (var i = 0; i < imgs.length; i++) markImage(imgs[i]);
+        var singleImgs = document.querySelectorAll('.hero-photo img');
+        for (var i = 0; i < singleImgs.length; i++) markImage(singleImgs[i]);
+
+        var wraps = document.querySelectorAll('.hero-bg-wrap');
+        for (var j = 0; j < wraps.length; j++) wireBgRotation(wraps[j]);
 
         requestAnimationFrame(function () {
             requestAnimationFrame(function () {

@@ -311,6 +311,18 @@ a { color: inherit; }
     object-fit: cover;
     filter: grayscale(1) contrast(1.15) brightness(0.85);
     display: block;
+    transform-origin: center center;
+    animation: hero-kenburns 22s ease-in-out infinite alternate;
+    will-change: transform, opacity;
+}
+
+@keyframes hero-kenburns {
+    0% { transform: scale(1.1) translateY(-2%); }
+    100% { transform: scale(1.24) translateY(2%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-photo img { animation: none; }
 }
 
 .hero-photo::after {
