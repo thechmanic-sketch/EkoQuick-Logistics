@@ -1,9 +1,9 @@
 (function () {
     var style = document.createElement('style');
     style.textContent =
-        'body{opacity:0;transition:opacity .32s ease;}' +
+        'body{opacity:0;transition:opacity .12s ease;}' +
         'body.eq-ready{opacity:1;}' +
-        'body.eq-leaving{opacity:0;transition:opacity .2s ease;}';
+        'body.eq-leaving{opacity:0;transition:opacity .08s ease;}';
     document.head.appendChild(style);
 
     function markImage(img) {
@@ -57,7 +57,7 @@
         document.body.classList.add('eq-leaving');
         setTimeout(function () {
             window.location.href = href;
-        }, 200);
+        }, 80);
     });
 
     window.addEventListener('pageshow', function (e) {
