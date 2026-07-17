@@ -65,6 +65,10 @@
     --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
+@view-transition {
+    navigation: auto;
+}
+
 * { box-sizing: border-box; }
 
 body {
@@ -130,6 +134,15 @@ body {
     overflow: hidden;
     z-index: 0;
     background: var(--ink);
+    view-transition-name: eq-hero-bg;
+}
+
+::view-transition-group(eq-hero-bg) {
+    animation-duration: 0.5s;
+}
+::view-transition-old(eq-hero-bg),
+::view-transition-new(eq-hero-bg) {
+    mix-blend-mode: normal;
 }
 
 .hero-bg {
