@@ -67,10 +67,6 @@
     --sp-7: 88px;
 }
 
-@view-transition {
-    navigation: auto;
-}
-
 * { box-sizing: border-box; }
 
 body {
