@@ -96,6 +96,34 @@ body {
     .auth-wrap { margin-left: 8vw; }
 }
 
+.auth-logo-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    text-decoration: none;
+    margin-bottom: 22px;
+}
+
+.auth-logo-link .logo {
+    font-family: var(--font-stencil);
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #fff;
+}
+.auth-logo-link .logo span { color: var(--orange); }
+
+.auth-logo-link .auth-logo-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-dim);
+}
+
+.auth-logo-link:hover .logo { color: var(--orange); }
+
 .hero-bg-wrap {
     position: fixed;
     inset: 0;
