@@ -13,6 +13,9 @@ create table if not exists profiles (
   username text unique,
   email text,
   phone text,
+  vehicle_class text,
+  last_lat double precision,
+  last_lng double precision,
   created_at timestamptz not null default now()
 );
 
@@ -70,14 +73,15 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into profiles (id, role, full_name, username, email, phone)
+  insert into profiles (id, role, full_name, username, email, phone, vehicle_class)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'role', 'customer'),
     coalesce(new.raw_user_meta_data->>'full_name', ''),
     new.raw_user_meta_data->>'username',
     new.email,
-    new.raw_user_meta_data->>'phone'
+    new.raw_user_meta_data->>'phone',
+    new.raw_user_meta_data->>'vehicle_class'
   )
   on conflict (id) do nothing;
   return new;
@@ -97,6 +101,8 @@ create table if not exists jobs (
   customer_id uuid not null references profiles (id) on delete cascade,
   driver_id uuid references profiles (id) on delete set null,
   pickup text not null,
+  pickup_lat double precision,
+  pickup_lng double precision,
   dropoff text not null,
   vehicle text not null,
   distance numeric,

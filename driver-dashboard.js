@@ -15,13 +15,35 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     document.getElementById('logoutBtn').addEventListener('click', async function () {
         stopTracking();
+        stopPresence();
         await supabase.auth.signOut();
         window.location.href = 'login.html';
     });
     document.getElementById('refreshBtn').addEventListener('click', loadJobs);
 
+    beginPresence();
     loadJobs();
 });
+
+let presenceWatchId = null;
+
+function beginPresence() {
+    if (!navigator.geolocation) return;
+    presenceWatchId = navigator.geolocation.watchPosition(
+        async function (pos) {
+            await supabase.from('profiles').update({
+                last_lat: pos.coords.latitude,
+                last_lng: pos.coords.longitude,
+            }).eq('id', currentUser.id);
+        },
+        function () { /* silently ignore — presence is best-effort */ },
+        { enableHighAccuracy: false, maximumAge: 60000, timeout: 20000 }
+    );
+}
+
+function stopPresence() {
+    if (presenceWatchId !== null) { navigator.geolocation.clearWatch(presenceWatchId); presenceWatchId = null; }
+}
 
 function escapeHtml(s) {
     const d = document.createElement('div');

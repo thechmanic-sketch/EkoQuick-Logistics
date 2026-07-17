@@ -95,14 +95,37 @@ async function autoAssignPending(jobs) {
             .map(function (j) { return j.driver_id; });
 
         for (const job of unassigned) {
-            const available = driversCache.find(function (d) { return busyDriverIds.indexOf(d.id) === -1; });
-            if (!available) break;
-            const { error } = await supabase.from('jobs').update({ driver_id: available.id, status: 'assigned' }).eq('id', job.id);
-            if (!error) busyDriverIds.push(available.id);
+            const candidates = driversCache.filter(function (d) {
+                return d.vehicle_class === job.vehicle && busyDriverIds.indexOf(d.id) === -1;
+            });
+            if (!candidates.length) continue;
+
+            let chosen = candidates[0];
+            if (job.pickup_lat && job.pickup_lng) {
+                const withDistance = candidates
+                    .filter(function (d) { return d.last_lat && d.last_lng; })
+                    .map(function (d) {
+                        return { driver: d, dist: haversineKm(job.pickup_lat, job.pickup_lng, d.last_lat, d.last_lng) };
+                    })
+                    .sort(function (a, b) { return a.dist - b.dist; });
+                if (withDistance.length) chosen = withDistance[0].driver;
+            }
+
+            const { error } = await supabase.from('jobs').update({ driver_id: chosen.id, status: 'assigned' }).eq('id', job.id);
+            if (!error) busyDriverIds.push(chosen.id);
         }
     } finally {
         autoAssigning = false;
     }
+}
+
+function haversineKm(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 async function loadJobs() {
@@ -110,7 +133,7 @@ async function loadJobs() {
     const { data: jobs, error } = await supabase.from('jobs').select('*').order('created_at', { ascending: false });
     if (error) { list.innerHTML = '<div class="empty">Failed to load jobs: ' + error.message + '</div>'; return; }
 
-    const { data: drivers } = await supabase.from('profiles').select('id, full_name').eq('role', 'driver');
+    const { data: drivers } = await supabase.from('profiles').select('id, full_name, vehicle_class, last_lat, last_lng').eq('role', 'driver');
     driversCache = drivers || [];
 
     renderStats(jobs || []);
@@ -119,15 +142,20 @@ async function loadJobs() {
 
     if (!jobs || jobs.length === 0) { list.innerHTML = '<div class="empty">No jobs yet.</div>'; return; }
 
+    function vehicleLabel(id) {
+        const v = (typeof VEHICLES !== 'undefined' ? VEHICLES : []).find(function (x) { return x.id === id; });
+        return v ? v.icon + ' ' + v.label : (id || '');
+    }
+
     const driverOptions = driversCache.map(function (d) {
-        return '<option value="' + d.id + '">' + escapeHtml(d.full_name || d.id) + '</option>';
+        return '<option value="' + d.id + '">' + escapeHtml(d.full_name || d.id) + ' — ' + vehicleLabel(d.vehicle_class) + '</option>';
     }).join('');
 
     list.innerHTML = jobs.map(function (job) {
         return (
             '<div class="job">' +
                 '<div class="route">' + escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff) + '</div>' +
-                '<div class="meta">' + (job.distance || 0) + ' km • R' + (job.quote || 0) + ' • Customer: ' + escapeHtml(job.customer_phone || '') + '</div>' +
+                '<div class="meta">' + vehicleLabel(job.vehicle) + ' • ' + (job.distance || 0) + ' km • R' + (job.quote || 0) + ' • Customer: ' + escapeHtml(job.customer_phone || '') + '</div>' +
                 (job.receiver_name ? '<div class="meta">Receiver: ' + escapeHtml(job.receiver_name) + '</div>' : '') +
                 '<span class="badge ' + job.status + '">' + (STATUS_LABELS[job.status] || job.status) + '</span>' +
                 (job.rating ? '<div class="meta" style="margin-top: 6px;">Rating: ' + '★'.repeat(job.rating) + (job.rating_comment ? ' — "' + escapeHtml(job.rating_comment) + '"' : '') + '</div>' : '') +

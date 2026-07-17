@@ -89,6 +89,18 @@ function generateCode() {
     return String(Math.floor(1000 + Math.random() * 9000));
 }
 
+async function geocodePickup(pickup) {
+    try {
+        const q = encodeURIComponent(pickup + ', KwaZulu-Natal, South Africa');
+        const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + q);
+        const results = await res.json();
+        if (results && results[0]) {
+            return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
+        }
+    } catch (err) { /* best effort — auto-assign falls back to any available driver */ }
+    return null;
+}
+
 async function bookNow() {
     const pickup = document.getElementById('pickup').value.trim();
     const dropoff = document.getElementById('dropoff').value.trim();
@@ -105,9 +117,13 @@ async function bookNow() {
     btn.disabled = true;
     btn.textContent = 'Booking...';
 
+    const pickupCoords = await geocodePickup(pickup);
+
     const { data, error } = await supabase.from('jobs').insert({
         customer_id: currentUser.id,
         pickup: pickup,
+        pickup_lat: pickupCoords ? pickupCoords.lat : null,
+        pickup_lng: pickupCoords ? pickupCoords.lng : null,
         dropoff: dropoff,
         vehicle: selectedVehicle.id,
         distance: currentDistance,

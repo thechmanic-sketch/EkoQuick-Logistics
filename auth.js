@@ -24,6 +24,16 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    var vehicleSelect = document.getElementById('vehicleClass');
+    if (vehicleSelect && typeof VEHICLES !== 'undefined') {
+        VEHICLES.forEach(function (v) {
+            var opt = document.createElement('option');
+            opt.value = v.id;
+            opt.textContent = v.icon + ' ' + v.label;
+            vehicleSelect.appendChild(opt);
+        });
+    }
+
     wireCustomerLogin();
     wireAdminLogin();
     wireDriverLogin();
@@ -201,10 +211,11 @@ function wireDriverSignup() {
         var driverId = fieldValue('driverId');
         var email = fieldValue('email');
         var phone = fieldValue('phone');
+        var vehicleClass = fieldValue('vehicleClass');
         var password = fieldValue('password');
         var confirmPassword = fieldValue('confirmPassword');
 
-        if (!fullName || !driverId || !email || !phone || !password) { showFormError(form, 'Please fill in all fields'); return; }
+        if (!fullName || !driverId || !email || !phone || !vehicleClass || !password) { showFormError(form, 'Please fill in all fields'); return; }
         if (password !== confirmPassword) { showFormError(form, 'Passwords do not match'); return; }
         if (password.length < 6) { showFormError(form, 'Password must be at least 6 characters'); return; }
 
@@ -213,7 +224,7 @@ function wireDriverSignup() {
             var { data, error } = await supabase.auth.signUp({
                 email: email,
                 password: password,
-                options: { data: { role: 'driver', full_name: fullName, username: driverId, phone: phone } },
+                options: { data: { role: 'driver', full_name: fullName, username: driverId, phone: phone, vehicle_class: vehicleClass } },
             });
             if (error) { showFormError(form, error.message); return; }
             window.location.href = 'signup-success.html';
