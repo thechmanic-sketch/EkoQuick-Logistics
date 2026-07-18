@@ -1,0 +1,148 @@
+/* Admin command-center layout — desktop-first, overrides app.css's
+   mobile page-wrap for this page only. */
+
+body { display: block; }
+
+.cmd-shell {
+    display: flex;
+    min-height: 100vh;
+    align-items: stretch;
+}
+
+.cmd-sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--ink-2);
+    border-right: 1px solid var(--line);
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+}
+
+.cmd-brand {
+    font-family: var(--font-stencil);
+    font-weight: 800;
+    font-size: 20px;
+    text-transform: uppercase;
+    color: #fff;
+    margin-bottom: 4px;
+}
+.cmd-brand span { color: var(--orange); }
+
+.cmd-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted-dim);
+    margin-bottom: 28px;
+}
+
+.cmd-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.cmd-nav a {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 9px 10px;
+    border-left: 2px solid transparent;
+}
+.cmd-nav a:hover { color: var(--paper); border-left-color: var(--line); }
+
+.cmd-sidebar-bottom {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+
+.cmd-main {
+    flex: 1;
+    min-width: 0;
+    padding: 24px 28px 48px;
+    overflow-y: auto;
+    height: 100vh;
+}
+
+.cmd-stats-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+.cmd-stat {
+    background: var(--ink-2);
+    border: 1px solid var(--line);
+    padding: 14px 18px;
+    min-width: 140px;
+}
+.cmd-stat .amt { font-size: 22px; }
+.cmd-stat .lbl {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-dim);
+    margin-top: 2px;
+}
+
+.cmd-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.cmd-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+.cmd-panel {
+    background: var(--ink-2);
+    border: 1px solid var(--line);
+    padding: 18px;
+}
+.cmd-panel h2 {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--muted-dim);
+    margin: 0 0 14px;
+}
+
+.cmd-panel-scroll {
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+@media (max-width: 960px) {
+    .cmd-shell { flex-direction: column; }
+    .cmd-sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+    }
+    .cmd-tag { display: none; }
+    .cmd-nav { display: none; }
+    .cmd-sidebar-bottom { margin-top: 0; padding-top: 0; border-top: none; }
+    .cmd-main { height: auto; padding: 20px 16px 40px; }
+    .cmd-grid { grid-template-columns: 1fr; }
+    .cmd-panel-scroll { max-height: none; }
+}

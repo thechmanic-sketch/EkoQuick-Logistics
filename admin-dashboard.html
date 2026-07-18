@@ -4,52 +4,68 @@
     <meta charset="UTF-8">
     <style>html{background:#0B0F16}</style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ekoquick — Admin Dashboard</title>
+    <title>Ekoquick — Admin Command Center</title>
     <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="auth.css">
     <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="support-widget.css">
     <script src="transitions.js"></script>
 </head>
 <body>
-    <div class="navbar">
-        <div class="brand">Eko<span>quick</span> Admin</div>
-        <button class="nav-logout" id="logoutBtn">Log Out</button>
-    </div>
-
-    <div class="page-wrap">
-        <div class="card">
-            <h2>Overview</h2>
-            <div id="statsRow" style="display: flex; gap: 16px; flex-wrap: wrap;">
-                <div><div class="quote-box" style="padding: 12px 18px; margin: 0;"><div class="amt" id="statRevenue" style="font-size: 22px;">R0</div><div style="font-size: 11px;">Revenue (delivered)</div></div></div>
-                <div><div class="quote-box" style="padding: 12px 18px; margin: 0;"><div class="amt" id="statTrips" style="font-size: 22px;">0</div><div style="font-size: 11px;">Completed trips</div></div></div>
-                <div><div class="quote-box" style="padding: 12px 18px; margin: 0;"><div class="amt" id="statRating" style="font-size: 22px;">—</div><div style="font-size: 11px;">Avg. rating</div></div></div>
-                <div><div class="quote-box" style="padding: 12px 18px; margin: 0;"><div class="amt" id="statPlatform" style="font-size: 22px;">R0</div><div style="font-size: 11px;">Our revenue (15%)</div></div></div>
-                <div><div class="quote-box" style="padding: 12px 18px; margin: 0;"><div class="amt" id="statDrivers" style="font-size: 22px;">R0</div><div style="font-size: 11px;">Paid to drivers (85%)</div></div></div>
+    <div class="cmd-shell">
+        <aside class="cmd-sidebar">
+            <div class="cmd-brand">Eko<span>quick</span></div>
+            <div class="cmd-tag">Admin Command Center</div>
+            <nav class="cmd-nav">
+                <a href="#overview">Overview</a>
+                <a href="#fleet">Fleet Map</a>
+                <a href="#drivers">Drivers</a>
+                <a href="#reviews">Reviews & Complaints</a>
+                <a href="#jobs">All Jobs</a>
+            </nav>
+            <div class="cmd-sidebar-bottom">
+                <button class="nav-logout" id="logoutBtn" style="width: 100%;">Log Out</button>
             </div>
-        </div>
+        </aside>
 
-        <div class="card">
-            <h2>Drivers</h2>
-            <div style="font-size: 11px; color: var(--muted); margin-bottom: 10px;">Set each driver's vehicle class so auto-assign can match them to jobs.</div>
-            <div id="driversList"><div class="empty">Loading...</div></div>
-        </div>
+        <main class="cmd-main">
+            <div id="overview" class="cmd-stats-row">
+                <div class="cmd-stat"><div class="amt" id="statRevenue">R0</div><div class="lbl">Revenue (delivered)</div></div>
+                <div class="cmd-stat"><div class="amt" id="statTrips">0</div><div class="lbl">Completed trips</div></div>
+                <div class="cmd-stat"><div class="amt" id="statRating">—</div><div class="lbl">Avg. rating</div></div>
+                <div class="cmd-stat"><div class="amt" id="statPlatform">R0</div><div class="lbl">Our revenue (15%)</div></div>
+                <div class="cmd-stat"><div class="amt" id="statDrivers">R0</div><div class="lbl">Paid to drivers (85%)</div></div>
+            </div>
 
-        <div class="card">
-            <h2>Live Fleet Map</h2>
-            <div id="fleetMap" style="height: 260px; border: 1px solid var(--line);"></div>
-        </div>
+            <div class="cmd-grid">
+                <div class="cmd-col">
+                    <div class="cmd-panel" id="fleet">
+                        <h2>Live Fleet Map</h2>
+                        <div id="fleetMap" style="height: 320px; border: 1px solid var(--line);"></div>
+                    </div>
 
-        <div class="card">
-            <h2>Reviews & Complaints</h2>
-            <div id="reviewsList"><div class="empty">Loading...</div></div>
-        </div>
+                    <div class="cmd-panel" id="jobs">
+                        <h2>All Jobs</h2>
+                        <button class="btn btn-outline-blue" id="refreshBtn" style="width: auto; margin-bottom: 10px;">Refresh</button>
+                        <div id="jobsList" class="cmd-panel-scroll"><div class="empty">Loading...</div></div>
+                    </div>
+                </div>
 
-        <div class="card">
-            <h2>All Jobs</h2>
-            <button class="btn btn-outline-blue" id="refreshBtn">Refresh</button>
-            <div id="jobsList" style="margin-top: 14px;"><div class="empty">Loading...</div></div>
-        </div>
+                <div class="cmd-col">
+                    <div class="cmd-panel" id="drivers">
+                        <h2>Drivers</h2>
+                        <div style="font-size: 11px; color: var(--muted); margin-bottom: 10px;">Set each driver's vehicle class so auto-assign can match them to jobs.</div>
+                        <div id="driversList" class="cmd-panel-scroll"><div class="empty">Loading...</div></div>
+                    </div>
+
+                    <div class="cmd-panel" id="reviews">
+                        <h2>Reviews & Complaints</h2>
+                        <div id="reviewsList" class="cmd-panel-scroll"><div class="empty">Loading...</div></div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script src="vendor/leaflet.js"></script>
