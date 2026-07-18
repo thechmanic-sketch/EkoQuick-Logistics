@@ -13,10 +13,17 @@ const VEHICLES = [
 
 const DISTANCE_MATRIX_API_KEY = 'BE2w7PoMQ4xmiDE0VXaN2zHdTqiOpy8ECtEStW9QCdW7O68yH33SOwZ31ASLDZ67';
 
-// Driver keeps 85% of the quoted fare; Ekoquick's commission is the rest.
-const DRIVER_SHARE = 0.85;
+// Driver keeps this share of the quoted fare; Ekoquick's commission is the
+// rest. Defaults to 85% but is overridden by the `settings` table (editable
+// from the admin Commissions page) as soon as it loads.
+let DRIVER_SHARE = 0.85;
 function driverEarning(quote) { return Math.round((Number(quote) || 0) * DRIVER_SHARE * 100) / 100; }
 function platformFee(quote) { return Math.round((Number(quote) || 0) * (1 - DRIVER_SHARE) * 100) / 100; }
+
+async function loadDriverShare() {
+    const { data } = await supabase.from('settings').select('value').eq('key', 'driver_share').single();
+    if (data && data.value) DRIVER_SHARE = parseFloat(data.value);
+}
 
 function mapsDirectionsUrl(lat, lng) {
     return 'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng;

@@ -15,6 +15,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         window.location.href = 'driver-login.html';
         return;
     }
+    if (profile.account_status !== 'active') {
+        alert(profile.account_status === 'banned'
+            ? 'Your account has been banned. Contact support if you believe this is a mistake.'
+            : 'Your account is currently paused. Contact support for more information.');
+        await supabase.auth.signOut();
+        window.location.href = 'driver-login.html';
+        return;
+    }
     currentProfile = profile;
 
     const banner = document.getElementById('verificationBanner');
@@ -35,6 +43,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
     document.getElementById('refreshBtn').addEventListener('click', loadJobs);
 
+    await loadDriverShare();
     beginPresence();
     loadJobs();
 
@@ -59,6 +68,7 @@ function beginPresence() {
             await supabase.from('profiles').update({
                 last_lat: pos.coords.latitude,
                 last_lng: pos.coords.longitude,
+                last_seen_at: new Date().toISOString(),
             }).eq('id', currentUser.id);
         },
         function () { /* silently ignore — presence is best-effort */ },
@@ -205,7 +215,7 @@ async function acceptJob(jobId) {
         alert('Your documents must be approved before you can accept jobs. Go to "Complete now" above.');
         return;
     }
-    const { error } = await supabase.from('jobs').update({ status: 'to_pickup' }).eq('id', jobId);
+    const { error } = await supabase.from('jobs').update({ status: 'to_pickup', to_pickup_at: new Date().toISOString() }).eq('id', jobId);
     if (error) { alert('Failed to accept job: ' + error.message); return; }
     beginTracking(jobId);
     loadJobs();
@@ -226,7 +236,7 @@ async function confirmPickup(jobId) {
         return;
     }
 
-    const { error } = await supabase.from('jobs').update({ status: 'to_dropoff' }).eq('id', jobId);
+    const { error } = await supabase.from('jobs').update({ status: 'to_dropoff', to_dropoff_at: new Date().toISOString() }).eq('id', jobId);
     if (error) { alert('Failed to update: ' + error.message); return; }
     loadJobs();
 }
@@ -273,7 +283,7 @@ async function markDelivered(jobId) {
         return;
     }
 
-    const { error } = await supabase.from('jobs').update({ status: 'delivered' }).eq('id', jobId);
+    const { error } = await supabase.from('jobs').update({ status: 'delivered', delivered_at: new Date().toISOString() }).eq('id', jobId);
     if (error) { alert('Failed to update: ' + error.message); return; }
     if (activeJobId === jobId) stopTracking();
     loadJobs();

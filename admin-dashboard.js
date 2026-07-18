@@ -2,7 +2,10 @@ let currentUser = null;
 let driversCache = [];
 let fleetMap = null;
 let fleetMarkers = {};
+let onlineMarkers = {};
 let autoAssigning = false;
+
+const ONLINE_WINDOW_MS = 5 * 60 * 1000;
 
 document.addEventListener('DOMContentLoaded', async function () {
     currentUser = await requireSession('admin-login.html');
@@ -24,6 +27,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     fleetMap = L.map('fleetMap').setView([-29.6, 30.9], 8);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(fleetMap);
 
+    await loadDriverShare();
     loadJobs();
 
     supabase
@@ -36,6 +40,10 @@ function escapeHtml(s) {
     const d = document.createElement('div');
     d.textContent = s || '';
     return d.innerHTML;
+}
+
+function isOnline(driver) {
+    return !!(driver.last_seen_at && (Date.now() - new Date(driver.last_seen_at).getTime()) < ONLINE_WINDOW_MS);
 }
 
 const STATUS_LABELS = {
@@ -87,13 +95,17 @@ function renderReviews(jobs) {
 }
 
 function renderFleetMap(jobs) {
-    const active = jobs.filter(function (j) {
-        return (j.status === 'to_pickup' || j.status === 'to_dropoff') && j.driver_lat && j.driver_lng;
+    const activeJobsByDriver = {};
+    jobs.forEach(function (j) {
+        if ((j.status === 'to_pickup' || j.status === 'to_dropoff') && j.driver_lat && j.driver_lng) {
+            activeJobsByDriver[j.driver_id] = j;
+        }
     });
-    const seen = {};
 
-    active.forEach(function (job) {
-        seen[job.id] = true;
+    const seenJobs = {};
+    Object.keys(activeJobsByDriver).forEach(function (driverId) {
+        const job = activeJobsByDriver[driverId];
+        seenJobs[job.id] = true;
         const pos = [job.driver_lat, job.driver_lng];
         if (fleetMarkers[job.id]) {
             fleetMarkers[job.id].setLatLng(pos);
@@ -103,12 +115,27 @@ function renderFleetMap(jobs) {
             }).bindPopup(escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff)).addTo(fleetMap);
         }
     });
-
     Object.keys(fleetMarkers).forEach(function (id) {
-        if (!seen[id]) {
-            fleetMap.removeLayer(fleetMarkers[id]);
-            delete fleetMarkers[id];
+        if (!seenJobs[id]) { fleetMap.removeLayer(fleetMarkers[id]); delete fleetMarkers[id]; }
+    });
+
+    // Online drivers not currently mid-trip: plot them too, so admin can see
+    // the whole available fleet, not just drivers already on a job.
+    const seenOnline = {};
+    driversCache.forEach(function (d) {
+        if (activeJobsByDriver[d.id] || !isOnline(d) || !d.last_lat || !d.last_lng) return;
+        seenOnline[d.id] = true;
+        const pos = [d.last_lat, d.last_lng];
+        if (onlineMarkers[d.id]) {
+            onlineMarkers[d.id].setLatLng(pos);
+        } else {
+            onlineMarkers[d.id] = L.marker(pos, {
+                icon: L.divIcon({ html: '🟢', className: 'driver-marker', iconSize: [20, 20] }),
+            }).bindPopup(escapeHtml(d.full_name) + ' — online').addTo(fleetMap);
         }
+    });
+    Object.keys(onlineMarkers).forEach(function (id) {
+        if (!seenOnline[id]) { fleetMap.removeLayer(onlineMarkers[id]); delete onlineMarkers[id]; }
     });
 }
 
@@ -125,7 +152,8 @@ async function autoAssignPending(jobs) {
 
         for (const job of unassigned) {
             const candidates = driversCache.filter(function (d) {
-                return d.vehicle_class === job.vehicle && d.verification_status === 'approved' && busyDriverIds.indexOf(d.id) === -1;
+                return d.vehicle_class === job.vehicle && d.verification_status === 'approved' &&
+                    d.account_status === 'active' && busyDriverIds.indexOf(d.id) === -1;
             });
             if (!candidates.length) continue;
 
@@ -175,24 +203,39 @@ function renderDrivers() {
             return '<button class="btn btn-outline-blue" style="margin-right: 6px; margin-bottom: 6px; display:inline-block; width:auto;" data-doc="' + escapeHtml(d[f[0]]) + '" data-action="view-doc">' + f[1] + '</button>';
         }).join('');
 
+        const online = isOnline(d);
+        const statusBadge = d.account_status === 'active' ? '' : '<span class="badge cancelled" style="margin-left:6px;">' + d.account_status + '</span>';
+
         return (
             '<div class="job">' +
                 '<div style="display:flex; align-items:center; gap:10px;">' +
                     (d.avatar_url ? '<img src="' + escapeHtml(d.avatar_url) + '" style="width:40px; height:40px; object-fit:cover; border:1px solid var(--line);">' : '') +
                     '<div class="route">' + escapeHtml(d.full_name || d.id) + '</div>' +
                 '</div>' +
-                '<span class="badge ' + (d.verification_status === 'approved' ? 'delivered' : d.verification_status === 'rejected' ? 'cancelled' : 'pending') + '" style="margin-top: 8px;">' + (d.verification_status || 'pending') + '</span>' +
+                '<span class="badge ' + (online ? 'delivered' : 'cancelled') + '" style="margin-top: 8px;">' + (online ? 'Online' : 'Offline') + '</span> ' +
+                '<span class="badge ' + (d.verification_status === 'approved' ? 'delivered' : d.verification_status === 'rejected' ? 'cancelled' : 'pending') + '">' + (d.verification_status || 'pending') + '</span>' +
+                statusBadge +
                 (docLinks ? '<div style="margin-top: 8px;">' + docLinks + '</div>' : '<div class="meta" style="margin-top: 8px;">No documents uploaded yet.</div>') +
                 '<div style="margin-top: 10px;">' +
+                    '<label>Full name</label>' +
+                    '<input class="field-plain" id="nameInput-' + d.id + '" value="' + escapeHtml(d.full_name || '') + '">' +
+                    '<label>Phone</label>' +
+                    '<input class="field-plain" id="phoneInput-' + d.id + '" value="' + escapeHtml(d.phone || '') + '">' +
                     '<select class="field-plain" id="vehicleSelect-' + d.id + '" style="margin-bottom: 8px;">' +
                         '<option value="">No vehicle class set</option>' +
                         vehicleOptions +
                     '</select>' +
-                    '<button class="btn btn-blue" data-driver="' + d.id + '" data-action="save-vehicle">Save vehicle class</button>' +
+                    '<button class="btn btn-blue" data-driver="' + d.id + '" data-action="save-profile">Save profile</button>' +
                 '</div>' +
                 '<div style="margin-top: 8px;">' +
                     '<button class="btn btn-blue" data-driver="' + d.id + '" data-action="approve" style="margin-right: 8px;">Approve</button>' +
                     '<button class="btn btn-outline-blue" data-driver="' + d.id + '" data-action="reject">Reject</button>' +
+                '</div>' +
+                '<div style="margin-top: 8px;">' +
+                    (d.account_status === 'active'
+                        ? '<button class="btn btn-outline-blue" data-driver="' + d.id + '" data-action="pause" style="margin-right: 8px;">Pause</button>'
+                        : '<button class="btn btn-blue" data-driver="' + d.id + '" data-action="activate" style="margin-right: 8px;">Reactivate</button>') +
+                    '<button class="btn btn-outline-blue" data-driver="' + d.id + '" data-action="ban">Ban / Cut profile</button>' +
                 '</div>' +
             '</div>'
         );
@@ -203,8 +246,8 @@ function renderDrivers() {
         if (sel && d.vehicle_class) sel.value = d.vehicle_class;
     });
 
-    el.querySelectorAll('button[data-action="save-vehicle"]').forEach(function (btn) {
-        btn.addEventListener('click', function () { saveDriverVehicle(btn.dataset.driver); });
+    el.querySelectorAll('button[data-action="save-profile"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { saveDriverProfile(btn.dataset.driver); });
     });
     el.querySelectorAll('button[data-action="approve"]').forEach(function (btn) {
         btn.addEventListener('click', function () { setDriverVerification(btn.dataset.driver, 'approved'); });
@@ -215,10 +258,29 @@ function renderDrivers() {
     el.querySelectorAll('button[data-action="view-doc"]').forEach(function (btn) {
         btn.addEventListener('click', function () { viewDriverDoc(btn.dataset.doc); });
     });
+    el.querySelectorAll('button[data-action="pause"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { setAccountStatus(btn.dataset.driver, 'paused'); });
+    });
+    el.querySelectorAll('button[data-action="activate"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { setAccountStatus(btn.dataset.driver, 'active'); });
+    });
+    el.querySelectorAll('button[data-action="ban"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (confirm('This will permanently ban the driver from receiving jobs. Continue?')) {
+                setAccountStatus(btn.dataset.driver, 'banned');
+            }
+        });
+    });
 }
 
 async function setDriverVerification(driverId, status) {
     const { error } = await supabase.from('profiles').update({ verification_status: status }).eq('id', driverId);
+    if (error) { alert('Failed to update: ' + error.message); return; }
+    loadJobs();
+}
+
+async function setAccountStatus(driverId, status) {
+    const { error } = await supabase.from('profiles').update({ account_status: status }).eq('id', driverId);
     if (error) { alert('Failed to update: ' + error.message); return; }
     loadJobs();
 }
@@ -229,11 +291,17 @@ async function viewDriverDoc(path) {
     window.open(data.signedUrl, '_blank', 'noopener');
 }
 
-async function saveDriverVehicle(driverId) {
-    const sel = document.getElementById('vehicleSelect-' + driverId);
-    const vehicleClass = sel.value;
-    if (!vehicleClass) { alert('Please choose a vehicle class'); return; }
-    const { error } = await supabase.from('profiles').update({ vehicle_class: vehicleClass }).eq('id', driverId);
+async function saveDriverProfile(driverId) {
+    const vehicleClass = document.getElementById('vehicleSelect-' + driverId).value;
+    const fullName = document.getElementById('nameInput-' + driverId).value.trim();
+    const phone = document.getElementById('phoneInput-' + driverId).value.trim();
+    if (!fullName) { alert('Name cannot be empty'); return; }
+
+    const { error } = await supabase.from('profiles').update({
+        full_name: fullName,
+        phone: phone,
+        vehicle_class: vehicleClass || null,
+    }).eq('id', driverId);
     if (error) { alert('Failed to save: ' + error.message); return; }
     loadJobs();
 }
@@ -247,12 +315,23 @@ function haversineKm(lat1, lng1, lat2, lng2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+function formatTime(iso) {
+    if (!iso) return null;
+    return new Date(iso).toLocaleString('en-ZA', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function whatsappResend(phone, message) {
+    const digits = (phone || '').replace(/[^0-9]/g, '');
+    if (!digits) { alert('No phone number on file for this contact.'); return; }
+    window.open('https://wa.me/' + digits + '?text=' + encodeURIComponent(message), '_blank', 'noopener');
+}
+
 async function loadJobs() {
     const list = document.getElementById('jobsList');
     const { data: jobs, error } = await supabase.from('jobs').select('*').order('created_at', { ascending: false });
     if (error) { list.innerHTML = '<div class="empty">Failed to load jobs: ' + error.message + '</div>'; return; }
 
-    const { data: drivers } = await supabase.from('profiles').select('id, full_name, vehicle_class, last_lat, last_lng, avatar_url, verification_status, license_url, id_doc_url, vehicle_reg_url, insurance_url').eq('role', 'driver');
+    const { data: drivers } = await supabase.from('profiles').select('id, full_name, phone, vehicle_class, last_lat, last_lng, last_seen_at, avatar_url, verification_status, account_status, license_url, id_doc_url, vehicle_reg_url, insurance_url').eq('role', 'driver');
     driversCache = drivers || [];
 
     renderStats(jobs || []);
@@ -268,6 +347,36 @@ async function loadJobs() {
     }).join('');
 
     list.innerHTML = jobs.map(function (job) {
+        const isDone = job.status === 'delivered' || job.status === 'cancelled';
+
+        const codesHtml =
+            (job.collection_code
+                ? '<div class="meta">Pickup code: <b>' + escapeHtml(job.collection_code) + '</b> ' +
+                    '<button class="btn btn-outline-blue" style="width:auto; display:inline-block; padding:4px 10px; font-size:10px;" data-job="' + job.id + '" data-action="resend-collection">Resend</button></div>'
+                : '') +
+            (job.delivery_code
+                ? '<div class="meta" style="margin-top:4px;">Delivery code: <b>' + escapeHtml(job.delivery_code) + '</b> ' +
+                    '<button class="btn btn-outline-blue" style="width:auto; display:inline-block; padding:4px 10px; font-size:10px;" data-job="' + job.id + '" data-action="resend-delivery">Resend</button></div>'
+                : '');
+
+        const timelineHtml = isDone
+            ? '<div class="meta" style="margin-top: 8px; line-height:1.8;">' +
+                'Booked: ' + (formatTime(job.created_at) || '—') + '<br>' +
+                'Accepted (heading to pickup): ' + (formatTime(job.to_pickup_at) || '—') + '<br>' +
+                'Picked up (heading to drop-off): ' + (formatTime(job.to_dropoff_at) || '—') + '<br>' +
+                'Delivered: ' + (formatTime(job.delivered_at) || '—') +
+              '</div>'
+            : '';
+
+        const assignHtml = isDone ? '' :
+            '<div style="margin-top: 10px;">' +
+                '<select class="field-plain" id="driverSelect-' + job.id + '" style="margin-bottom: 8px;">' +
+                    '<option value="">Assign a driver...</option>' +
+                    driverOptions +
+                '</select>' +
+                '<button class="btn btn-blue" data-job="' + job.id + '" data-action="assign">Assign Driver</button>' +
+            '</div>';
+
         return (
             '<div class="job">' +
                 '<div class="route">' + escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff) + '</div>' +
@@ -277,13 +386,9 @@ async function loadJobs() {
                 (job.receiver_name ? '<div class="meta">Receiver: ' + escapeHtml(job.receiver_name) + '</div>' : '') +
                 '<span class="badge ' + job.status + '">' + (STATUS_LABELS[job.status] || job.status) + '</span>' +
                 (job.rating ? '<div class="meta" style="margin-top: 6px;">Rating: ' + '★'.repeat(job.rating) + (job.rating_comment ? ' — "' + escapeHtml(job.rating_comment) + '"' : '') + '</div>' : '') +
-                '<div style="margin-top: 10px;">' +
-                    '<select class="field-plain" id="driverSelect-' + job.id + '" style="margin-bottom: 8px;">' +
-                        '<option value="">Assign a driver...</option>' +
-                        driverOptions +
-                    '</select>' +
-                    '<button class="btn btn-blue" data-job="' + job.id + '" data-action="assign">Assign Driver</button>' +
-                '</div>' +
+                (codesHtml ? '<div style="margin-top: 8px;">' + codesHtml + '</div>' : '') +
+                timelineHtml +
+                assignHtml +
             '</div>'
         );
     }).join('');
@@ -297,6 +402,20 @@ async function loadJobs() {
 
     list.querySelectorAll('button[data-action="assign"]').forEach(function (btn) {
         btn.addEventListener('click', function () { assignDriver(btn.dataset.job); });
+    });
+    list.querySelectorAll('button[data-action="resend-collection"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const job = jobs.find(function (j) { return j.id === btn.dataset.job; });
+            if (!job) return;
+            whatsappResend(job.customer_phone, 'Ekoquick pickup code reminder: ' + job.collection_code + ' — give this to your driver at pickup.');
+        });
+    });
+    list.querySelectorAll('button[data-action="resend-delivery"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const job = jobs.find(function (j) { return j.id === btn.dataset.job; });
+            if (!job) return;
+            whatsappResend(job.receiver_phone, 'Ekoquick delivery code reminder: ' + job.delivery_code + ' — give this to the driver when your parcel arrives.');
+        });
     });
 }
 

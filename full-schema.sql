@@ -16,6 +16,9 @@ create table if not exists profiles (
   vehicle_class text,
   last_lat double precision,
   last_lng double precision,
+  last_seen_at timestamptz,
+  account_status text not null default 'active'
+    check (account_status in ('active', 'paused', 'banned')),
   avatar_url text,
   license_url text,
   id_doc_url text,
@@ -128,6 +131,9 @@ create table if not exists jobs (
   driver_lng double precision,
   rating int2 check (rating between 1 and 5),
   rating_comment text,
+  to_pickup_at timestamptz,
+  to_dropoff_at timestamptz,
+  delivered_at timestamptz,
   created_at timestamptz not null default now()
 );
 
@@ -177,6 +183,23 @@ create policy "driver-docs owner update" on storage.objects
 drop policy if exists "driver-docs owner or admin read" on storage.objects;
 create policy "driver-docs owner or admin read" on storage.objects
   for select using (bucket_id = 'driver-docs' and ((storage.foldername(name))[1] = auth.uid()::text or is_admin()));
+
+-- ---------------------------------------------------------------------
+-- Platform settings (e.g. commission rate) — editable without a code deploy
+-- ---------------------------------------------------------------------
+create table if not exists settings (
+  key text primary key,
+  value text not null
+);
+insert into settings (key, value) values ('driver_share', '0.85') on conflict (key) do nothing;
+
+alter table settings enable row level security;
+
+drop policy if exists "settings public read" on settings;
+create policy "settings public read" on settings for select using (true);
+
+drop policy if exists "settings admin write" on settings;
+create policy "settings admin write" on settings for update using (is_admin());
 
 -- ---------------------------------------------------------------------
 -- Admin account

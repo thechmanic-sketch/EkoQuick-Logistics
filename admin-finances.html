@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Finances</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+</head>
+<body>
+    <div class="cmd-shell">
+        <aside class="cmd-sidebar">
+            <div class="cmd-brand">Eko<span>quick</span></div>
+            <div class="cmd-tag">Admin Command Center</div>
+            <nav class="cmd-nav">
+                <a href="admin-dashboard.html#overview">Overview</a>
+                <a href="admin-dashboard.html#fleet">Fleet Map</a>
+                <a href="admin-dashboard.html#drivers">Drivers</a>
+                <a href="admin-dashboard.html#reviews">Reviews & Complaints</a>
+                <a href="admin-dashboard.html#jobs">All Jobs</a>
+                <a href="admin-finances.html">Finances</a>
+                <a href="admin-commissions.html">Commissions</a>
+            </nav>
+            <div class="cmd-sidebar-bottom">
+                <button class="nav-logout" id="logoutBtn" style="width: 100%;">Log Out</button>
+            </div>
+        </aside>
+
+        <main class="cmd-main">
+            <div class="cmd-stats-row">
+                <div class="cmd-stat"><div class="amt" id="statTotalRevenue">R0</div><div class="lbl">Total revenue (delivered)</div></div>
+                <div class="cmd-stat"><div class="amt" id="statTotalPlatform">R0</div><div class="lbl">Platform commission</div></div>
+                <div class="cmd-stat"><div class="amt" id="statTotalDrivers">R0</div><div class="lbl">Paid to drivers</div></div>
+                <div class="cmd-stat"><div class="amt" id="statTotalTrips">0</div><div class="lbl">Delivered trips</div></div>
+            </div>
+
+            <div class="cmd-panel">
+                <h2>Daily breakdown</h2>
+                <button class="btn btn-outline-blue" id="exportBtn" style="width: auto; margin-bottom: 12px;">Export CSV</button>
+                <div id="financesTable" class="cmd-panel-scroll" style="max-height: 640px;"><div class="empty">Loading...</div></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="admin-finances.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>
