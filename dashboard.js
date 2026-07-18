@@ -8,6 +8,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (profile && profile.full_name) {
         document.getElementById('welcomeText').textContent = 'Welcome back, ' + profile.full_name.split(' ')[0] + '!';
     }
+    if (profile && profile.avatar_url) {
+        const preview = document.getElementById('avatarPreview');
+        preview.src = profile.avatar_url;
+        preview.classList.remove('hidden');
+    }
+
+    document.getElementById('avatarSaveBtn').addEventListener('click', saveAvatar);
 
     document.getElementById('logoutBtn').addEventListener('click', async function () {
         await supabase.auth.signOut();
@@ -16,6 +23,34 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     loadJobs();
 });
+
+async function saveAvatar() {
+    const file = document.getElementById('avatarFile').files[0];
+    if (!file) { alert('Choose a photo first'); return; }
+
+    const btn = document.getElementById('avatarSaveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+        const path = currentUser.id + '/avatar-' + Date.now() + '.' + (file.name.split('.').pop() || 'jpg');
+        const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+        if (uploadError) throw uploadError;
+
+        const publicUrl = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+        const { error } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentUser.id);
+        if (error) throw error;
+
+        const preview = document.getElementById('avatarPreview');
+        preview.src = publicUrl;
+        preview.classList.remove('hidden');
+    } catch (err) {
+        alert('Failed to save photo: ' + (err && err.message ? err.message : err));
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save photo';
+    }
+}
 
 function escapeHtml(s) {
     const d = document.createElement('div');

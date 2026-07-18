@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Driver Documents</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="driver-dashboard.html">← Eko<span>quick</span></a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h2>Verification status</h2>
+            <span class="badge" id="verificationBadge">Loading...</span>
+            <div class="meta" id="verificationNote" style="margin-top: 8px;"></div>
+        </div>
+
+        <div class="card">
+            <h2>Profile & Documents</h2>
+            <div class="meta" style="margin-bottom: 12px;">All fields are required. Photos/scans must be clear and valid.</div>
+
+            <form id="docsForm">
+                <label>Profile photo</label>
+                <input class="field-plain" type="file" id="avatarFile" accept="image/*">
+                <img id="avatarPreview" class="hidden" style="width:64px; height:64px; object-fit:cover; border:1px solid var(--line); margin-bottom:12px;">
+
+                <label>Driving licence</label>
+                <input class="field-plain" type="file" id="licenseFile" accept="image/*,.pdf">
+
+                <label>Government ID</label>
+                <input class="field-plain" type="file" id="idFile" accept="image/*,.pdf">
+
+                <label>Vehicle registration certificate</label>
+                <input class="field-plain" type="file" id="vehicleRegFile" accept="image/*,.pdf">
+
+                <label>Vehicle insurance</label>
+                <input class="field-plain" type="file" id="insuranceFile" accept="image/*,.pdf">
+
+                <div id="msgArea"></div>
+
+                <button type="submit" class="btn btn-blue" id="submitBtn" style="margin-top: 10px;">Submit for review</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="driver-documents.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>

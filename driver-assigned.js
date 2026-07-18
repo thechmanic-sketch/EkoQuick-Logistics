@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
 
         if (job.driver_id) {
-            const { data: driver } = await supabase.from('profiles').select('full_name, phone').eq('id', job.driver_id).single();
+            const { data: driver } = await supabase.from('profiles').select('full_name, phone, avatar_url').eq('id', job.driver_id).single();
             document.getElementById('statusTitle').textContent = job.status === 'offered' ? 'Driver Found!' : 'Driver Assigned!';
             document.getElementById('statusSubtitle').textContent = job.status === 'offered'
                 ? 'Waiting for the driver to accept your job.'
@@ -49,6 +49,11 @@ document.addEventListener('DOMContentLoaded', async function () {
             document.getElementById('driverName').textContent = driver ? driver.full_name : 'Your driver';
             document.getElementById('driverPhone').textContent = driver && driver.phone ? 'Contact: ' + driver.phone : '';
             document.getElementById('jobRoute').textContent = job.pickup + ' → ' + job.dropoff;
+            if (driver && driver.avatar_url) {
+                const avatar = document.getElementById('driverAvatar');
+                avatar.src = driver.avatar_url;
+                avatar.classList.remove('hidden');
+            }
             document.getElementById('driverInfo').classList.remove('hidden');
             if (job.status !== 'offered') document.getElementById('trackBtn').classList.remove('hidden');
         }

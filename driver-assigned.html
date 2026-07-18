@@ -25,7 +25,10 @@
 
             <div id="driverInfo" class="hidden">
                 <div class="job">
-                    <div class="route" id="driverName"></div>
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom: 8px;">
+                        <img id="driverAvatar" class="hidden" style="width:48px; height:48px; object-fit:cover; border:1px solid var(--line); border-radius:50%;">
+                        <div class="route" id="driverName" style="margin-bottom:0;"></div>
+                    </div>
                     <div class="meta" id="driverPhone"></div>
                     <div class="meta" id="jobRoute"></div>
                 </div>

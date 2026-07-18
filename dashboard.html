@@ -19,6 +19,13 @@
     <div class="page-wrap">
         <div class="card">
             <h2 id="welcomeText">Welcome back!</h2>
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom: 12px;">
+                <img id="avatarPreview" class="hidden" style="width:56px; height:56px; object-fit:cover; border:1px solid var(--line);">
+                <div style="flex:1;">
+                    <input class="field-plain" type="file" id="avatarFile" accept="image/*">
+                </div>
+                <button class="btn btn-outline-blue" id="avatarSaveBtn" style="width:auto;">Save photo</button>
+            </div>
             <a class="btn btn-blue" href="new-delivery.html">+ New Delivery</a>
         </div>
 

@@ -16,6 +16,13 @@ create table if not exists profiles (
   vehicle_class text,
   last_lat double precision,
   last_lng double precision,
+  avatar_url text,
+  license_url text,
+  id_doc_url text,
+  vehicle_reg_url text,
+  insurance_url text,
+  verification_status text not null default 'pending'
+    check (verification_status in ('pending', 'approved', 'rejected')),
   created_at timestamptz not null default now()
 );
 
@@ -140,6 +147,36 @@ create policy "jobs update own or driver or admin" on jobs
 
 -- Enable realtime updates on jobs (used for live tracking + dashboard refresh)
 alter publication supabase_realtime add table jobs;
+
+-- ---------------------------------------------------------------------
+-- Storage: profile photos (public) + driver documents (private)
+-- ---------------------------------------------------------------------
+insert into storage.buckets (id, name, public) values ('avatars', 'avatars', true) on conflict (id) do nothing;
+insert into storage.buckets (id, name, public) values ('driver-docs', 'driver-docs', false) on conflict (id) do nothing;
+
+drop policy if exists "avatars public read" on storage.objects;
+create policy "avatars public read" on storage.objects
+  for select using (bucket_id = 'avatars');
+
+drop policy if exists "avatars owner write" on storage.objects;
+create policy "avatars owner write" on storage.objects
+  for insert with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "avatars owner update" on storage.objects;
+create policy "avatars owner update" on storage.objects
+  for update using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "driver-docs owner write" on storage.objects;
+create policy "driver-docs owner write" on storage.objects
+  for insert with check (bucket_id = 'driver-docs' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "driver-docs owner update" on storage.objects;
+create policy "driver-docs owner update" on storage.objects
+  for update using (bucket_id = 'driver-docs' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "driver-docs owner or admin read" on storage.objects;
+create policy "driver-docs owner or admin read" on storage.objects
+  for select using (bucket_id = 'driver-docs' and ((storage.foldername(name))[1] = auth.uid()::text or is_admin()));
 
 -- ---------------------------------------------------------------------
 -- Admin account

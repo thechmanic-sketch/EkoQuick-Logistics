@@ -64,6 +64,28 @@ function renderStats(jobs) {
     document.getElementById('statDrivers').textContent = 'R' + driverPayouts.toLocaleString(undefined, { maximumFractionDigits: 2 });
 }
 
+function renderReviews(jobs) {
+    const el = document.getElementById('reviewsList');
+    if (!el) return;
+
+    const rated = jobs.filter(function (j) { return j.rating; }).sort(function (a, b) { return a.rating - b.rating; });
+    if (!rated.length) { el.innerHTML = '<div class="empty">No reviews yet.</div>'; return; }
+
+    el.innerHTML = rated.map(function (job) {
+        const driver = driversCache.find(function (d) { return d.id === job.driver_id; });
+        const isComplaint = job.rating <= 2;
+        return (
+            '<div class="job">' +
+                (isComplaint ? '<span class="badge cancelled">Complaint</span>' : '') +
+                '<div class="route" style="margin-top: 6px;">' + '★'.repeat(job.rating) + '☆'.repeat(5 - job.rating) + ' — ' + escapeHtml(driver ? driver.full_name : 'Unknown driver') + '</div>' +
+                '<div class="meta">' + escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff) + '</div>' +
+                (job.rating_comment ? '<div class="meta" style="margin-top:6px;">"' + escapeHtml(job.rating_comment) + '"</div>' : '') +
+                '<div class="meta">Customer: ' + escapeHtml(job.customer_phone || '') + '</div>' +
+            '</div>'
+        );
+    }).join('');
+}
+
 function renderFleetMap(jobs) {
     const active = jobs.filter(function (j) {
         return (j.status === 'to_pickup' || j.status === 'to_dropoff') && j.driver_lat && j.driver_lng;
@@ -103,7 +125,7 @@ async function autoAssignPending(jobs) {
 
         for (const job of unassigned) {
             const candidates = driversCache.filter(function (d) {
-                return d.vehicle_class === job.vehicle && busyDriverIds.indexOf(d.id) === -1;
+                return d.vehicle_class === job.vehicle && d.verification_status === 'approved' && busyDriverIds.indexOf(d.id) === -1;
             });
             if (!candidates.length) continue;
 
@@ -140,16 +162,37 @@ function renderDrivers() {
         .map(function (v) { return '<option value="' + v.id + '">' + v.icon + ' ' + v.label + '</option>'; })
         .join('');
 
+    const docFields = [
+        ['license_url', 'Licence'],
+        ['id_doc_url', 'ID'],
+        ['vehicle_reg_url', 'Vehicle reg'],
+        ['insurance_url', 'Insurance'],
+    ];
+
     el.innerHTML = driversCache.map(function (d) {
+        const docLinks = docFields.map(function (f) {
+            if (!d[f[0]]) return '';
+            return '<button class="btn btn-outline-blue" style="margin-right: 6px; margin-bottom: 6px; display:inline-block; width:auto;" data-doc="' + escapeHtml(d[f[0]]) + '" data-action="view-doc">' + f[1] + '</button>';
+        }).join('');
+
         return (
             '<div class="job">' +
-                '<div class="route">' + escapeHtml(d.full_name || d.id) + '</div>' +
-                '<div style="margin-top: 8px;">' +
+                '<div style="display:flex; align-items:center; gap:10px;">' +
+                    (d.avatar_url ? '<img src="' + escapeHtml(d.avatar_url) + '" style="width:40px; height:40px; object-fit:cover; border:1px solid var(--line);">' : '') +
+                    '<div class="route">' + escapeHtml(d.full_name || d.id) + '</div>' +
+                '</div>' +
+                '<span class="badge ' + (d.verification_status === 'approved' ? 'delivered' : d.verification_status === 'rejected' ? 'cancelled' : 'pending') + '" style="margin-top: 8px;">' + (d.verification_status || 'pending') + '</span>' +
+                (docLinks ? '<div style="margin-top: 8px;">' + docLinks + '</div>' : '<div class="meta" style="margin-top: 8px;">No documents uploaded yet.</div>') +
+                '<div style="margin-top: 10px;">' +
                     '<select class="field-plain" id="vehicleSelect-' + d.id + '" style="margin-bottom: 8px;">' +
                         '<option value="">No vehicle class set</option>' +
                         vehicleOptions +
                     '</select>' +
-                    '<button class="btn btn-blue" data-driver="' + d.id + '" data-action="save-vehicle">Save</button>' +
+                    '<button class="btn btn-blue" data-driver="' + d.id + '" data-action="save-vehicle">Save vehicle class</button>' +
+                '</div>' +
+                '<div style="margin-top: 8px;">' +
+                    '<button class="btn btn-blue" data-driver="' + d.id + '" data-action="approve" style="margin-right: 8px;">Approve</button>' +
+                    '<button class="btn btn-outline-blue" data-driver="' + d.id + '" data-action="reject">Reject</button>' +
                 '</div>' +
             '</div>'
         );
@@ -163,6 +206,27 @@ function renderDrivers() {
     el.querySelectorAll('button[data-action="save-vehicle"]').forEach(function (btn) {
         btn.addEventListener('click', function () { saveDriverVehicle(btn.dataset.driver); });
     });
+    el.querySelectorAll('button[data-action="approve"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { setDriverVerification(btn.dataset.driver, 'approved'); });
+    });
+    el.querySelectorAll('button[data-action="reject"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { setDriverVerification(btn.dataset.driver, 'rejected'); });
+    });
+    el.querySelectorAll('button[data-action="view-doc"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { viewDriverDoc(btn.dataset.doc); });
+    });
+}
+
+async function setDriverVerification(driverId, status) {
+    const { error } = await supabase.from('profiles').update({ verification_status: status }).eq('id', driverId);
+    if (error) { alert('Failed to update: ' + error.message); return; }
+    loadJobs();
+}
+
+async function viewDriverDoc(path) {
+    const { data, error } = await supabase.storage.from('driver-docs').createSignedUrl(path, 300);
+    if (error) { alert('Failed to open document: ' + error.message); return; }
+    window.open(data.signedUrl, '_blank', 'noopener');
 }
 
 async function saveDriverVehicle(driverId) {
@@ -188,12 +252,13 @@ async function loadJobs() {
     const { data: jobs, error } = await supabase.from('jobs').select('*').order('created_at', { ascending: false });
     if (error) { list.innerHTML = '<div class="empty">Failed to load jobs: ' + error.message + '</div>'; return; }
 
-    const { data: drivers } = await supabase.from('profiles').select('id, full_name, vehicle_class, last_lat, last_lng').eq('role', 'driver');
+    const { data: drivers } = await supabase.from('profiles').select('id, full_name, vehicle_class, last_lat, last_lng, avatar_url, verification_status, license_url, id_doc_url, vehicle_reg_url, insurance_url').eq('role', 'driver');
     driversCache = drivers || [];
 
     renderStats(jobs || []);
     renderFleetMap(jobs || []);
     renderDrivers();
+    renderReviews(jobs || []);
     await autoAssignPending(jobs || []);
 
     if (!jobs || jobs.length === 0) { list.innerHTML = '<div class="empty">No jobs yet.</div>'; return; }

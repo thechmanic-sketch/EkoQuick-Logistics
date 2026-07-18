@@ -1,4 +1,5 @@
 let currentUser = null;
+let currentProfile = null;
 let watchId = null;
 let activeJobId = null;
 let lastPos = null;
@@ -13,6 +14,17 @@ document.addEventListener('DOMContentLoaded', async function () {
         await supabase.auth.signOut();
         window.location.href = 'driver-login.html';
         return;
+    }
+    currentProfile = profile;
+
+    const banner = document.getElementById('verificationBanner');
+    if (profile.verification_status !== 'approved') {
+        banner.classList.remove('hidden');
+        document.getElementById('verificationBannerText').textContent = !profile.avatar_url
+            ? 'Upload your profile photo and documents to start accepting jobs.'
+            : profile.verification_status === 'rejected'
+                ? 'Your documents were rejected. Please re-upload them.'
+                : 'Your documents are pending review — you can\'t accept jobs until approved.';
     }
 
     document.getElementById('logoutBtn').addEventListener('click', async function () {
@@ -189,6 +201,10 @@ function showJobError(id, message) {
 }
 
 async function acceptJob(jobId) {
+    if (currentProfile.verification_status !== 'approved') {
+        alert('Your documents must be approved before you can accept jobs. Go to "Complete now" above.');
+        return;
+    }
     const { error } = await supabase.from('jobs').update({ status: 'to_pickup' }).eq('id', jobId);
     if (error) { alert('Failed to accept job: ' + error.message); return; }
     beginTracking(jobId);
