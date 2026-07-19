@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Available Jobs</title>
+    <link rel="stylesheet" href="vendor/leaflet.css">
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+        .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--line); color: #fff; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px; }
+        .filter-btn.active { background: var(--blue, #3E8BFF); border-color: var(--blue, #3E8BFF); }
+        .job-card { background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-top: 10px; }
+        .sticky-accept { position: sticky; bottom: 10px; }
+        #detailsModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center; }
+        #detailsModal.open { display:flex; }
+        #detailsModal .card { max-width: 480px; width: 92%; max-height: 88vh; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="driver-dashboard.html">← Eko<span>quick</span> Driver</a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h1>Available Jobs</h1>
+            <div class="meta" id="onlineStatusLine"></div>
+            <input class="field-plain" id="jobSearch" placeholder="Search by pickup address, Job ID or customer name...">
+            <button class="btn btn-outline-blue" id="refreshBtn" style="margin-top:8px;">Refresh</button>
+        </div>
+
+        <div class="card">
+            <div class="summary-cards" id="summaryCards"></div>
+        </div>
+
+        <div class="card">
+            <div class="filter-row" id="sortFilters">
+                <button class="filter-btn active" data-sort="closest">Closest Pickup</button>
+                <button class="filter-btn" data-sort="earnings">Highest Earnings</button>
+                <button class="filter-btn" data-sort="newest">Newest Jobs</button>
+                <button class="filter-btn" data-sort="shortest">Shortest Delivery Distance</button>
+            </div>
+        </div>
+
+        <div class="card" id="jobListCard">
+            <div id="jobList"></div>
+            <div class="empty hidden" id="emptyState">
+                You're all caught up! New delivery requests will appear here when available.
+            </div>
+        </div>
+    </div>
+
+    <div id="detailsModal">
+        <div class="card">
+            <h2>Job Details</h2>
+            <div id="detailsContent"></div>
+            <button class="btn btn-outline-blue" id="closeDetailsBtn" style="margin-top:10px;">Close</button>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="driver-available-jobs.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>
