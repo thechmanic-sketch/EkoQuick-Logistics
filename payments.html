@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Payments</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        table.pay-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        table.pay-table th, table.pay-table td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+        table.pay-table th { color: var(--muted); font-weight: 600; position: sticky; top: 0; background: #11151d; }
+        .table-scroll { overflow-x: auto; }
+        .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+        .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--line); color: #fff; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px; }
+        .filter-btn.active { background: var(--blue, #3E8BFF); border-color: var(--blue, #3E8BFF); }
+        .details-row { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+        .details-row.open { display: block; }
+        .details-row h4 { color: #fff; margin: 10px 0 4px; font-size: 13px; }
+        .details-row h4:first-child { margin-top: 0; }
+        .method-card { background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="dashboard.html">← Eko<span>quick</span></a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h1>Payments</h1>
+            <input class="field-plain" id="paySearch" placeholder="Search by Order ID...">
+            <div class="filter-row" id="statusFilters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="paid">Paid</button>
+                <button class="filter-btn" data-filter="pending">Pending</button>
+                <button class="filter-btn" data-filter="refunded">Refunded</button>
+                <button class="filter-btn" data-filter="failed">Failed</button>
+            </div>
+            <div class="filter-row">
+                <label class="meta">From <input type="date" class="field-plain" id="dateFrom" style="width:auto;"></label>
+                <label class="meta">To <input type="date" class="field-plain" id="dateTo" style="width:auto;"></label>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="summary-cards" id="summaryCards"></div>
+        </div>
+
+        <div class="card">
+            <h2>Payment Methods</h2>
+            <div class="method-card">
+                <b>Cash on Delivery</b>
+                <div class="meta">Pay the driver directly when your parcel is collected or delivered. Available by default.</div>
+            </div>
+            <div class="method-card">
+                <b>EFT (Business accounts)</b>
+                <div class="meta">Bank transfer with proof of payment, manually verified by our finance team.</div>
+            </div>
+            <div class="method-card">
+                <b>Card <span class="meta">(soon)</span></b>
+                <div class="meta">Card payments aren't available yet — no payment gateway is connected.</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Payment History</h2>
+            <div class="table-scroll">
+                <table class="pay-table">
+                    <thead>
+                        <tr><th>Payment ID</th><th>Order ID</th><th>Delivery Date</th><th>Amount</th><th>Method</th><th>Status</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="payBody"></tbody>
+                </table>
+            </div>
+            <div class="empty hidden" id="emptyState">
+                No payment history found.
+                <div style="margin-top:8px;">Your completed delivery payments will appear here.</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Refunds</h2>
+            <div id="refundsList"></div>
+            <div class="empty hidden" id="refundsEmpty">No refunds yet.</div>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="payments.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>
