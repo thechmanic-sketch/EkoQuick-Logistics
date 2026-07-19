@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('adminSendBtn').addEventListener('click', sendAdminMessage);
     document.getElementById('adminMessageInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') sendAdminMessage(); });
     document.getElementById('exportBtn').addEventListener('click', exportConversation);
+    document.getElementById('closeDrawerBtn').addEventListener('click', closeDrawer);
+    document.getElementById('drawerBackdrop').addEventListener('click', closeDrawer);
     document.querySelectorAll('.filter-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
             document.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
@@ -96,7 +98,34 @@ async function loadAll() {
         chat._last = last && last[0];
     }
 
+    renderSummary();
     renderRoomList();
+}
+
+function renderSummary() {
+    const escalatedCount = allRooms.filter(function (r) { return r.escalated; }).length;
+    const waitingCount = allDriverChats.filter(function (c) { return c.status === 'waiting'; }).length;
+    const unreadCount = Object.values(unreadByRoom).filter(Boolean).length + Object.values(unreadByDriverChat).filter(Boolean).length;
+    const openDriverChats = allDriverChats.filter(function (c) { return c.status !== 'resolved'; }).length;
+
+    document.getElementById('summaryCards').innerHTML =
+        '<div class="cmd-panel" style="padding:14px;"><div style="font-size:22px; font-weight:700;">' + allRooms.length + '</div><div class="meta">Customer Chats</div></div>' +
+        '<div class="cmd-panel" style="padding:14px;"><div style="font-size:22px; font-weight:700;">' + openDriverChats + '</div><div class="meta">Driver Chats Open</div></div>' +
+        '<div class="cmd-panel" style="padding:14px;"><div style="font-size:22px; font-weight:700;">' + escalatedCount + '</div><div class="meta">Escalated</div></div>' +
+        '<div class="cmd-panel" style="padding:14px;"><div style="font-size:22px; font-weight:700;">' + waitingCount + '</div><div class="meta">Waiting for Admin</div></div>' +
+        '<div class="cmd-panel" style="padding:14px;"><div style="font-size:22px; font-weight:700;">' + unreadCount + '</div><div class="meta">Unread</div></div>';
+}
+
+function closeDrawer() {
+    document.getElementById('chatDrawer').classList.remove('open');
+    document.getElementById('drawerBackdrop').classList.remove('open');
+    currentId = null;
+    currentSource = null;
+}
+
+function openDrawer() {
+    document.getElementById('chatDrawer').classList.add('open');
+    document.getElementById('drawerBackdrop').classList.add('open');
 }
 
 function filteredItems() {
@@ -168,6 +197,7 @@ async function openRoom(roomId) {
     currentSource = 'room';
     unreadByRoom[roomId] = 0;
     renderRoomList();
+    openDrawer();
 
     const room = allRooms.find(function (r) { return r.id === roomId; });
     const cust = profilesById[room.customer_id];
@@ -282,6 +312,7 @@ async function openDriverChat(chatId) {
     currentSource = 'driverAdmin';
     unreadByDriverChat[chatId] = 0;
     renderRoomList();
+    openDrawer();
 
     const chat = allDriverChats.find(function (c) { return c.id === chatId; });
     const drv = profilesById[chat.driver_id];
