@@ -24,10 +24,13 @@
         .notif-item { font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
         .notif-item:last-child { border-bottom: none; }
         .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (min-width: 700px) { .summary-grid { grid-template-columns: repeat(4, 1fr); } }
         .summary-card { border: 1px solid var(--line); background: var(--ink); padding: 12px; }
         .summary-card .num { font-family: var(--font-stencil); font-size: 24px; color: var(--paper); }
         .summary-card .lbl { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-dim); }
         .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        @media (min-width: 700px) { .quick-actions { grid-template-columns: repeat(3, 1fr); } }
+        @media (min-width: 1000px) { .quick-actions { grid-template-columns: repeat(4, 1fr); } }
         .quick-action { text-align: center; padding: 12px 8px; border: 1px solid var(--line); background: var(--ink); color: var(--paper); text-decoration: none; font-size: 12px; cursor: pointer; }
         .quick-action:hover { border-color: var(--orange); color: var(--orange); }
         .quick-action.disabled { opacity: 0.4; cursor: not-allowed; }
