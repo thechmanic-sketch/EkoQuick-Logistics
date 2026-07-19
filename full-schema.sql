@@ -134,7 +134,11 @@ create table if not exists jobs (
   receiver_name text,
   receiver_phone text,
   collection_code text,
+  collection_code_resend_count int not null default 0,
+  collection_code_last_sent_at timestamptz,
   delivery_code text,
+  delivery_code_resend_count int not null default 0,
+  delivery_code_last_sent_at timestamptz,
   status text not null default 'pending'
     check (status in ('pending', 'offered', 'to_pickup', 'to_dropoff', 'delivered', 'cancelled')),
   driver_lat double precision,
@@ -144,10 +148,12 @@ create table if not exists jobs (
   review_hidden boolean not null default false,
   review_reply text,
   review_reply_at timestamptz,
+  assigned_at timestamptz,
   to_pickup_at timestamptz,
   to_dropoff_at timestamptz,
   delivered_at timestamptz,
   cancelled_at timestamptz,
+  cancellation_reason text,
   created_at timestamptz not null default now()
 );
 

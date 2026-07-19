@@ -10,6 +10,44 @@
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="support-widget.css">
     <script src="transitions.js"></script>
+    <style>
+        .drawer-backdrop {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            z-index: 20; display: none;
+        }
+        .drawer-backdrop.open { display: block; }
+        .drawer {
+            position: fixed; top: 0; right: 0; height: 100vh; width: min(560px, 100vw);
+            background: var(--ink-2); border-left: 1px solid var(--line);
+            z-index: 21; transform: translateX(100%); transition: transform 0.25s ease;
+            overflow-y: auto; padding: 20px;
+        }
+        .drawer.open { transform: translateX(0); }
+        .drawer-close { float: right; background: transparent; border: 1px solid var(--line); border-radius: 8px; color: var(--paper); width: 32px; height: 32px; cursor: pointer; }
+        .drawer h3 { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-dim); margin: 20px 0 8px; border-top: 1px solid var(--line); padding-top: 14px; }
+        .drawer h3:first-of-type { border-top: none; padding-top: 0; }
+        .kv-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; gap: 10px; }
+        .kv-row span:first-child { color: var(--muted); }
+        .progress-dots { display: flex; gap: 3px; align-items: center; }
+        .progress-dots .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+        .progress-dots .dot.filled { background: var(--orange); }
+        .progress-dots.cancelled .dot { background: #D93025; opacity: 0.4; }
+        .actions-menu { position: relative; }
+        .actions-menu summary { list-style: none; cursor: pointer; padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; display:inline-block; }
+        .actions-menu summary::-webkit-details-marker { display: none; }
+        .actions-menu[open] summary { border-color: var(--orange); }
+        .actions-menu .menu-body {
+            position: absolute; right: 0; top: 100%; z-index: 10; background: var(--ink-2);
+            border: 1px solid var(--line); min-width: 200px; padding: 6px;
+        }
+        .actions-menu .menu-body button, .actions-menu .menu-body a {
+            display: block; width: 100%; text-align: left; background: transparent; border: none;
+            color: var(--paper); padding: 6px 8px; cursor: pointer; font-size: 13px; text-decoration: none;
+        }
+        .actions-menu .menu-body button:hover, .actions-menu .menu-body a:hover { background: rgba(255,255,255,0.06); }
+        table.simple-table thead { position: sticky; top: 0; background: var(--ink-2); z-index: 2; }
+        .bulk-bar { display:flex; gap:8px; align-items:center; padding:8px 0; }
+    </style>
 </head>
 <body>
     <div class="cmd-shell">
@@ -33,25 +71,62 @@
         </aside>
 
         <main class="cmd-main">
-            <div class="cmd-panel">
-                <h2>All Jobs</h2>
-                <div style="display:flex; gap:8px; margin-bottom: 10px; flex-wrap: wrap;">
-                    <input class="field-plain" id="jobSearch" placeholder="Search pickup, dropoff, phone..." style="flex:1; min-width: 160px;">
-                    <select class="field-plain" id="jobStatusFilter" style="width: auto;">
-                        <option value="">All statuses</option>
-                        <option value="pending">Pending</option>
-                        <option value="offered">Awaiting driver</option>
-                        <option value="to_pickup">Heading to pickup</option>
-                        <option value="to_dropoff">Heading to drop-off</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
+            <div class="cmd-header">
+                <div class="cmd-header-title">
+                    <h1>All Jobs</h1>
+                    <div class="cmd-breadcrumb" id="jobCountLabel">Loading...</div>
+                </div>
+                <div class="cmd-header-right">
+                    <button class="btn btn-outline-blue" id="exportBtn" style="width: auto;">Export CSV</button>
                     <button class="btn btn-outline-blue" id="refreshBtn" style="width: auto;">Refresh</button>
                 </div>
-                <div id="jobsList"><div class="empty">Loading...</div></div>
+            </div>
+
+            <div id="summaryCards" class="kpi-grid">
+                <div class="skeleton" style="height:80px;"></div>
+                <div class="skeleton" style="height:80px;"></div>
+                <div class="skeleton" style="height:80px;"></div>
+            </div>
+
+            <div class="cmd-panel">
+                <div style="display:flex; gap:8px; margin-bottom: 10px; flex-wrap: wrap;">
+                    <input class="field-plain" id="jobSearch" placeholder="Search job ID, customer, phone, driver, address..." style="flex:1; min-width:220px;">
+                    <select class="field-plain" id="statusFilter" style="width:auto;">
+                        <option value="">All statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="offered">Assigned</option>
+                        <option value="to_pickup">Heading to Pickup</option>
+                        <option value="to_dropoff">Heading to Drop-off</option>
+                        <option value="delivered">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <select class="field-plain" id="driverFilter" style="width:auto;">
+                        <option value="">All drivers</option>
+                    </select>
+                    <select class="field-plain" id="vehicleFilter" style="width:auto;">
+                        <option value="">All vehicles</option>
+                    </select>
+                    <input class="field-plain" type="date" id="dateFrom" style="width:auto;">
+                    <input class="field-plain" type="date" id="dateTo" style="width:auto;">
+                    <select class="field-plain" id="pageSizeSelect" style="width:auto;">
+                        <option value="25">25 / page</option>
+                        <option value="50">50 / page</option>
+                        <option value="100">100 / page</option>
+                    </select>
+                </div>
+                <div id="bulkBar" class="bulk-bar hidden">
+                    <span id="bulkCountLabel" class="meta"></span>
+                    <button class="btn btn-outline-blue" id="bulkCancelBtn" style="width:auto;">Cancel Selected</button>
+                    <button class="btn btn-outline-blue" id="bulkExportBtn" style="width:auto;">Export Selected</button>
+                </div>
+                <div id="jobsTableWrap" class="cmd-panel-scroll" style="max-height: 620px;"><div class="empty">Loading...</div></div>
+                <div id="pagination" style="margin-top: 10px; display:flex; gap:8px; align-items:center;"></div>
             </div>
         </main>
     </div>
+
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+    <div class="drawer" id="jobDrawer"></div>
 
     <script src="vendor/supabase.js"></script>
     <script src="config.js"></script>
