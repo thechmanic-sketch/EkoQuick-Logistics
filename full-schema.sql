@@ -607,6 +607,8 @@ create table if not exists settings (
 );
 insert into settings (key, value) values ('driver_share', '0.85') on conflict (key) do nothing;
 insert into settings (key, value) values ('min_withdrawal_amount', '100') on conflict (key) do nothing;
+insert into settings (key, value) values ('chat_read_only_hours', '48') on conflict (key) do nothing;
+insert into settings (key, value) values ('chat_flagged_keywords', '') on conflict (key) do nothing;
 insert into settings (key, value) values
   ('company_name', 'Ekoquick'),
   ('company_logo_url', ''),
@@ -834,6 +836,7 @@ create table if not exists chat_rooms (
   customer_id uuid not null references profiles (id) on delete cascade,
   driver_id uuid references profiles (id) on delete set null,
   status text not null default 'active' check (status in ('active', 'closed')),
+  muted_by_admin_user_id uuid references profiles (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (delivery_id)

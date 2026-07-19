@@ -18,6 +18,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     const profile = await getProfile(user.id);
     if (!profile || profile.role !== 'admin') { await supabase.auth.signOut(); window.location.href = 'admin-login.html'; return; }
     window.currentAdminName = profile.full_name || profile.email || 'Admin';
+    await loadAppSettings();
+    window.chatFlaggedKeywords = appSetting('chat_flagged_keywords', '').split(',').map(function (s) { return s.trim(); });
 
     document.getElementById('logoutBtn').addEventListener('click', async function () { await supabase.auth.signOut(); window.location.href = 'login.html'; });
     document.getElementById('roomSearch').addEventListener('input', renderRoomList);
@@ -111,7 +113,13 @@ async function openRoom(roomId) {
     const room = allRooms.find(function (r) { return r.id === roomId; });
     const cust = profilesById[room.customer_id];
     const drv = profilesById[room.driver_id];
-    document.getElementById('adminChatTitle').textContent = (cust ? cust.full_name : '—') + ' ↔ ' + (drv ? drv.full_name : 'Unassigned') + ' — Delivery ' + room.delivery_id.slice(0, 8);
+    document.getElementById('adminChatTitle').innerHTML =
+        (cust ? escapeHtml(cust.full_name) : '—') + ' <button class="btn btn-outline-blue" style="width:auto; font-size:11px; padding:2px 8px;" data-action="mute" data-id="' + room.customer_id + '">' + (room.muted_by_admin_user_id === room.customer_id ? 'Unmute' : 'Mute') + '</button>' +
+        ' ↔ ' + (drv ? escapeHtml(drv.full_name) : 'Unassigned') + (drv ? ' <button class="btn btn-outline-blue" style="width:auto; font-size:11px; padding:2px 8px;" data-action="mute" data-id="' + room.driver_id + '">' + (room.muted_by_admin_user_id === room.driver_id ? 'Unmute' : 'Mute') + '</button>' : '') +
+        ' — Delivery ' + room.delivery_id.slice(0, 8);
+    document.getElementById('adminChatTitle').querySelectorAll('button[data-action="mute"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { toggleMute(room, btn.dataset.id); });
+    });
     document.getElementById('exportBtn').style.display = 'inline-block';
     document.getElementById('adminInputRow').style.display = 'flex';
 
@@ -120,6 +128,17 @@ async function openRoom(roomId) {
     area.innerHTML = '';
     (messages || []).forEach(function (m) { appendMessageToView(m, true); });
     area.scrollTop = area.scrollHeight;
+}
+
+function highlightFlagged(text) {
+    const keywords = (window.chatFlaggedKeywords || []).filter(Boolean);
+    if (!keywords.length) return escapeHtml(text);
+    let escaped = escapeHtml(text);
+    keywords.forEach(function (kw) {
+        const re = new RegExp('(' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+        escaped = escaped.replace(re, '<mark style="background:#C0392B; color:#fff;">$1</mark>');
+    });
+    return escaped;
 }
 
 function appendMessageToView(m, skipCheck) {
@@ -131,7 +150,7 @@ function appendMessageToView(m, skipCheck) {
     if (m.message_type === 'image') body = '<img src="' + escapeHtml(m.image_url) + '" style="max-width:200px; border-radius:8px;">';
     else if (m.message_type === 'voice') body = '<audio controls src="' + escapeHtml(m.voice_url) + '" style="height:32px;"></audio>';
     else if (m.message_type === 'location') body = '📍 Shared location (' + m.location_lat + ', ' + m.location_lng + ')';
-    else body = escapeHtml(m.message || '');
+    else body = highlightFlagged(m.message || '');
 
     const div = document.createElement('div');
     div.className = 'msg-row ' + m.sender_type;
@@ -160,6 +179,13 @@ async function sendAdminMessage() {
     input.value = '';
     const user = await requireSession('admin-login.html');
     await supabase.from('chat_messages').insert({ room_id: currentRoomId, sender_id: user.id, sender_type: 'admin', message: text, message_type: 'text' });
+}
+
+async function toggleMute(room, userId) {
+    const newValue = room.muted_by_admin_user_id === userId ? null : userId;
+    await supabase.from('chat_rooms').update({ muted_by_admin_user_id: newValue }).eq('id', room.id);
+    room.muted_by_admin_user_id = newValue;
+    openRoom(room.id);
 }
 
 async function exportConversation() {

@@ -108,12 +108,22 @@ async function loadAll() {
     const { data: complaints } = await supabase.from('complaints').select('*').eq('customer_id', currentUser.id);
     allComplaints = complaints || [];
 
+    renderChatUnreadBadge();
     renderSummaryCards();
     renderActiveDeliveries();
     renderRecentOrders();
     renderActivity();
     renderNotifications();
     updateQuickActions();
+}
+
+async function renderChatUnreadBadge() {
+    const { data: rooms } = await supabase.from('chat_rooms').select('id').eq('customer_id', currentUser.id);
+    const roomIds = (rooms || []).map(function (r) { return r.id; });
+    const badge = document.getElementById('chatUnreadBadge');
+    if (!roomIds.length) { badge.classList.add('hidden'); return; }
+    const { count } = await supabase.from('chat_messages').select('id', { count: 'exact', head: true }).in('room_id', roomIds).is('read_at', null).neq('sender_id', currentUser.id);
+    if (count) { badge.textContent = count; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
 }
 
 function vehicleLabel(id) {

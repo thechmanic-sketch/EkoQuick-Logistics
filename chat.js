@@ -40,7 +40,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (!currentProfile) return;
     myRole = currentProfile.role === 'driver' ? 'driver' : currentProfile.role === 'admin' ? 'admin' : 'customer';
 
-    document.getElementById('backBtn').href = myRole === 'driver' ? 'driver-dashboard.html' : myRole === 'admin' ? 'admin-chat.html' : 'dashboard.html';
+    const fromParam = new URLSearchParams(window.location.search).get('from');
+    document.getElementById('backBtn').href = fromParam === 'delivery'
+        ? (myRole === 'driver' ? 'driver-active-deliveries.html' : 'my-orders.html')
+        : (myRole === 'driver' ? 'chat-list.html' : myRole === 'admin' ? 'admin-chat.html' : 'chat-list.html');
 
     const jobId = new URLSearchParams(window.location.search).get('job');
     if (!jobId) { document.getElementById('peerName').textContent = 'No delivery specified.'; return; }
@@ -55,9 +58,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     await ensureRoom();
     if (!room) { document.getElementById('peerName').textContent = 'Chat not available yet — waiting for a driver to be assigned.'; return; }
 
+    await loadAppSettings();
     await loadPeer();
     await loadSettings();
     await checkBlocked();
+    checkReadOnly();
     renderQuickReplies();
     wireUi();
     await loadInitialMessages();
@@ -66,7 +71,23 @@ document.addEventListener('DOMContentLoaded', async function () {
     markRoomRead();
 
     document.getElementById('jobTag').textContent = 'Delivery #' + job.id.slice(0, 8);
+    document.getElementById('supportBtnTop').href = 'https://wa.me/27676659966?text=' + encodeURIComponent('Hi Ekoquick, I need help with delivery ' + job.id.slice(0, 8) + '.');
 });
+
+let isReadOnly = false;
+function checkReadOnly() {
+    if (job.status !== 'delivered' && job.status !== 'cancelled') return;
+    const endedAt = job.delivered_at || job.cancelled_at;
+    if (!endedAt) return;
+    const hoursSince = (Date.now() - new Date(endedAt).getTime()) / 3600000;
+    const limit = parseFloat(appSetting('chat_read_only_hours', '48')) || 48;
+    if (hoursSince >= limit) {
+        isReadOnly = true;
+        document.getElementById('readOnlyBanner').classList.add('show');
+        document.getElementById('chatBottom').classList.add('hidden');
+        document.getElementById('quickReplies').classList.add('hidden');
+    }
+}
 
 async function ensureRoom() {
     let { data } = await supabase.from('chat_rooms').select('*').eq('delivery_id', job.id).single();
@@ -82,21 +103,41 @@ async function ensureRoom() {
 async function loadPeer() {
     const peerId = myRole === 'driver' ? room.customer_id : room.driver_id;
     if (!peerId) { document.getElementById('peerName').textContent = 'Waiting for driver'; return; }
-    const { data } = await supabase.from('profiles').select('id, full_name, avatar_url, last_seen_at, is_online').eq('id', peerId).single();
+    const { data } = await supabase.from('profiles').select('id, full_name, avatar_url, last_seen_at, is_online, phone, vehicle_class').eq('id', peerId).single();
     peerProfile = data;
     document.getElementById('peerName').textContent = peerProfile ? peerProfile.full_name : 'Unknown';
+    document.getElementById('callPeerBtn').href = peerProfile && peerProfile.phone ? 'tel:' + peerProfile.phone : '#';
+
+    if (myRole === 'customer' && peerProfile) {
+        const { data: rated } = await supabase.from('jobs').select('rating').eq('driver_id', peerId).not('rating', 'is', null);
+        if (rated && rated.length) {
+            peerProfile._rating = (rated.reduce(function (s, j) { return s + j.rating; }, 0) / rated.length).toFixed(1);
+        }
+    }
+
     updatePeerStatus();
 }
 
 function updatePeerStatus(online) {
     const el = document.getElementById('peerStatus');
-    if (online) { el.textContent = 'Online'; return; }
-    if (peerProfile && peerProfile.last_seen_at) {
+    const extras = [];
+    if (peerProfile && peerProfile._rating) extras.push('★' + peerProfile._rating);
+    if (peerProfile && peerProfile.vehicle_class) extras.push(vehicleLabel(peerProfile.vehicle_class));
+
+    let statusText;
+    if (online) statusText = 'Online';
+    else if (peerProfile && peerProfile.last_seen_at) {
         const mins = Math.round((Date.now() - new Date(peerProfile.last_seen_at).getTime()) / 60000);
-        el.textContent = mins < 1 ? 'Last seen just now' : 'Last seen ' + mins + ' min ago';
+        statusText = mins < 1 ? 'Last seen just now' : 'Last seen ' + mins + ' min ago';
     } else {
-        el.textContent = 'Offline';
+        statusText = 'Offline';
     }
+    el.textContent = extras.concat([statusText]).join(' · ');
+}
+
+function vehicleLabel(id) {
+    const v = (typeof VEHICLES !== 'undefined' ? VEHICLES : []).find(function (v) { return v.id === id; });
+    return v ? v.label : (id || '');
 }
 
 async function loadSettings() {
@@ -112,15 +153,17 @@ async function checkBlocked() {
     if (!peerId) return;
     const { data: theyBlockedMe } = await supabase.from('user_blocks').select('*').eq('blocker_id', peerId).eq('blocked_id', currentUser.id).maybeSingle();
     const { data: iBlockedThem } = await supabase.from('user_blocks').select('*').eq('blocker_id', currentUser.id).eq('blocked_id', peerId).maybeSingle();
-    isBlocked = !!(theyBlockedMe || iBlockedThem);
+    const adminMuted = room.muted_by_admin_user_id === currentUser.id;
+    isBlocked = !!(theyBlockedMe || iBlockedThem || adminMuted);
+    document.getElementById('blockedNote').textContent = adminMuted ? 'You have been muted by an administrator in this conversation.' : 'Messaging is unavailable in this conversation.';
     document.getElementById('blockedNote').classList.toggle('hidden', !isBlocked);
     document.getElementById('chatBottom').classList.toggle('hidden', isBlocked);
     document.getElementById('blockBtn').textContent = iBlockedThem ? '✅ Unblock' : '🚫 Block';
 }
 
 function renderQuickReplies() {
-    if (myRole !== 'driver') return;
-    const replies = ["I'm here", 'Please answer', 'Running 5 minutes late', 'Collected', 'Delivered'];
+    if (myRole !== 'driver' || isReadOnly) return;
+    const replies = ["I'm here", 'Please answer', 'Running 5 minutes late', 'Traffic delay', 'Collected', 'Delivered'];
     const wrap = document.getElementById('quickReplies');
     wrap.classList.remove('hidden');
     wrap.innerHTML = replies.map(function (r) { return '<button data-text="' + escapeHtml(r) + '">' + escapeHtml(r) + '</button>'; }).join('');
@@ -130,6 +173,10 @@ function renderQuickReplies() {
 }
 
 function wireUi() {
+    document.getElementById('jumpToNew').addEventListener('click', function () {
+        scrollToBottom();
+        this.classList.remove('show');
+    });
     document.getElementById('menuBtn').addEventListener('click', function () { document.getElementById('menuPanel').classList.toggle('open'); });
     document.getElementById('searchToggleBtn').addEventListener('click', function () {
         document.getElementById('chatSearchBar').classList.toggle('show');
@@ -249,6 +296,26 @@ function scrollToBottom() {
 
 function messageById(id) { return messages.find(function (m) { return m.id === id; }); }
 
+const SYSTEM_TITLES = [
+    [/accepted/i, 'Driver Accepted'],
+    [/heading to pickup/i, 'Heading to Pickup'],
+    [/arrived at pickup/i, 'Driver Arrived'],
+    [/collected/i, 'Package Collected'],
+    [/heading to destination/i, 'In Transit'],
+    [/arrived at destination/i, 'Driver Arrived'],
+    [/delivery completed/i, 'Delivered'],
+    [/cancelled/i, 'Delivery Cancelled'],
+];
+function systemCardTitle(message) {
+    const match = SYSTEM_TITLES.find(function (t) { return t[0].test(message || ''); });
+    return match ? match[1] : 'Update';
+}
+
+function isNearBottom() {
+    const area = document.getElementById('messageArea');
+    return area.scrollHeight - area.scrollTop - area.clientHeight < 120;
+}
+
 function renderMessages() {
     const q = document.getElementById('searchInput').value.trim().toLowerCase();
     const area = document.getElementById('messageArea');
@@ -263,7 +330,7 @@ function renderMessages() {
         if (dateLabel !== lastDate) { html.push('<div class="date-sep">' + dateLabel + '</div>'); lastDate = dateLabel; }
 
         if (m.message_type === 'system') {
-            html.push('<div class="msg-row system"><div class="bubble">' + escapeHtml(m.message) + '</div></div>');
+            html.push('<div class="msg-row system"><div class="system-card"><b>' + systemCardTitle(m.message) + '</b>' + escapeHtml(m.message) + '</div></div>');
             return;
         }
 
@@ -349,6 +416,17 @@ function wireMessageActions() {
             document.getElementById('fullscreenImgTag').src = img.src;
             document.getElementById('fullscreenImg').classList.add('open');
         });
+
+        const bubble = row.querySelector('.bubble');
+        let pressTimer = null;
+        bubble.addEventListener('touchstart', function () {
+            pressTimer = setTimeout(function () {
+                document.querySelectorAll('.bubble.show-actions').forEach(function (b) { if (b !== bubble) b.classList.remove('show-actions'); });
+                bubble.classList.toggle('show-actions');
+            }, 450);
+        });
+        bubble.addEventListener('touchend', function () { clearTimeout(pressTimer); });
+        bubble.addEventListener('touchmove', function () { clearTimeout(pressTimer); });
     });
 }
 
@@ -390,7 +468,7 @@ async function handleMessageAction(action, msg) {
 }
 
 async function sendMessage(text, extra) {
-    if (isBlocked) return;
+    if (isBlocked || isReadOnly) return;
     const fields = Object.assign({
         room_id: room.id, sender_id: currentUser.id, sender_type: myRole,
         message: text, message_type: 'text', reply_to: replyingTo,
@@ -488,10 +566,16 @@ async function markRoomRead() {
 function subscribeRealtime() {
     supabase.channel('chat-room-' + room.id)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: 'room_id=eq.' + room.id }, async function (payload) {
+            const wasNearBottom = isNearBottom();
             messages.push(payload.new);
             await loadReactionsFor([payload.new]);
             renderMessages();
-            scrollToBottom();
+            if (wasNearBottom || payload.new.sender_id === currentUser.id) {
+                scrollToBottom();
+                document.getElementById('jumpToNew').classList.remove('show');
+            } else {
+                document.getElementById('jumpToNew').classList.add('show');
+            }
             if (payload.new.sender_id !== currentUser.id) markRoomRead();
         })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'chat_messages', filter: 'room_id=eq.' + room.id }, function (payload) {

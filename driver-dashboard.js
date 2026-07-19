@@ -168,6 +168,7 @@ async function loadJobs() {
     renderRecentDeliveries();
     renderPerformance();
     renderNotifications();
+    renderChatUnreadBadge();
 
     const inProgress = allJobs.find(function (j) { return j.status === 'to_pickup' || j.status === 'to_dropoff'; });
     if (inProgress && activeJobId !== inProgress.id) beginTracking(inProgress.id);
@@ -345,6 +346,15 @@ function renderPerformance() {
         '<div class="summary-card"><div class="num">—</div><div class="lbl">Acceptance Rate</div><div class="meta">Not tracked — declined jobs aren\'t retained</div></div>' +
         '<div class="summary-card"><div class="num">' + (completionRate !== null ? completionRate + '%' : '—') + '</div><div class="lbl">Completion Rate</div></div>' +
         '<div class="summary-card"><div class="num">' + (avgRating ? avgRating.toFixed(1) + ' ★' : '—') + '</div><div class="lbl">Average Customer Rating</div></div>';
+}
+
+async function renderChatUnreadBadge() {
+    const { data: rooms } = await supabase.from('chat_rooms').select('id').eq('driver_id', currentUser.id);
+    const roomIds = (rooms || []).map(function (r) { return r.id; });
+    const badge = document.getElementById('chatUnreadBadge');
+    if (!roomIds.length) { badge.classList.add('hidden'); return; }
+    const { count } = await supabase.from('chat_messages').select('id', { count: 'exact', head: true }).in('room_id', roomIds).is('read_at', null).neq('sender_id', currentUser.id);
+    if (count) { badge.textContent = count; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
 }
 
 async function renderNotifications() {
