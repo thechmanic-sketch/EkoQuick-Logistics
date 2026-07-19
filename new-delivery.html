@@ -17,6 +17,10 @@
         .step-dot.active { color: var(--orange); }
         .step-dot.active::before { border-color: var(--orange); background: var(--orange); }
         .step-dot.done::before { border-color: #1E8E3E; background: #1E8E3E; }
+        .step-dot.clickable { cursor: pointer; }
+        .step-dot.clickable:hover { color: var(--orange); }
+        .step-dot.clickable:hover::before { border-color: var(--orange); }
+        .step-dot.clickable::before { width: 18px; height: 18px; }
         .step-panel { display: none; }
         .step-panel.active { display: block; }
         .mini-map { height: 180px; border: 1px solid var(--line); margin: 8px 0; }

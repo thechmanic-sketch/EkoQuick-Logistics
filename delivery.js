@@ -71,21 +71,33 @@ function phoneLooksValid(p) {
 
 // ---- Step indicator / navigation ----
 
+let maxStepReached = 1;
+
 function renderStepIndicator() {
     const labels = ['Pickup', 'Recipient', 'Parcel', 'Vehicle', 'Payment'];
     const el = document.getElementById('stepIndicator');
     el.innerHTML = labels.map(function (label, i) {
         const n = i + 1;
-        return '<div class="step-dot' + (n === currentStep ? ' active' : n < currentStep ? ' done' : '') + '">' + label + '</div>';
+        const reachable = n <= maxStepReached;
+        return '<div class="step-dot' + (n === currentStep ? ' active' : n < currentStep ? ' done' : '') + (reachable ? ' clickable' : '') + '" data-step="' + n + '">' + label + '</div>';
     }).join('');
+    el.querySelectorAll('.step-dot.clickable').forEach(function (dot) {
+        dot.addEventListener('click', function () { goToStep(parseInt(dot.dataset.step, 10)); });
+    });
 }
 
 function goToStep(n) {
+    if (n > maxStepReached) return;
     currentStep = n;
     document.querySelectorAll('.step-panel').forEach(function (p) { p.classList.toggle('active', parseInt(p.dataset.step, 10) === n); });
     renderStepIndicator();
     if (n === 5) renderOrderSummary();
     window.scrollTo(0, 0);
+}
+
+function advanceToStep(n) {
+    maxStepReached = Math.max(maxStepReached, n);
+    goToStep(n);
 }
 
 function wireNav() {
@@ -97,7 +109,7 @@ function wireNav() {
         if (!name) { showMsg('msgArea1', 'error', 'Your full name is required.'); return; }
         if (!phone || !phoneLooksValid(phone)) { showMsg('msgArea1', 'error', 'A valid phone number is required.'); return; }
         if (!pickup) { showMsg('msgArea1', 'error', 'Pickup address missing.'); return; }
-        goToStep(2);
+        advanceToStep(2);
     });
 
     document.getElementById('back2').addEventListener('click', function () { goToStep(1); });
@@ -109,16 +121,16 @@ function wireNav() {
         if (!name) { showMsg('msgArea2', 'error', 'Recipient name is required.'); return; }
         if (!phone || !phoneLooksValid(phone)) { showMsg('msgArea2', 'error', 'Recipient phone invalid.'); return; }
         if (!dropoff) { showMsg('msgArea2', 'error', 'Delivery address missing.'); return; }
-        goToStep(3);
+        advanceToStep(3);
     });
 
     document.getElementById('back3').addEventListener('click', function () { goToStep(2); });
-    document.getElementById('next3').addEventListener('click', function () { goToStep(4); });
+    document.getElementById('next3').addEventListener('click', function () { advanceToStep(4); });
 
     document.getElementById('back4').addEventListener('click', function () { goToStep(3); });
     document.getElementById('next4').addEventListener('click', function () {
         if (currentQuote <= 0) { showMsg('msgArea4', 'error', 'Please calculate the price first.'); return; }
-        goToStep(5);
+        advanceToStep(5);
     });
 
     document.getElementById('back5').addEventListener('click', function () { goToStep(4); });
