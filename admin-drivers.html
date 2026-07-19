@@ -5,11 +5,33 @@
     <style>html{background:#0B0F16}</style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ekoquick — Drivers</title>
+    <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="auth.css">
     <link rel="stylesheet" href="app.css">
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="support-widget.css">
     <script src="transitions.js"></script>
+    <style>
+        .drawer-backdrop {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            z-index: 20; display: none;
+        }
+        .drawer-backdrop.open { display: block; }
+        .drawer {
+            position: fixed; top: 0; right: 0; height: 100vh; width: min(520px, 100vw);
+            background: var(--ink-2); border-left: 1px solid var(--line);
+            z-index: 21; transform: translateX(100%); transition: transform 0.25s ease;
+            overflow-y: auto; padding: 20px;
+        }
+        .drawer.open { transform: translateX(0); }
+        .drawer-close { float: right; background: transparent; border: 1px solid var(--line); border-radius: 8px; color: var(--paper); width: 32px; height: 32px; cursor: pointer; }
+        .drawer h3 { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-dim); margin: 20px 0 8px; border-top: 1px solid var(--line); padding-top: 14px; }
+        .drawer h3:first-of-type { border-top: none; padding-top: 0; }
+        .kv-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; gap: 10px; }
+        .kv-row span:first-child { color: var(--muted); }
+        th.sortable { cursor: pointer; user-select: none; }
+        th.sortable:hover { color: var(--paper); }
+    </style>
 </head>
 <body>
     <div class="cmd-shell">
@@ -33,14 +55,70 @@
         </aside>
 
         <main class="cmd-main">
+            <div class="cmd-header">
+                <div class="cmd-header-title">
+                    <h1>Drivers</h1>
+                    <div class="cmd-breadcrumb" id="driverCountLabel">Loading...</div>
+                </div>
+                <div class="cmd-header-right">
+                    <button class="btn btn-outline-blue" id="refreshBtn" style="width: auto;">Refresh</button>
+                </div>
+            </div>
+
+            <div id="summaryCards" class="kpi-grid">
+                <div class="skeleton" style="height:80px;"></div>
+                <div class="skeleton" style="height:80px;"></div>
+                <div class="skeleton" style="height:80px;"></div>
+            </div>
+
             <div class="cmd-panel">
-                <h2>Drivers</h2>
-                <div style="font-size: 11px; color: var(--muted); margin-bottom: 10px;">Set each driver's vehicle class so auto-assign can match them to jobs.</div>
-                <div id="driversList"><div class="empty">Loading...</div></div>
+                <div style="display:flex; gap:8px; margin-bottom: 12px; flex-wrap: wrap;">
+                    <input class="field-plain" id="driverSearch" placeholder="Search name, phone, email, ID..." style="flex:1; min-width:180px;">
+                    <select class="field-plain" id="statusFilter" style="width:auto;">
+                        <option value="">All statuses</option>
+                        <option value="online">Online</option>
+                        <option value="busy">Busy</option>
+                        <option value="offline">Offline</option>
+                        <option value="verified">Verified</option>
+                        <option value="unverified">Unverified</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                    <select class="field-plain" id="vehicleFilter" style="width:auto;">
+                        <option value="">All vehicles</option>
+                    </select>
+                    <select class="field-plain" id="sortBy" style="width:auto;">
+                        <option value="name">Sort: Name</option>
+                        <option value="rating">Sort: Rating</option>
+                        <option value="deliveries">Sort: Deliveries</option>
+                        <option value="earnings">Sort: Earnings</option>
+                        <option value="lastSeen">Sort: Last Seen</option>
+                    </select>
+                </div>
+                <div id="driversTableWrap" class="cmd-panel-scroll" style="max-height: 600px;"><div class="empty">Loading...</div></div>
+                <div id="pagination" style="margin-top: 10px; display:flex; gap:8px; align-items:center;"></div>
+            </div>
+
+            <div class="cmd-panel">
+                <h2>Driver Analytics (Fleet-wide)</h2>
+                <div class="kpi-grid" id="analyticsCards"></div>
+                <div class="cmd-grid" style="margin-top: 16px;">
+                    <div class="cmd-col">
+                        <canvas id="deliveriesChart" height="120"></canvas>
+                    </div>
+                    <div class="cmd-col">
+                        <canvas id="earningsChart" height="120"></canvas>
+                    </div>
+                </div>
+                <canvas id="ratingChart" height="80" style="margin-top: 16px;"></canvas>
             </div>
         </main>
     </div>
 
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+    <div class="drawer" id="driverDrawer"></div>
+
+    <script src="vendor/leaflet.js"></script>
+    <script src="vendor/chart.js"></script>
     <script src="vendor/supabase.js"></script>
     <script src="config.js"></script>
     <script src="admin-drivers.js"></script>

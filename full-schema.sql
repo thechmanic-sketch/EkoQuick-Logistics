@@ -14,6 +14,12 @@ create table if not exists profiles (
   email text,
   phone text,
   vehicle_class text,
+  vehicle_make text,
+  vehicle_model text,
+  vehicle_year text,
+  vehicle_color text,
+  registration_number text,
+  address text,
   last_lat double precision,
   last_lng double precision,
   last_seen_at timestamptz,
@@ -24,6 +30,10 @@ create table if not exists profiles (
   id_doc_url text,
   vehicle_reg_url text,
   insurance_url text,
+  license_expiry date,
+  insurance_expiry date,
+  documents_verified_by text,
+  documents_verified_at timestamptz,
   verification_status text not null default 'pending'
     check (verification_status in ('pending', 'approved', 'rejected')),
   created_at timestamptz not null default now()
