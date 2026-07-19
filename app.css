@@ -80,6 +80,25 @@ body {
 .summary-card .num { font-family: var(--font-stencil); font-size: 24px; color: var(--paper); }
 .summary-card .lbl { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-dim); }
 
+.quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.quick-action {
+    text-align: center;
+    padding: 12px 8px;
+    border: 1px solid var(--line);
+    background: var(--ink);
+    color: var(--paper);
+    text-decoration: none;
+    font-size: 12px;
+    cursor: pointer;
+}
+.quick-action:visited { color: var(--paper); }
+.quick-action:hover { border-color: var(--orange); color: var(--orange); }
+.quick-action.disabled { opacity: 0.4; cursor: not-allowed; }
+
 .card {
     background: var(--ink-2);
     border: 1px solid var(--line);
