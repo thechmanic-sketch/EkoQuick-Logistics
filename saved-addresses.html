@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Saved Addresses</title>
+    <link rel="stylesheet" href="vendor/leaflet.css">
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        .addr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 10px; }
+        .addr-card { background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+        .addr-card .name { font-weight: 600; }
+        .addr-card .meta { margin-top: 4px; }
+        .default-badge { display:inline-block; background: var(--blue,#3E8BFF); color:#fff; font-size:11px; border-radius:6px; padding:2px 6px; margin-left:6px; }
+        .addr-actions { margin-top: 10px; display: flex; gap: 8px; }
+        #addrModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center; }
+        #addrModal.open { display:flex; }
+        #addrModal .card { max-width: 460px; width: 92%; max-height: 88vh; overflow-y: auto; }
+        #miniMap { height: 220px; border-radius: 10px; margin: 8px 0; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="dashboard.html">← Eko<span>quick</span></a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h1>Saved Addresses</h1>
+            <input class="field-plain" id="addrSearch" placeholder="Search by name, street or contact person...">
+            <button class="btn btn-blue" id="addAddrBtn" style="margin-top:8px;">+ Add New Address</button>
+        </div>
+
+        <div class="card">
+            <div class="summary-cards" id="summaryCards"></div>
+        </div>
+
+        <div class="card">
+            <div class="addr-grid" id="addrGrid"></div>
+            <div class="empty hidden" id="emptyState">
+                No saved addresses.
+                <div style="margin-top:8px;">Save your first address to speed up future bookings.</div>
+                <button class="btn btn-blue" id="emptyAddBtn" style="margin-top:10px;">Add Address</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addrModal">
+        <div class="card">
+            <h2 id="modalTitle">Add Address</h2>
+            <label>Address Name</label>
+            <input class="field-plain" id="fLabel" placeholder="e.g. Home, Office">
+            <label>Address Type</label>
+            <select class="field-plain" id="fType">
+                <option value="home">Home</option><option value="work">Work</option><option value="business">Business</option>
+                <option value="warehouse">Warehouse</option><option value="family">Family</option><option value="other">Other</option>
+            </select>
+            <label>Street Address</label>
+            <input class="field-plain" id="fStreet" placeholder="Street address">
+            <div id="miniMap"></div>
+            <div class="meta">Click the map to set GPS coordinates (optional).</div>
+            <label>Suburb</label>
+            <input class="field-plain" id="fSuburb">
+            <label>City</label>
+            <input class="field-plain" id="fCity">
+            <label>Province</label>
+            <input class="field-plain" id="fProvince">
+            <label>Postal Code</label>
+            <input class="field-plain" id="fPostal">
+            <label>Contact Person</label>
+            <input class="field-plain" id="fContactPerson">
+            <label>Contact Number</label>
+            <input class="field-plain" id="fContactPhone">
+            <label>Email (Optional)</label>
+            <input class="field-plain" id="fContactEmail">
+            <label>Delivery Notes</label>
+            <textarea class="field-plain" id="fNotes" rows="2" placeholder="e.g. Use the back gate."></textarea>
+            <label style="display:flex; align-items:center; gap:6px; margin-top:8px;">
+                <input type="checkbox" id="fDefaultPickup" style="width:auto;"> Set as Default Pickup
+            </label>
+            <label style="display:flex; align-items:center; gap:6px;">
+                <input type="checkbox" id="fDefaultDropoff" style="width:auto;"> Set as Default Delivery
+            </label>
+            <div id="modalMsg" class="meta"></div>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn btn-blue" id="saveAddrBtn">Save Address</button>
+                <button class="btn btn-outline-blue" id="cancelAddrBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/leaflet.js"></script>
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="saved-addresses.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>

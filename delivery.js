@@ -47,9 +47,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     wireMapPickers();
     wireScheduleToggles();
 
-    document.getElementById('savedAddrBtn1').addEventListener('click', function () {
-        document.getElementById('savedAddrEmpty1').classList.toggle('hidden');
-    });
+    document.getElementById('savedAddrBtn1').addEventListener('click', showSavedAddresses);
     document.getElementById('calcBtn').addEventListener('click', calculateDistance);
     document.getElementById('bookBtn').addEventListener('click', bookNow);
 });
@@ -157,6 +155,31 @@ function wireMapPickers() {
                 if (addr) document.getElementById('dropoff').value = addr;
             });
         }
+    });
+}
+
+async function showSavedAddresses() {
+    const wrap = document.getElementById('savedAddrList1');
+    const showing = !wrap.classList.contains('hidden');
+    if (showing) { wrap.classList.add('hidden'); return; }
+
+    const { data } = await supabase.from('saved_addresses').select('*').eq('customer_id', currentUser.id).order('created_at', { ascending: false });
+    if (!data || !data.length) {
+        wrap.textContent = 'No saved addresses.';
+        wrap.classList.remove('hidden');
+        return;
+    }
+    wrap.classList.remove('hidden');
+    wrap.innerHTML = data.map(function (a) {
+        return '<div style="padding:6px 0; border-bottom:1px solid var(--line); cursor:pointer;" data-lat="' + (a.lat || '') + '" data-lng="' + (a.lng || '') + '" data-street="' + escapeHtml(a.street) + '">' +
+            '<b>' + escapeHtml(a.label) + '</b><br><span class="meta">' + escapeHtml(a.street) + '</span></div>';
+    }).join('');
+    wrap.querySelectorAll('div[data-street]').forEach(function (el) {
+        el.addEventListener('click', function () {
+            document.getElementById('pickup').value = el.dataset.street;
+            if (el.dataset.lat && el.dataset.lng) pickupCoords = { lat: parseFloat(el.dataset.lat), lng: parseFloat(el.dataset.lng) };
+            wrap.classList.add('hidden');
+        });
     });
 }
 
