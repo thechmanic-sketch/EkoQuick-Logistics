@@ -154,6 +154,11 @@ create table if not exists jobs (
   delivered_at timestamptz,
   cancelled_at timestamptz,
   cancellation_reason text,
+  refunded boolean not null default false,
+  refund_amount numeric,
+  refund_reason text,
+  refunded_at timestamptz,
+  refunded_by text,
   created_at timestamptz not null default now()
 );
 
