@@ -389,8 +389,8 @@ function renderDriverDetails(driverId) {
         '<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">' +
             (callLink ? '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" href="' + callLink + '">Call Driver</a>' : '') +
             (waLink ? '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" target="_blank" href="' + waLink + '">Message</a>' : '') +
-            '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" href="admin-drivers.html">Driver Profile</a>' +
-            (job ? '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" href="admin-jobs.html">View Job</a>' : '') +
+            '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" href="admin-drivers.html?driver=' + d.id + '">Driver Profile</a>' +
+            (job ? '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" href="admin-jobs.html?job=' + job.id + '">View Job</a>' : '') +
         '</div>';
 }
 
@@ -410,7 +410,7 @@ function renderJobDetails(jobId) {
         kv('Assigned Driver', driver ? driver.full_name : '—') +
         kv('Status', j.status) + kv('ETA', computeEta(j)) +
         '<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">' +
-            '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" href="admin-jobs.html">Open Job Details</a>' +
+            '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" href="admin-jobs.html?job=' + j.id + '">Open Job Details</a>' +
             (custWaLink ? '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" target="_blank" href="' + custWaLink + '">Contact Customer</a>' : '') +
             (driverWaLink ? '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" target="_blank" href="' + driverWaLink + '">Contact Driver</a>' : '') +
         '</div>';

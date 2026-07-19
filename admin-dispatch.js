@@ -318,7 +318,7 @@ function renderNearbyDrivers(jobId) {
                     '<button class="btn btn-blue" style="width:auto;" data-action="assign-driver" data-driver="' + w.driver.id + '">Assign</button>' +
                     (w.driver.phone ? '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" href="tel:' + w.driver.phone + '">Call</a>' : '') +
                     (w.driver.phone ? '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" target="_blank" href="' + whatsappLink(w.driver.phone, 'Ekoquick — new job available.') + '">Message</a>' : '') +
-                    '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" href="admin-drivers.html">View Profile</a>' +
+                    '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" href="admin-drivers.html?driver=' + w.driver.id + '">View Profile</a>' +
                 '</div>' +
             '</div>'
         );
@@ -447,7 +447,7 @@ function renderActiveDeliveries() {
                 '<td>' + eta + '</td>' +
                 '<td style="display:flex; gap:4px; flex-wrap:wrap;">' +
                     '<a class="btn btn-outline-blue" style="width:auto; padding:2px 8px; text-decoration:none;" href="admin-fleet-map.html">Live Track</a>' +
-                    '<a class="btn btn-outline-blue" style="width:auto; padding:2px 8px; text-decoration:none;" href="admin-jobs.html">View Job</a>' +
+                    '<a class="btn btn-outline-blue" style="width:auto; padding:2px 8px; text-decoration:none;" href="admin-jobs.html?job=' + j.id + '">View Job</a>' +
                     '<button class="btn btn-outline-blue" style="width:auto; padding:2px 8px;" data-action="reassign" data-job="' + j.id + '">Reassign</button>' +
                     (driverWa ? '<a class="btn btn-outline-blue" style="width:auto; padding:2px 8px; text-decoration:none;" target="_blank" href="' + driverWa + '">Contact Driver</a>' : '') +
                     (custWa ? '<a class="btn btn-outline-blue" style="width:auto; padding:2px 8px; text-decoration:none;" target="_blank" href="' + custWa + '">Contact Customer</a>' : '') +

@@ -34,10 +34,18 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     await loadDriverShare();
     await loadAll();
+    openDriverFromUrl();
 
     supabase.channel('drivers-page-profiles').on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, loadAll).subscribe();
     supabase.channel('drivers-page-jobs').on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, loadAll).subscribe();
 });
+
+function openDriverFromUrl() {
+    const driverId = new URLSearchParams(window.location.search).get('driver');
+    if (!driverId) return;
+    const driver = allDrivers.find(function (d) { return d.id === driverId; });
+    if (driver) openDrawer(driver.id);
+}
 
 function escapeHtml(s) {
     const d = document.createElement('div');

@@ -52,9 +52,17 @@ document.addEventListener('DOMContentLoaded', async function () {
     populateVehicleFilter();
     await loadDriverShare();
     await loadAll();
+    openJobFromUrl();
 
     supabase.channel('admin-jobs-page').on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, loadAll).subscribe();
 });
+
+function openJobFromUrl() {
+    const jobId = new URLSearchParams(window.location.search).get('job');
+    if (!jobId) return;
+    const job = allJobs.find(function (j) { return j.id === jobId; });
+    if (job) openJobDrawer(job.id);
+}
 
 function escapeHtml(s) {
     const d = document.createElement('div');
