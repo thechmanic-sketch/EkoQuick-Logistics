@@ -206,6 +206,7 @@ function wireSignup() {
                 options: { data: { role: 'customer', full_name: fullName, username: username } },
             });
             if (error) { showFormError(form, error.message); return; }
+            await recordReferralIfAny(data.user ? data.user.id : null, 'customer');
             window.location.href = 'signup-success.html';
         } catch (err) {
             showFormError(form, 'Something went wrong: ' + (err && err.message ? err.message : err));
@@ -213,6 +214,18 @@ function wireSignup() {
             setBusy(btn, null, btnText);
         }
     });
+}
+
+async function recordReferralIfAny(newUserId, role) {
+    if (!newUserId) return;
+    var refCode = new URLSearchParams(window.location.search).get('ref');
+    if (!refCode) return;
+    try {
+        var { data: referrer } = await supabase.from('profiles').select('id').eq('referral_code', refCode).single();
+        if (referrer) {
+            await supabase.from('referrals').insert({ referrer_id: referrer.id, referred_id: newUserId, referred_role: role });
+        }
+    } catch (err) { /* best-effort — never block signup on referral tracking */ }
 }
 
 function wireDriverSignup() {
@@ -253,6 +266,7 @@ function wireDriverSignup() {
             if (appSetting('driver_manual_approval', 'true') === 'false' && data.session) {
                 await supabase.from('profiles').update({ verification_status: 'approved' }).eq('id', data.user.id);
             }
+            await recordReferralIfAny(data.user ? data.user.id : null, 'driver');
 
             window.location.href = 'signup-success.html';
         } catch (err) {

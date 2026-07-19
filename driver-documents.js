@@ -31,6 +31,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         ? 'You are fully verified and can accept jobs.'
         : 'Re-uploading any document will reset your status to pending review.';
 
+    if (profile.verification_status === 'rejected' && profile.documents_rejected_reason) {
+        const el = document.getElementById('rejectedReasonNote');
+        el.textContent = 'Reason: ' + profile.documents_rejected_reason;
+        el.classList.remove('hidden');
+    }
+
     document.getElementById('docsForm').addEventListener('submit', handleSubmit);
 });
 
@@ -52,9 +58,10 @@ async function handleSubmit(e) {
     const idFile = document.getElementById('idFile').files[0];
     const vehicleRegFile = document.getElementById('vehicleRegFile').files[0];
     const insuranceFile = document.getElementById('insuranceFile').files[0];
+    const policeFile = document.getElementById('policeFile').files[0];
 
     if (!avatarFile || !licenseFile || !idFile || !vehicleRegFile || !insuranceFile) {
-        showMsg('error', 'Please choose all five files.');
+        showMsg('error', 'Please choose all required files.');
         return;
     }
 
@@ -73,6 +80,7 @@ async function handleSubmit(e) {
         updates.id_doc_url = await uploadFile('driver-docs', currentUser.id + '/id-' + Date.now() + '.' + (idFile.name.split('.').pop() || 'jpg'), idFile);
         updates.vehicle_reg_url = await uploadFile('driver-docs', currentUser.id + '/vehiclereg-' + Date.now() + '.' + (vehicleRegFile.name.split('.').pop() || 'jpg'), vehicleRegFile);
         updates.insurance_url = await uploadFile('driver-docs', currentUser.id + '/insurance-' + Date.now() + '.' + (insuranceFile.name.split('.').pop() || 'jpg'), insuranceFile);
+        if (policeFile) updates.police_clearance_url = await uploadFile('driver-docs', currentUser.id + '/police-' + Date.now() + '.' + (policeFile.name.split('.').pop() || 'jpg'), policeFile);
 
         const { error } = await supabase.from('profiles').update(updates).eq('id', currentUser.id);
         if (error) throw error;

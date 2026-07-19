@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Notifications</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--line); }
+        .toggle-row:last-child { border-bottom: none; }
+        .notif-item { font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-time { color: var(--muted); font-size: 11px; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="driver-dashboard.html">← Eko<span>quick</span> Driver</a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h1>Notifications</h1>
+        </div>
+
+        <div class="card">
+            <h2>Recent</h2>
+            <div id="notifList"></div>
+            <div class="empty hidden" id="emptyState">No notifications yet.</div>
+        </div>
+
+        <div class="card">
+            <h2>Preferences</h2>
+            <div class="toggle-row"><span>New Job</span><input type="checkbox" id="pNewJob"></div>
+            <div class="toggle-row"><span>Job Cancelled</span><input type="checkbox" id="pJobCancelled"></div>
+            <div class="toggle-row"><span>Payment Received</span><input type="checkbox" id="pPaymentReceived"></div>
+            <div class="toggle-row"><span>Weekly Summary</span><input type="checkbox" id="pWeeklySummary"></div>
+            <div class="toggle-row"><span>Support Reply</span><input type="checkbox" id="pSupportReply"></div>
+            <div class="toggle-row"><span>New Promotion</span><input type="checkbox" id="pPromotion"></div>
+            <div class="toggle-row"><span>Maintenance Reminder</span><input type="checkbox" id="pMaintenance"></div>
+            <div class="toggle-row"><span>Document Expiring</span><input type="checkbox" id="pDocExpiring"></div>
+            <div class="toggle-row"><span>Account Approved / Suspended</span><input type="checkbox" id="pAccountStatus"></div>
+            <button class="btn btn-blue" id="savePrefsBtn" style="margin-top:10px;">Save Preferences</button>
+            <div class="meta" id="prefsMsg"></div>
+            <div class="meta" style="margin-top:8px;">These control which events appear in the list above — there's no SMS/email/push delivery connected yet.</div>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="driver-notifications.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>

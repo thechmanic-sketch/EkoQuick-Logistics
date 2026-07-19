@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Messages</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        .thread-card { background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="driver-dashboard.html">← Eko<span>quick</span> Driver</a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h1>Messages</h1>
+            <div class="meta">Customer chat uses WhatsApp deep links (real-time in-app chat isn't built). Dispatch/Admin/Support conversations below come from your real Support tickets.</div>
+        </div>
+
+        <div class="card">
+            <h2>Active Delivery Customer</h2>
+            <div id="customerThread"></div>
+        </div>
+
+        <div class="card">
+            <h2>Dispatch / Admin / Support</h2>
+            <div id="supportThreads"></div>
+            <div class="empty hidden" id="emptyState">No conversations yet.</div>
+            <a class="btn btn-outline-blue" href="driver-support.html" style="display:block; text-align:center; margin-top:10px;">Open Support</a>
+        </div>
+
+        <div class="card">
+            <h2>Group Messages</h2>
+            <div class="meta">Not available — team/group messaging isn't built yet.</div>
+        </div>
+
+        <div class="card">
+            <h2>Location Sharing</h2>
+            <div class="meta">Your live location is already shared automatically with dispatch and customers during an active delivery (see Live Navigation) — there's no separate manual location-sharing control.</div>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="driver-messages.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>

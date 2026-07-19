@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Referrals</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        table.ref-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        table.ref-table th, table.ref-table td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="driver-dashboard.html">← Eko<span>quick</span> Driver</a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h1>Referrals</h1>
+            <div class="meta">Your Referral Code</div>
+            <div style="font-size:22px; font-weight:700; font-family:var(--font-mono);" id="referralCode">—</div>
+            <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                <a class="btn btn-blue" id="inviteDriverBtn" style="width:auto;" target="_blank" rel="noopener">Invite Drivers</a>
+                <a class="btn btn-blue" id="inviteCustomerBtn" style="width:auto;" target="_blank" rel="noopener">Invite Customers</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="summary-cards" id="summaryCards"></div>
+        </div>
+
+        <div class="card">
+            <h2>Referral History</h2>
+            <table class="ref-table">
+                <thead><tr><th>Date</th><th>Type</th><th>Reward</th><th>Status</th></tr></thead>
+                <tbody id="referralBody"></tbody>
+            </table>
+            <div class="empty hidden" id="emptyState">No referrals yet — invite drivers or customers to start earning.</div>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="driver-referrals.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>

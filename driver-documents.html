@@ -20,6 +20,7 @@
             <h2>Verification status</h2>
             <span class="badge" id="verificationBadge">Loading...</span>
             <div class="meta" id="verificationNote" style="margin-top: 8px;"></div>
+            <div class="msg error hidden" id="rejectedReasonNote" style="margin-top: 8px;"></div>
         </div>
 
         <div class="card">
@@ -42,6 +43,9 @@
 
                 <label>Vehicle insurance</label>
                 <input class="field-plain" type="file" id="insuranceFile" accept="image/*,.pdf">
+
+                <label>Police clearance</label>
+                <input class="field-plain" type="file" id="policeFile" accept="image/*,.pdf">
 
                 <div id="msgArea"></div>
 

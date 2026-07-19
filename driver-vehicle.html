@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Vehicle</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="driver-dashboard.html">← Eko<span>quick</span> Driver</a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h1>Vehicle</h1>
+            <label>Vehicle Photo</label>
+            <input class="field-plain" type="file" id="vehiclePhotoFile" accept="image/*">
+            <img id="vehiclePhotoPreview" class="hidden" style="width:100%; max-width:300px; border-radius:8px; margin-top:8px;">
+        </div>
+
+        <div class="card">
+            <h2>Vehicle Details</h2>
+            <label>Vehicle Class</label>
+            <select class="field-plain" id="fVehicleClass"></select>
+            <label>Make</label>
+            <input class="field-plain" id="fMake">
+            <label>Model</label>
+            <input class="field-plain" id="fModel">
+            <label>Year</label>
+            <input class="field-plain" id="fYear">
+            <label>Colour</label>
+            <input class="field-plain" id="fColor">
+            <label>Registration Number</label>
+            <input class="field-plain" id="fReg">
+            <label>VIN (Optional)</label>
+            <input class="field-plain" id="fVin">
+            <button class="btn btn-blue" id="saveDetailsBtn" style="margin-top:8px;">Save Vehicle Details</button>
+            <div class="meta" id="detailsMsg"></div>
+        </div>
+
+        <div class="card">
+            <h2>Vehicle Documents</h2>
+            <label>Insurance</label>
+            <input class="field-plain" type="file" id="insuranceFile" accept="image/*,.pdf">
+            <label>Expiry Date</label>
+            <input class="field-plain" type="date" id="fInsuranceExpiry">
+            <div class="meta" id="insuranceStatus"></div>
+
+            <label style="margin-top:10px;">Licence Disc</label>
+            <input class="field-plain" type="file" id="discFile" accept="image/*,.pdf">
+            <label>Expiry Date</label>
+            <input class="field-plain" type="date" id="fDiscExpiry">
+            <div class="meta" id="discStatus"></div>
+
+            <label style="margin-top:10px;">Roadworthy Certificate</label>
+            <input class="field-plain" type="file" id="roadworthyFile" accept="image/*,.pdf">
+            <label>Expiry Date</label>
+            <input class="field-plain" type="date" id="fRoadworthyExpiry">
+            <div class="meta" id="roadworthyStatus"></div>
+
+            <button class="btn btn-blue" id="uploadDocsBtn" style="margin-top:10px;">Upload New Documents</button>
+            <div class="meta" id="docsMsg"></div>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="driver-vehicle.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>

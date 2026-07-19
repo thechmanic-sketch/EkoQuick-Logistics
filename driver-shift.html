@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Shift</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        table.shift-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        table.shift-table th, table.shift-table td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="driver-dashboard.html">← Eko<span>quick</span> Driver</a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h1>Shift</h1>
+            <div class="meta" id="shiftStatus"></div>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn btn-blue" id="clockInBtn">Clock In</button>
+                <button class="btn btn-outline-blue hidden" id="clockOutBtn">Clock Out</button>
+                <button class="btn btn-outline-blue hidden" id="breakBtn">Start Break</button>
+            </div>
+            <div class="meta" id="shiftMsg"></div>
+        </div>
+
+        <div class="card">
+            <div class="summary-cards" id="summaryCards"></div>
+        </div>
+
+        <div class="card">
+            <h2>Shift History</h2>
+            <table class="shift-table">
+                <thead><tr><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Breaks</th><th>Distance</th><th>Deliveries</th></tr></thead>
+                <tbody id="shiftBody"></tbody>
+            </table>
+            <div class="empty hidden" id="emptyState">No shifts recorded yet.</div>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="driver-shift.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>
