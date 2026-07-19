@@ -58,6 +58,7 @@ create table if not exists profiles (
   notif_delivery_completed boolean not null default true,
   notif_promotions boolean not null default true,
   notif_support_replies boolean not null default true,
+  is_online boolean not null default false,
   created_at timestamptz not null default now()
 );
 

@@ -3,7 +3,38 @@ let currentProfile = null;
 let watchId = null;
 let activeJobId = null;
 let lastPos = null;
+let allJobs = [];
 const jobMaps = {};
+
+const STATUS_LABELS = {
+    pending: 'Pending', offered: 'New job — respond below', to_pickup: 'Heading to pickup',
+    to_dropoff: 'Heading to drop-off', delivered: 'Delivered', cancelled: 'Cancelled',
+};
+const BADGE_CLASS = {
+    pending: 'pending', offered: 'assigned', to_pickup: 'in_progress', to_dropoff: 'in_progress',
+    delivered: 'delivered', cancelled: 'cancelled',
+};
+const ACTIVE_STATUSES = ['offered', 'to_pickup', 'to_dropoff'];
+
+function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+}
+function formatDate(iso) { return iso ? new Date(iso).toLocaleDateString('en-ZA') : '—'; }
+
+function haversineKm(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function startOfDay() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+function startOfWeek() { const d = startOfDay(); d.setDate(d.getDate() - d.getDay()); return d; }
+function startOfMonth() { const d = startOfDay(); d.setDate(1); return d; }
 
 document.addEventListener('DOMContentLoaded', async function () {
     currentUser = await requireSession('driver-login.html');
@@ -25,6 +56,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
     currentProfile = profile;
 
+    document.getElementById('driverName').textContent = profile.full_name;
+    if (profile.avatar_url) document.getElementById('driverAvatar').src = profile.avatar_url;
+    document.getElementById('onlineToggle').checked = !!profile.is_online;
+    document.getElementById('onlineLabel').textContent = profile.is_online ? 'Online' : 'Offline';
+
     const banner = document.getElementById('verificationBanner');
     if (profile.verification_status !== 'approved') {
         banner.classList.remove('hidden');
@@ -41,7 +77,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         await supabase.auth.signOut();
         window.location.href = 'login.html';
     });
-    document.getElementById('refreshBtn').addEventListener('click', loadJobs);
+    document.getElementById('onlineToggle').addEventListener('change', toggleOnline);
+    document.getElementById('bellBtn').addEventListener('click', function () {
+        document.getElementById('notifPanel').classList.toggle('open');
+    });
 
     await loadDriverShare();
     await loadCommissionRules();
@@ -51,14 +90,42 @@ document.addEventListener('DOMContentLoaded', async function () {
     supabase
         .channel('driver-jobs-' + currentUser.id)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs', filter: 'driver_id=eq.' + currentUser.id }, function (payload) {
-            // Our own GPS writes touch driver_lat/lng constantly — only a full
-            // reload (which rebuilds the map) when the job actually changes state.
             var oldStatus = payload.old && payload.old.status;
             var newStatus = payload.new && payload.new.status;
             if (payload.eventType !== 'UPDATE' || oldStatus !== newStatus) loadJobs();
         })
         .subscribe();
+
+    if (profile.is_online) {
+        supabase
+            .channel('driver-available-' + currentUser.id)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs', filter: 'status=eq.pending' }, loadJobs)
+            .subscribe();
+    }
 });
+
+async function toggleOnline() {
+    const toggle = document.getElementById('onlineToggle');
+    const goingOnline = toggle.checked;
+
+    if (!goingOnline) {
+        const hasActive = allJobs.some(function (j) { return j.status === 'to_pickup' || j.status === 'to_dropoff'; });
+        if (hasActive) {
+            toggle.checked = true;
+            alert('You can\'t go offline while you have an active delivery. Complete it first.');
+            return;
+        }
+        if (!confirm('Go Offline? You will stop receiving new delivery requests.')) {
+            toggle.checked = true;
+            return;
+        }
+    }
+
+    await supabase.from('profiles').update({ is_online: goingOnline }).eq('id', currentUser.id);
+    currentProfile.is_online = goingOnline;
+    document.getElementById('onlineLabel').textContent = goingOnline ? 'Online' : 'Offline';
+    loadJobs();
+}
 
 let presenceWatchId = null;
 
@@ -81,81 +148,142 @@ function stopPresence() {
     if (presenceWatchId !== null) { navigator.geolocation.clearWatch(presenceWatchId); presenceWatchId = null; }
 }
 
-function escapeHtml(s) {
-    const d = document.createElement('div');
-    d.textContent = s || '';
-    return d.innerHTML;
-}
-
-const STATUS_LABELS = {
-    pending: 'Pending',
-    offered: 'New job — respond below',
-    to_pickup: 'Heading to pickup',
-    to_dropoff: 'Heading to drop-off',
-    delivered: 'Delivered',
-    cancelled: 'Cancelled',
-};
-
-const ACTIVE_STATUSES = ['offered', 'to_pickup', 'to_dropoff'];
-
 async function loadJobs() {
     const { data: jobs, error } = await supabase.from('jobs').select('*').eq('driver_id', currentUser.id).order('created_at', { ascending: false });
-    if (error) {
-        document.getElementById('jobsList').innerHTML = '<div class="empty">Failed to load jobs: ' + error.message + '</div>';
-        return;
+    if (error) return;
+    allJobs = jobs || [];
+
+    let availablePending = [];
+    if (currentProfile.is_online) {
+        const { data: pendingJobs } = await supabase.from('jobs').select('*')
+            .eq('status', 'pending').is('driver_id', null).eq('vehicle', currentProfile.vehicle_class)
+            .order('created_at', { ascending: false }).limit(5);
+        availablePending = pendingJobs || [];
     }
 
-    const active = (jobs || []).filter(function (j) { return ACTIVE_STATUSES.indexOf(j.status) !== -1; });
-    const history = (jobs || []).filter(function (j) { return j.status === 'delivered' || j.status === 'cancelled'; });
-
     destroyAllJobMaps();
-    renderActiveJobs(active);
-    renderHistory(history);
+    renderSummaryCards();
+    renderActiveDelivery();
+    renderAvailableJobs(availablePending);
+    renderRecentDeliveries();
+    renderPerformance();
+    renderNotifications();
 
-    // Resume live tracking automatically if we're mid-trip (e.g. after a page reload).
-    const inProgress = active.find(function (j) { return j.status === 'to_pickup' || j.status === 'to_dropoff'; });
+    const inProgress = allJobs.find(function (j) { return j.status === 'to_pickup' || j.status === 'to_dropoff'; });
     if (inProgress && activeJobId !== inProgress.id) beginTracking(inProgress.id);
     if (!inProgress) stopTracking();
 }
 
-function renderActiveJobs(jobs) {
-    const list = document.getElementById('jobsList');
-    if (!jobs.length) { list.innerHTML = '<div class="empty">No active jobs right now.</div>'; return; }
+function renderSummaryCards() {
+    const today = startOfDay();
+    const deliveredToday = allJobs.filter(function (j) { return j.status === 'delivered' && j.delivered_at && new Date(j.delivered_at) >= today; });
+    const earningsToday = deliveredToday.reduce(function (s, j) { return s + driverEarningForJob(j); }, 0);
+    const distanceToday = deliveredToday.reduce(function (s, j) { return s + (Number(j.distance) || 0); }, 0);
 
-    list.innerHTML = jobs.map(function (job) {
-        let actionArea = '';
+    const offeredCount = allJobs.filter(function (j) { return j.status === 'offered'; }).length;
+    const activeCount = allJobs.filter(function (j) { return j.status === 'to_pickup' || j.status === 'to_dropoff'; }).length;
 
-        if (job.status === 'offered') {
-            actionArea =
-                '<button class="btn btn-blue" data-job="' + job.id + '" data-action="accept">Accept job</button>' +
-                '<button class="btn btn-outline-blue" data-job="' + job.id + '" style="margin-top: 8px;" data-action="decline">Decline</button>';
-        } else if (job.status === 'to_pickup') {
-            actionArea =
-                (job.pickup_lat && job.pickup_lng ? '<div id="jobMap-' + job.id + '" style="height: 180px; border: 1px solid var(--line); margin-bottom: 10px;"></div>' : '') +
-                '<label>Pickup code (ask the sender)</label>' +
-                '<input class="field-plain" id="collectionInput-' + job.id + '" placeholder="4-digit code">' +
-                '<div class="msg error hidden" id="collectionError-' + job.id + '"></div>' +
-                '<div class="msg error hidden" id="locError-' + job.id + '"></div>' +
-                '<button class="btn btn-blue" data-job="' + job.id + '" data-action="confirm-pickup">Confirm pickup</button>';
-        } else if (job.status === 'to_dropoff') {
-            actionArea =
-                (job.dropoff_lat && job.dropoff_lng ? '<div id="jobMap-' + job.id + '" style="height: 180px; border: 1px solid var(--line); margin-bottom: 10px;"></div>' : '') +
-                '<label>Delivery code (ask the receiver)</label>' +
-                '<input class="field-plain" id="deliveryInput-' + job.id + '" placeholder="4-digit code">' +
-                '<div class="msg error hidden" id="deliveryError-' + job.id + '"></div>' +
-                '<button class="btn btn-outline-blue" data-job="' + job.id + '" data-action="deliver">Mark Delivered</button>';
-        }
+    const rated = allJobs.filter(function (j) { return j.rating; });
+    const avgRating = rated.length ? (rated.reduce(function (s, j) { return s + j.rating; }, 0) / rated.length) : null;
 
-        return (
-            '<div class="job">' +
-                '<div class="route">' + escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff) + '</div>' +
-                '<div class="meta">' + (job.distance || 0) + ' km • You earn R' + driverEarningForJob(job).toFixed(2) + '</div>' +
-                '<div class="meta">Sender: ' + escapeHtml(job.customer_phone || '') + '</div>' +
-                '<div class="meta">Receiver: ' + escapeHtml(job.receiver_name || '') + (job.receiver_phone ? ' (' + escapeHtml(job.receiver_phone) + ')' : '') + '</div>' +
-                '<span class="badge ' + job.status + '">' + (STATUS_LABELS[job.status] || job.status) + '</span>' +
-                (actionArea ? '<div style="margin-top: 10px;">' + actionArea + '</div>' : '') +
-            '</div>'
-        );
+    const delivered = allJobs.filter(function (j) { return j.status === 'delivered'; });
+    const cancelled = allJobs.filter(function (j) { return j.status === 'cancelled'; });
+    const completionRate = (delivered.length + cancelled.length) ? Math.round((delivered.length / (delivered.length + cancelled.length)) * 100) : null;
+
+    document.getElementById('summaryCards').innerHTML =
+        '<div class="summary-card"><div class="num">R' + earningsToday.toFixed(0) + '</div><div class="lbl">Today\'s Earnings</div><div class="meta">' + deliveredToday.length + ' deliveries today</div></div>' +
+        '<div class="summary-card"><div class="num">' + offeredCount + '</div><div class="lbl">Available Jobs</div></div>' +
+        '<div class="summary-card"><div class="num">' + activeCount + '</div><div class="lbl">Active Deliveries</div></div>' +
+        '<div class="summary-card"><div class="num">' + distanceToday.toFixed(1) + ' km</div><div class="lbl">Today\'s Distance</div></div>' +
+        '<div class="summary-card"><div class="num">' + (avgRating ? avgRating.toFixed(1) + ' ★' : '—') + '</div><div class="lbl">Average Rating</div><div class="meta">' + rated.length + ' reviews</div></div>' +
+        '<div class="summary-card"><div class="num">' + (completionRate !== null ? completionRate + '%' : '—') + '</div><div class="lbl">Completion Rate</div></div>';
+}
+
+function computeEtaMin(job) {
+    const destLat = job.status === 'to_pickup' ? job.pickup_lat : job.dropoff_lat;
+    const destLng = job.status === 'to_pickup' ? job.pickup_lng : job.dropoff_lng;
+    if (!job.driver_lat || !job.driver_lng || !destLat || !destLng) return null;
+    return haversineKm(job.driver_lat, job.driver_lng, destLat, destLng);
+}
+
+function renderActiveDelivery() {
+    const active = allJobs.find(function (j) { return j.status === 'to_pickup' || j.status === 'to_dropoff'; });
+    const card = document.getElementById('activeDeliveryCard');
+    const emptyCard = document.getElementById('noActiveDeliveryCard');
+
+    if (!active) { card.classList.add('hidden'); emptyCard.classList.remove('hidden'); return; }
+    emptyCard.classList.add('hidden');
+    card.classList.remove('hidden');
+
+    const remainingKm = computeEtaMin(active);
+    const etaMin = remainingKm !== null ? Math.round((remainingKm / 30) * 60) : null;
+    const destLat = active.status === 'to_pickup' ? active.pickup_lat : active.dropoff_lat;
+    const destLng = active.status === 'to_pickup' ? active.pickup_lng : active.dropoff_lng;
+    const navUrl = destLat && destLng ? mapsDirectionsUrl(destLat, destLng) : null;
+    const custDigits = (active.customer_phone || '').replace(/\D/g, '');
+
+    let actionArea = '';
+    if (active.status === 'to_pickup') {
+        actionArea =
+            (active.pickup_lat && active.pickup_lng ? '<div id="jobMap-' + active.id + '" style="height: 180px; border: 1px solid var(--line); margin-bottom: 10px;"></div>' : '') +
+            '<label>Pickup code (ask the sender)</label>' +
+            '<input class="field-plain" id="collectionInput-' + active.id + '" placeholder="4-digit code">' +
+            '<div class="msg error hidden" id="collectionError-' + active.id + '"></div>' +
+            '<div class="msg error hidden" id="locError-' + active.id + '"></div>' +
+            '<button class="btn btn-blue" data-job="' + active.id + '" data-action="confirm-pickup">Confirm pickup</button>';
+    } else {
+        actionArea =
+            (active.dropoff_lat && active.dropoff_lng ? '<div id="jobMap-' + active.id + '" style="height: 180px; border: 1px solid var(--line); margin-bottom: 10px;"></div>' : '') +
+            '<label>Delivery code (ask the receiver)</label>' +
+            '<input class="field-plain" id="deliveryInput-' + active.id + '" placeholder="4-digit code">' +
+            '<div class="msg error hidden" id="deliveryError-' + active.id + '"></div>' +
+            '<button class="btn btn-outline-blue" data-job="' + active.id + '" data-action="deliver">Mark Delivered</button>';
+    }
+
+    document.getElementById('activeDeliveryContent').innerHTML =
+        '<div class="meta">Job ' + active.id.slice(0, 8) + '</div>' +
+        '<div class="route">' + escapeHtml(active.pickup) + ' → ' + escapeHtml(active.dropoff) + '</div>' +
+        '<div class="meta">Customer: ' + escapeHtml(active.sender_name || '') + (active.customer_phone ? ' · ' + escapeHtml(active.customer_phone) : '') + '</div>' +
+        '<span class="badge ' + BADGE_CLASS[active.status] + '">' + STATUS_LABELS[active.status] + '</span>' +
+        '<div class="meta" style="margin-top:6px;">ETA: ' + (etaMin !== null ? etaMin + ' min' : '—') + ' · Distance remaining: ' + (remainingKm !== null ? remainingKm.toFixed(1) + ' km' : '—') + '</div>' +
+        '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">' +
+            (navUrl ? '<a class="btn btn-outline-blue" style="width:auto;" href="' + navUrl + '" target="_blank" rel="noopener">Open Navigation</a>' : '') +
+            (custDigits ? '<a class="btn btn-outline-blue" style="width:auto;" href="tel:' + escapeHtml(active.customer_phone) + '">Call Customer</a>' : '') +
+            (custDigits ? '<a class="btn btn-outline-blue" style="width:auto;" target="_blank" rel="noopener" href="https://wa.me/' + custDigits + '?text=' + encodeURIComponent('Hi, this is your Ekoquick driver regarding order ' + active.id.slice(0, 8) + '.') + '">Message Customer</a>' : '') +
+        '</div>' +
+        '<div style="margin-top:10px;">' + actionArea + '</div>';
+
+    document.querySelectorAll('button[data-action="confirm-pickup"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { confirmPickup(btn.dataset.job); });
+    });
+    document.querySelectorAll('button[data-action="deliver"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { markDelivered(btn.dataset.job); });
+    });
+
+    if (active.status === 'to_pickup' && active.pickup_lat && active.pickup_lng) ensureJobMap(active.id, active.pickup_lat, active.pickup_lng);
+    else if (active.status === 'to_dropoff' && active.dropoff_lat && active.dropoff_lng) ensureJobMap(active.id, active.dropoff_lat, active.dropoff_lng);
+}
+
+function renderAvailableJobs(availablePending) {
+    const offered = allJobs.filter(function (j) { return j.status === 'offered'; });
+    const list = document.getElementById('availableJobsList');
+    const combined = offered.concat(availablePending).slice(0, 5);
+
+    if (!combined.length) {
+        list.innerHTML = '<div class="empty">No delivery requests available nearby.</div>';
+        return;
+    }
+
+    list.innerHTML = combined.map(function (job) {
+        const isOffered = job.status === 'offered';
+        return '<div class="job">' +
+            '<div class="route">' + escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff) + '</div>' +
+            '<div class="meta">' + (job.distance || 0) + ' km · You earn R' + driverEarningForJob(job).toFixed(2) + ' · ' + (isOffered ? 'Dispatched to you' : 'Open request') + '</div>' +
+            '<div style="margin-top:8px; display:flex; gap:8px;">' +
+                '<button class="btn btn-blue" style="width:auto;" data-job="' + job.id + '" data-action="' + (isOffered ? 'accept' : 'claim') + '">Accept Job</button>' +
+                '<button class="btn btn-outline-blue" style="width:auto;" data-job="' + job.id + '" data-action="' + (isOffered ? 'decline' : 'dismiss') + '">Decline</button>' +
+            '</div>' +
+        '</div>';
     }).join('');
 
     list.querySelectorAll('button[data-action="accept"]').forEach(function (btn) {
@@ -164,44 +292,88 @@ function renderActiveJobs(jobs) {
     list.querySelectorAll('button[data-action="decline"]').forEach(function (btn) {
         btn.addEventListener('click', function () { declineJob(btn.dataset.job); });
     });
-    list.querySelectorAll('button[data-action="confirm-pickup"]').forEach(function (btn) {
-        btn.addEventListener('click', function () { confirmPickup(btn.dataset.job); });
+    list.querySelectorAll('button[data-action="claim"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { claimJob(btn.dataset.job); });
     });
-    list.querySelectorAll('button[data-action="deliver"]').forEach(function (btn) {
-        btn.addEventListener('click', function () { markDelivered(btn.dataset.job); });
-    });
-
-    jobs.forEach(function (job) {
-        if (job.status === 'to_pickup' && job.pickup_lat && job.pickup_lng) {
-            ensureJobMap(job.id, job.pickup_lat, job.pickup_lng);
-        } else if (job.status === 'to_dropoff' && job.dropoff_lat && job.dropoff_lng) {
-            ensureJobMap(job.id, job.dropoff_lat, job.dropoff_lng);
-        }
+    list.querySelectorAll('button[data-action="dismiss"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { btn.closest('.job').remove(); });
     });
 }
 
-function renderHistory(jobs) {
-    const totalEl = document.getElementById('statTotalEarned');
-    const list = document.getElementById('historyList');
-    const delivered = jobs.filter(function (j) { return j.status === 'delivered'; });
-
-    if (totalEl) {
-        const total = delivered.reduce(function (sum, j) { return sum + driverEarningForJob(j); }, 0);
-        totalEl.textContent = delivered.length + ' completed trips • Total earned: R' + total.toFixed(2);
-    }
-
-    if (!jobs.length) { list.innerHTML = '<div class="empty">No completed jobs yet.</div>'; return; }
-
-    list.innerHTML = jobs.map(function (job) {
-        return (
-            '<div class="job">' +
-                '<div class="route">' + escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff) + '</div>' +
-                '<div class="meta">' + (job.distance || 0) + ' km • You earned R' + driverEarningForJob(job).toFixed(2) + '</div>' +
-                '<span class="badge ' + job.status + '">' + (STATUS_LABELS[job.status] || job.status) + '</span>' +
-                (job.rating ? '<div class="meta" style="margin-top: 6px;">Rating: ' + '★'.repeat(job.rating) + (job.rating_comment ? ' — "' + escapeHtml(job.rating_comment) + '"' : '') + '</div>' : '') +
-            '</div>'
-        );
+function renderRecentDeliveries() {
+    const delivered = allJobs.filter(function (j) { return j.status === 'delivered'; }).slice(0, 5);
+    const body = document.getElementById('recentDeliveriesBody');
+    const empty = document.getElementById('recentDeliveriesEmpty');
+    if (!delivered.length) { body.innerHTML = ''; empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+    body.innerHTML = delivered.map(function (job) {
+        return '<tr>' +
+            '<td>' + job.id.slice(0, 8) + '</td>' +
+            '<td>' + escapeHtml(job.sender_name || '') + '</td>' +
+            '<td>' + formatDate(job.delivered_at) + '</td>' +
+            '<td>R' + driverEarningForJob(job).toFixed(2) + '</td>' +
+            '<td>' + (job.rating ? '★'.repeat(job.rating) : '—') + '</td>' +
+            '</tr>';
     }).join('');
+}
+
+function renderPerformance() {
+    const today = startOfDay(), week = startOfWeek(), month = startOfMonth();
+    const delivered = allJobs.filter(function (j) { return j.status === 'delivered'; });
+    const cancelled = allJobs.filter(function (j) { return j.status === 'cancelled'; });
+
+    const deliveriesToday = delivered.filter(function (j) { return new Date(j.delivered_at) >= today; }).length;
+    const deliveriesWeek = delivered.filter(function (j) { return new Date(j.delivered_at) >= week; }).length;
+    const deliveriesMonth = delivered.filter(function (j) { return new Date(j.delivered_at) >= month; }).length;
+
+    const withDuration = delivered.filter(function (j) { return j.assigned_at && j.delivered_at; });
+    const avgMin = withDuration.length
+        ? Math.round(withDuration.reduce(function (s, j) { return s + (new Date(j.delivered_at) - new Date(j.assigned_at)); }, 0) / withDuration.length / 60000)
+        : null;
+
+    const completionRate = (delivered.length + cancelled.length) ? Math.round((delivered.length / (delivered.length + cancelled.length)) * 100) : null;
+    const rated = allJobs.filter(function (j) { return j.rating; });
+    const avgRating = rated.length ? (rated.reduce(function (s, j) { return s + j.rating; }, 0) / rated.length) : null;
+
+    document.getElementById('performanceGrid').innerHTML =
+        '<div class="summary-card"><div class="num">' + deliveriesToday + '</div><div class="lbl">Deliveries Today</div></div>' +
+        '<div class="summary-card"><div class="num">' + deliveriesWeek + '</div><div class="lbl">Deliveries This Week</div></div>' +
+        '<div class="summary-card"><div class="num">' + deliveriesMonth + '</div><div class="lbl">Deliveries This Month</div></div>' +
+        '<div class="summary-card"><div class="num">' + delivered.length + '</div><div class="lbl">Lifetime Deliveries</div></div>' +
+        '<div class="summary-card"><div class="num">' + (avgMin !== null ? avgMin + ' min' : '—') + '</div><div class="lbl">Average Delivery Time</div></div>' +
+        '<div class="summary-card"><div class="num">—</div><div class="lbl">Acceptance Rate</div><div class="meta">Not tracked — declined jobs aren\'t retained</div></div>' +
+        '<div class="summary-card"><div class="num">' + (completionRate !== null ? completionRate + '%' : '—') + '</div><div class="lbl">Completion Rate</div></div>' +
+        '<div class="summary-card"><div class="num">' + (avgRating ? avgRating.toFixed(1) + ' ★' : '—') + '</div><div class="lbl">Average Customer Rating</div></div>';
+}
+
+async function renderNotifications() {
+    const notifs = [];
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+
+    allJobs.forEach(function (j) {
+        if (j.status === 'offered' && j.assigned_at && new Date(j.assigned_at).getTime() >= dayAgo) {
+            notifs.push({ time: j.assigned_at, label: 'New job assigned: ' + j.pickup + ' → ' + j.dropoff });
+        }
+        if (j.status === 'cancelled' && j.cancelled_at && new Date(j.cancelled_at).getTime() >= dayAgo) {
+            notifs.push({ time: j.cancelled_at, label: 'Job cancelled: ' + j.pickup + ' → ' + j.dropoff });
+        }
+    });
+
+    const { data: payouts } = await supabase.from('driver_payouts').select('*').eq('driver_id', currentUser.id).eq('status', 'paid').order('paid_at', { ascending: false }).limit(5);
+    (payouts || []).forEach(function (p) {
+        if (p.paid_at && new Date(p.paid_at).getTime() >= dayAgo) {
+            notifs.push({ time: p.paid_at, label: 'Earnings paid: R' + Number(p.total_amount).toFixed(2) });
+        }
+    });
+
+    notifs.sort(function (a, b) { return new Date(b.time) - new Date(a.time); });
+
+    const bell = document.getElementById('bellCount');
+    if (notifs.length) { bell.textContent = notifs.length; bell.classList.remove('hidden'); } else { bell.classList.add('hidden'); }
+
+    document.getElementById('notifPanel').innerHTML = notifs.length
+        ? notifs.map(function (n) { return '<div class="notif-item">' + escapeHtml(n.label) + '</div>'; }).join('')
+        : '<div class="empty">No notifications.</div>';
 }
 
 function showJobError(id, message) {
@@ -218,6 +390,25 @@ async function acceptJob(jobId) {
     }
     const { error } = await supabase.from('jobs').update({ status: 'to_pickup', to_pickup_at: new Date().toISOString() }).eq('id', jobId);
     if (error) { alert('Failed to accept job: ' + error.message); return; }
+    beginTracking(jobId);
+    loadJobs();
+}
+
+async function claimJob(jobId) {
+    if (currentProfile.verification_status !== 'approved') {
+        alert('Your documents must be approved before you can accept jobs. Go to "Complete now" above.');
+        return;
+    }
+    const hasActive = allJobs.some(function (j) { return j.status === 'to_pickup' || j.status === 'to_dropoff'; });
+    if (hasActive) { alert('You already have an active delivery. Complete it before accepting another job.'); return; }
+
+    const { data, error } = await supabase.from('jobs')
+        .update({ driver_id: currentUser.id, status: 'to_pickup', assigned_at: new Date().toISOString(), to_pickup_at: new Date().toISOString() })
+        .eq('id', jobId).eq('status', 'pending').is('driver_id', null).select();
+
+    if (error) { alert('Failed to accept job: ' + error.message); return; }
+    if (!data || !data.length) { alert('This job was just claimed by another driver.'); loadJobs(); return; }
+
     beginTracking(jobId);
     loadJobs();
 }

@@ -10,14 +10,63 @@
     <link rel="stylesheet" href="app.css">
     <link rel="stylesheet" href="support-widget.css">
     <script src="transitions.js"></script>
+    <style>
+        .driver-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .driver-header img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); }
+        .online-toggle { display: flex; align-items: center; gap: 8px; }
+        .switch { position: relative; width: 46px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; inset: 0; background: #444; cursor: pointer; border-radius: 26px; transition: .2s; }
+        .slider::before { content: ''; position: absolute; height: 20px; width: 20px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+        input:checked + .slider { background: #1E8E3E; }
+        input:checked + .slider::before { transform: translateX(20px); }
+        .dropdown { position: relative; }
+        .bell-btn { position: relative; background: transparent; border: 1px solid var(--line); color: var(--paper); width: 34px; height: 34px; cursor: pointer; }
+        .bell-count { position: absolute; top: -6px; right: -6px; background: var(--orange); color: #1a1a1a; font-size: 10px; font-weight: 700; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; }
+        .dropdown-panel { position: absolute; right: 0; top: 40px; width: 280px; max-height: 340px; overflow-y: auto; background: var(--ink-2); border: 1px solid var(--line); z-index: 30; display: none; padding: 10px; }
+        .dropdown-panel.open { display: block; }
+        .notif-item { font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+        .notif-item:last-child { border-bottom: none; }
+        .details-row { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+        .details-row.open { display: block; }
+        table.hist-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        table.hist-table th, table.hist-table td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+        .table-scroll { overflow-x: auto; }
+        .perf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        @media (min-width: 700px) { .perf-grid { grid-template-columns: repeat(4, 1fr); } }
+    </style>
 </head>
 <body>
     <div class="navbar">
         <div class="brand">Eko<span>quick</span> Driver</div>
-        <button class="nav-logout" id="logoutBtn">Log Out</button>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div class="dropdown">
+                <button class="bell-btn" id="bellBtn">🔔<span class="bell-count hidden" id="bellCount"></span></button>
+                <div class="dropdown-panel" id="notifPanel"></div>
+            </div>
+            <button class="nav-logout" id="logoutBtn">Log Out</button>
+        </div>
     </div>
 
     <div class="page-wrap">
+        <div class="card">
+            <div class="driver-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img id="driverAvatar" src="">
+                    <div>
+                        <h1 style="margin:0;">Welcome, <span id="driverName"></span></h1>
+                    </div>
+                </div>
+                <div class="online-toggle">
+                    <span id="onlineLabel">Offline</span>
+                    <label class="switch">
+                        <input type="checkbox" id="onlineToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <div class="card hidden" id="verificationBanner">
             <h2>Profile & Documents</h2>
             <div class="meta" id="verificationBannerText"></div>
@@ -25,15 +74,38 @@
         </div>
 
         <div class="card">
-            <h2>My Jobs</h2>
-            <button class="btn btn-outline-blue" id="refreshBtn">Refresh</button>
-            <div id="jobsList" style="margin-top: 14px;"><div class="empty">Loading...</div></div>
+            <div class="summary-cards" id="summaryCards"></div>
+        </div>
+
+        <div class="card hidden" id="activeDeliveryCard">
+            <h2>Active Delivery</h2>
+            <div id="activeDeliveryContent"></div>
+        </div>
+        <div class="card hidden" id="noActiveDeliveryCard">
+            <h2>Active Delivery</h2>
+            <div class="empty">No active deliveries.</div>
+        </div>
+
+        <div class="card" id="availableJobsCard">
+            <h2>Available Jobs</h2>
+            <div id="availableJobsList"><div class="empty">Loading...</div></div>
+            <a class="btn btn-outline-blue" href="driver-available-jobs.html" style="display:block; text-align:center; margin-top:10px;">View All Available Jobs</a>
+        </div>
+
+        <div class="card" id="recentDeliveriesCard">
+            <h2>Recent Deliveries</h2>
+            <div class="table-scroll">
+                <table class="hist-table">
+                    <thead><tr><th>Job ID</th><th>Customer</th><th>Date</th><th>Earnings</th><th>Rating</th></tr></thead>
+                    <tbody id="recentDeliveriesBody"></tbody>
+                </table>
+            </div>
+            <div class="empty hidden" id="recentDeliveriesEmpty">No completed jobs yet.</div>
         </div>
 
         <div class="card">
-            <h2>History</h2>
-            <div id="statTotalEarned" class="meta" style="margin-bottom: 10px;"></div>
-            <div id="historyList"><div class="empty">Loading...</div></div>
+            <h2>Performance</h2>
+            <div class="perf-grid" id="performanceGrid"></div>
         </div>
     </div>
 
