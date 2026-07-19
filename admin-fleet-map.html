@@ -11,6 +11,29 @@
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="support-widget.css">
     <script src="transitions.js"></script>
+    <style>
+        .fleet-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr 320px;
+            gap: 12px;
+            align-items: start;
+            height: calc(100vh - 40px);
+        }
+        @media (max-width: 1200px) {
+            .fleet-grid { grid-template-columns: 1fr; height: auto; }
+        }
+        .fleet-col { display: flex; flex-direction: column; gap: 12px; height: 100%; overflow-y: auto; }
+        .driver-row { padding: 8px; border: 1px solid var(--line); margin-bottom: 6px; cursor: pointer; font-size: 12px; }
+        .driver-row:hover, .driver-row.selected { border-color: var(--orange); }
+        .status-dot-inline { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+        .kv-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; gap: 10px; }
+        .kv-row span:first-child { color: var(--muted); }
+        .event-item { font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+        .event-item:hover { color: var(--orange); }
+        .legend-row { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+        #liveIndicator { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+        #liveIndicator .dot { width: 8px; height: 8px; border-radius: 50%; background: #1E8E3E; }
+    </style>
 </head>
 <body>
     <div class="cmd-shell">
@@ -19,9 +42,9 @@
             <div class="cmd-tag">Admin Command Center</div>
             <nav class="cmd-nav">
                 <a href="admin-dashboard.html">Dashboard</a>
-                <a href="admin-dashboard.html#drivers">Drivers</a>
-                <a href="admin-dashboard.html#reviews">Reviews & Complaints</a>
-                <a href="admin-dashboard.html#jobs">All Jobs</a>
+                <a href="admin-drivers.html">Drivers</a>
+                <a href="admin-reviews.html">Reviews & Complaints</a>
+                <a href="admin-jobs.html">All Jobs</a>
                 <a href="admin-fleet-map.html">Live Fleet Map</a>
                 <a href="admin-dispatch.html">Dispatch Center</a>
                 <a href="admin-customers.html">Customers</a>
@@ -34,10 +57,59 @@
         </aside>
 
         <main class="cmd-main">
-            <div class="cmd-panel">
-                <h2>Live Fleet Map</h2>
-                <div style="font-size: 11px; color: var(--muted); margin-bottom: 10px;">🚚 = driver mid-trip · 🟢 = online and available</div>
-                <div id="fleetMap" style="height: 640px; border: 1px solid var(--line); border-radius: 12px;"></div>
+            <div class="cmd-header">
+                <div class="cmd-header-title">
+                    <h1>Live Fleet Map</h1>
+                    <div class="cmd-breadcrumb"><span id="liveIndicator"><span class="dot"></span>Live</span> · Last updated <span id="lastUpdated">—</span></div>
+                </div>
+                <div class="cmd-header-right">
+                    <button class="btn btn-outline-blue" id="fullscreenBtn" style="width: auto;">Fullscreen</button>
+                    <button class="btn btn-outline-blue" id="refreshBtn" style="width: auto;">Refresh</button>
+                </div>
+            </div>
+
+            <div class="legend-row">
+                <span>🟢 Available</span> <span>🔵 Busy</span> <span>⚪ Offline</span> <span>🟠 Needs Attention</span>
+                <span>📦 Pickup</span> <span>🏁 Drop-off</span>
+            </div>
+
+            <div class="fleet-grid">
+                <div class="fleet-col">
+                    <div id="summaryCards" class="kpi-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="skeleton" style="height:60px;"></div>
+                    </div>
+                    <div class="cmd-panel" style="padding:10px;">
+                        <input class="field-plain" id="driverSearch" placeholder="Search name, phone, ID..." style="margin-bottom:6px;">
+                        <select class="field-plain" id="statusFilter" style="margin-bottom:6px;">
+                            <option value="">All statuses</option>
+                            <option value="online">Online</option>
+                            <option value="busy">Busy</option>
+                            <option value="offline">Offline</option>
+                        </select>
+                        <select class="field-plain" id="vehicleFilter">
+                            <option value="">All vehicles</option>
+                        </select>
+                    </div>
+                    <div class="cmd-panel" style="padding:10px; flex:1; overflow-y:auto;">
+                        <h2 style="margin-top:0;">Drivers</h2>
+                        <div id="driverList"><div class="empty">Loading...</div></div>
+                    </div>
+                </div>
+
+                <div class="cmd-panel" style="padding:6px; height:100%;">
+                    <div id="fleetMap" style="height: 100%; min-height: 500px; border-radius: 8px;"></div>
+                </div>
+
+                <div class="fleet-col">
+                    <div class="cmd-panel" id="detailsPanel" style="padding:10px;">
+                        <h2 style="margin-top:0;">Details</h2>
+                        <div class="empty">Select a driver or job marker to see details.</div>
+                    </div>
+                    <div class="cmd-panel" style="padding:10px; flex:1; overflow-y:auto;">
+                        <h2 style="margin-top:0;">Live Events</h2>
+                        <div id="eventsList"><div class="empty">No events yet.</div></div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
