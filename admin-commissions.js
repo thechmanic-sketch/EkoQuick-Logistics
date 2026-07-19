@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         return;
     }
     window.currentAdminName = profile.full_name || profile.email || 'Admin';
+    window.currentStaffRole = profile.staff_role || 'super_admin';
 
     document.getElementById('logoutBtn').addEventListener('click', async function () {
         await supabase.auth.signOut();
@@ -28,6 +29,15 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('specialType').addEventListener('change', updateSpecialFormVisibility);
     document.getElementById('addSpecialBtn').addEventListener('click', addSpecialRule);
     document.getElementById('calcFee').addEventListener('input', updateCalculator);
+
+    if (window.currentStaffRole !== 'super_admin') {
+        ['saveBtn', 'saveVehicleRatesBtn', 'addSpecialBtn'].forEach(function (id) {
+            const btn = document.getElementById(id);
+            btn.disabled = true;
+            btn.title = 'Only Super Admins can edit commission settings.';
+        });
+        document.getElementById('msgArea').innerHTML = '<div class="msg error">Only Super Admins can edit commission settings. You can view this page but not save changes.</div>';
+    }
 
     await loadDriverShare();
     updateDefaultInputs();
@@ -134,6 +144,7 @@ async function saveDefaultRate() {
     if (error) { showMsg('error', 'Failed to save: ' + error.message); return; }
 
     await logHistory('Default commission', previousPct + '% driver', pct + '% driver', reason);
+    await logAudit('Changed default commission from ' + previousPct + '% to ' + pct + '%', 'Commissions');
     DRIVER_SHARE = pct / 100;
     updateDefaultInputs();
     document.getElementById('defaultReasonInput').value = '';

@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     await loadDriverShare();
     await loadCommissionRules();
+    await loadAppSettings();
     await loadAll();
     setupAutoAssignTimer();
 
@@ -246,20 +247,37 @@ function driverStatsToday(driverId) {
     return { deliveredToday: deliveredToday.length, earningsToday: earningsToday, avgRating: avgRating };
 }
 
+function activeJobCount(driverId) {
+    return allJobs.filter(function (j) { return j.driver_id === driverId && (j.status === 'offered' || j.status === 'to_pickup' || j.status === 'to_dropoff'); }).length;
+}
+
 function candidatesForJob(job, vehicleFilter) {
-    const busy = busyDriverIds();
+    const maxActiveJobs = parseInt(appSetting('driver_max_active_jobs', '1'), 10) || 1;
+    const minRating = parseFloat(appSetting('driver_min_rating', '0')) || 0;
+    const maxRadiusKm = parseFloat(appSetting('driver_max_radius_km', '0')) || 0;
+
     let matching = allDrivers.filter(function (d) {
         return d.vehicle_class === job.vehicle && d.verification_status === 'approved' &&
-            d.account_status === 'active' && isOnline(d) && busy.indexOf(d.id) === -1;
+            d.account_status === 'active' && isOnline(d) && activeJobCount(d.id) < maxActiveJobs;
     });
     if (vehicleFilter) matching = matching.filter(function (d) { return d.vehicle_class === vehicleFilter; });
+    if (minRating > 0) {
+        matching = matching.filter(function (d) {
+            const stats = driverStatsToday(d.id);
+            return stats.avgRating === null || stats.avgRating >= minRating;
+        });
+    }
 
-    return matching.map(function (d) {
+    let withDistance = matching.map(function (d) {
         const dist = (job.pickup_lat && job.pickup_lng && d.last_lat && d.last_lng)
             ? haversineKm(job.pickup_lat, job.pickup_lng, d.last_lat, d.last_lng) : null;
         const stats = driverStatsToday(d.id);
         return { driver: d, dist: dist, eta: dist !== null ? Math.round((dist / 30) * 60) : null, stats: stats };
     });
+    if (maxRadiusKm > 0) {
+        withDistance = withDistance.filter(function (w) { return w.dist === null || w.dist <= maxRadiusKm; });
+    }
+    return withDistance;
 }
 
 function pickRecommendation(withStats) {

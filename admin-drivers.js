@@ -404,6 +404,7 @@ function kv(label, value) {
 async function setDriverVerification(driverId, status) {
     const { error } = await supabase.from('profiles').update({ verification_status: status }).eq('id', driverId);
     if (error) { alert('Failed to update: ' + error.message); return; }
+    await logAudit('Set driver verification to ' + status + ' (' + driverId.slice(0, 8) + ')', 'Drivers');
     closeDrawer();
     loadAll();
 }
@@ -411,6 +412,7 @@ async function setDriverVerification(driverId, status) {
 async function setAccountStatus(driverId, status) {
     const { error } = await supabase.from('profiles').update({ account_status: status }).eq('id', driverId);
     if (error) { alert('Failed to update: ' + error.message); return; }
+    await logAudit('Set driver account status to ' + status + ' (' + driverId.slice(0, 8) + ')', 'Drivers');
     closeDrawer();
     loadAll();
 }

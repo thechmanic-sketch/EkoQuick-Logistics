@@ -355,6 +355,7 @@ async function addCustomerNote(customerId) {
 async function setCustomerStatus(customerId, status) {
     const { error } = await supabase.from('profiles').update({ account_status: status }).eq('id', customerId);
     if (error) { alert('Failed to update: ' + error.message); return; }
+    await logAudit('Set customer account status to ' + status + ' (' + customerId.slice(0, 8) + ')', 'Customers');
     closeDrawer();
     loadAll();
 }
@@ -362,6 +363,7 @@ async function setCustomerStatus(customerId, status) {
 async function setCustomerType(customerId, type) {
     const { error } = await supabase.from('profiles').update({ customer_type: type }).eq('id', customerId);
     if (error) { alert('Failed to update: ' + error.message); return; }
+    await logAudit('Set customer type to ' + type + ' (' + customerId.slice(0, 8) + ')', 'Customers');
     await loadAll();
     openDrawer(customerId);
 }

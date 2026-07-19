@@ -421,6 +421,7 @@ async function issueRefund(jobId) {
         refunded_at: new Date().toISOString(), refunded_by: window.currentAdminName || 'Admin',
     }).eq('id', jobId);
     if (error) { alert('Failed to issue refund: ' + error.message); return; }
+    await logAudit('Issued refund of R' + amount.toFixed(2) + ' for job ' + jobId.slice(0, 8), 'Finances');
     closeDrawer();
     loadAll();
 }
@@ -441,6 +442,7 @@ async function verifyEftPayment(jobId) {
         payment_status: 'paid', payment_verified_by: window.currentAdminName || 'Admin', payment_verified_at: new Date().toISOString(),
     }).eq('id', jobId);
     if (error) { alert('Failed to update: ' + error.message); return; }
+    await logAudit('Verified EFT payment for job ' + jobId.slice(0, 8), 'Finances');
     closeDrawer();
     loadAll();
 }
@@ -522,6 +524,7 @@ async function allocatePayout(driverId) {
         paid_by: window.currentAdminName || 'Admin', paid_at: new Date().toISOString(),
     }).select().single();
     if (error) { alert('Failed to create payout: ' + error.message); return; }
+    await logAudit('Allocated payout of ' + money(amount) + ' to ' + (driver ? driver.full_name : driverId), 'Finances');
 
     for (const job of jobs) {
         await supabase.from('jobs').update({ payout_id: payout.id }).eq('id', job.id);

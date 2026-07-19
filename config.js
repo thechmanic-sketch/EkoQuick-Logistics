@@ -96,3 +96,24 @@ async function getProfile(userId) {
     var { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
     return data;
 }
+
+// General (non-sensitive) platform settings from the Settings page, keyed
+// by setting name. Loaded on demand — call loadAppSettings() then read
+// APP_SETTINGS['key'] (string values; parse as needed).
+let APP_SETTINGS = {};
+
+async function loadAppSettings() {
+    const { data } = await supabase.from('settings').select('key, value');
+    APP_SETTINGS = {};
+    (data || []).forEach(function (row) { APP_SETTINGS[row.key] = row.value; });
+}
+
+function appSetting(key, fallback) {
+    return (APP_SETTINGS[key] !== undefined && APP_SETTINGS[key] !== '') ? APP_SETTINGS[key] : fallback;
+}
+
+async function logAudit(action, module) {
+    try {
+        await supabase.from('audit_log').insert({ admin_name: window.currentAdminName || 'Admin', action: action, module: module });
+    } catch (err) { /* best effort — never block the actual action on audit logging */ }
+}

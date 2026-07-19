@@ -192,6 +192,12 @@ function wireSignup() {
         if (password !== confirmPassword) { showFormError(form, 'Passwords do not match'); return; }
         if (password.length < 6) { showFormError(form, 'Password must be at least 6 characters'); return; }
 
+        await loadAppSettings();
+        if (appSetting('customer_registration_enabled', 'true') === 'false') {
+            showFormError(form, 'New customer registrations are temporarily closed. Please try again later.');
+            return;
+        }
+
         setBusy(btn, 'Creating account...');
         try {
             var { data, error } = await supabase.auth.signUp({
@@ -229,6 +235,12 @@ function wireDriverSignup() {
         if (password !== confirmPassword) { showFormError(form, 'Passwords do not match'); return; }
         if (password.length < 6) { showFormError(form, 'Password must be at least 6 characters'); return; }
 
+        await loadAppSettings();
+        if (appSetting('driver_registration_enabled', 'true') === 'false') {
+            showFormError(form, 'New driver registrations are temporarily closed. Please try again later.');
+            return;
+        }
+
         setBusy(btn, 'Creating account...');
         try {
             var { data, error } = await supabase.auth.signUp({
@@ -237,6 +249,11 @@ function wireDriverSignup() {
                 options: { data: { role: 'driver', full_name: fullName, username: driverId, phone: phone, vehicle_class: vehicleClass } },
             });
             if (error) { showFormError(form, error.message); return; }
+
+            if (appSetting('driver_manual_approval', 'true') === 'false' && data.session) {
+                await supabase.from('profiles').update({ verification_status: 'approved' }).eq('id', data.user.id);
+            }
+
             window.location.href = 'signup-success.html';
         } catch (err) {
             showFormError(form, 'Something went wrong: ' + (err && err.message ? err.message : err));

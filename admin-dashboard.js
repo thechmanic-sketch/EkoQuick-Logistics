@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     startClock();
     await loadDriverShare();
     await loadCommissionRules();
+    await loadAppSettings();
     await loadDashboard();
 
     supabase
@@ -386,30 +387,44 @@ async function autoAssignPending(jobs, drivers) {
     const unassigned = jobs.filter(function (j) { return j.status === 'pending' && !j.driver_id; });
     if (!unassigned.length) return;
 
+    const maxActiveJobs = parseInt(appSetting('driver_max_active_jobs', '1'), 10) || 1;
+    const minRating = parseFloat(appSetting('driver_min_rating', '0')) || 0;
+    const maxRadiusKm = parseFloat(appSetting('driver_max_radius_km', '0')) || 0;
+
+    function driverAvgRating(driverId) {
+        const rated = jobs.filter(function (j) { return j.driver_id === driverId && j.rating; });
+        return rated.length ? (rated.reduce(function (s, j) { return s + j.rating; }, 0) / rated.length) : null;
+    }
+
     autoAssigning = true;
     try {
-        const busyDriverIds = jobs
-            .filter(function (j) { return j.driver_id && (j.status === 'offered' || j.status === 'to_pickup' || j.status === 'to_dropoff'); })
-            .map(function (j) { return j.driver_id; });
+        const activeCounts = {};
+        jobs.filter(function (j) { return j.driver_id && (j.status === 'offered' || j.status === 'to_pickup' || j.status === 'to_dropoff'); })
+            .forEach(function (j) { activeCounts[j.driver_id] = (activeCounts[j.driver_id] || 0) + 1; });
 
         for (const job of unassigned) {
-            const candidates = drivers.filter(function (d) {
+            let candidates = drivers.filter(function (d) {
                 return d.vehicle_class === job.vehicle && d.verification_status === 'approved' &&
-                    d.account_status === 'active' && busyDriverIds.indexOf(d.id) === -1;
+                    d.account_status === 'active' && (activeCounts[d.id] || 0) < maxActiveJobs;
             });
+            if (minRating > 0) {
+                candidates = candidates.filter(function (d) { const r = driverAvgRating(d.id); return r === null || r >= minRating; });
+            }
             if (!candidates.length) continue;
 
             let chosen = candidates[0];
             if (job.pickup_lat && job.pickup_lng) {
-                const withDistance = candidates
+                let withDistance = candidates
                     .filter(function (d) { return d.last_lat && d.last_lng; })
                     .map(function (d) { return { driver: d, dist: haversineKm(job.pickup_lat, job.pickup_lng, d.last_lat, d.last_lng) }; })
                     .sort(function (a, b) { return a.dist - b.dist; });
+                if (maxRadiusKm > 0) withDistance = withDistance.filter(function (w) { return w.dist <= maxRadiusKm; });
                 if (withDistance.length) chosen = withDistance[0].driver;
+                else if (maxRadiusKm > 0) continue;
             }
 
             const { error } = await supabase.from('jobs').update({ driver_id: chosen.id, status: 'offered' }).eq('id', job.id);
-            if (!error) busyDriverIds.push(chosen.id);
+            if (!error) activeCounts[chosen.id] = (activeCounts[chosen.id] || 0) + 1;
         }
     } finally {
         autoAssigning = false;

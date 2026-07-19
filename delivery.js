@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         return;
     }
 
+    await loadAppSettings();
     renderVehicles();
     renderPaymentOptions();
     document.getElementById('calcBtn').addEventListener('click', calculateDistance);
@@ -149,6 +150,15 @@ async function bookNow() {
     if (!pickup || !dropoff || !phone || !receiverName || !receiverPhone || currentQuote <= 0) {
         showMsg('error', 'Please fill in all fields and calculate a price first');
         return;
+    }
+
+    const maxActiveOrders = parseInt(appSetting('customer_max_active_orders', '0'), 10) || 0;
+    if (maxActiveOrders > 0) {
+        const { data: activeJobs } = await supabase.from('jobs').select('id').eq('customer_id', currentUser.id).in('status', ['pending', 'offered', 'to_pickup', 'to_dropoff']);
+        if ((activeJobs || []).length >= maxActiveOrders) {
+            showMsg('error', 'You have reached the maximum of ' + maxActiveOrders + ' active order(s). Please wait for a current order to complete before booking another.');
+            return;
+        }
     }
 
     let eftProofFile = null;
