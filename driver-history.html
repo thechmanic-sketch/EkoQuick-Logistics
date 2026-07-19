@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Delivery History</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        table.hist-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        table.hist-table th, table.hist-table td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+        table.hist-table th { color: var(--muted); position: sticky; top: 0; background: #11151d; }
+        .table-scroll { overflow-x: auto; }
+        .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; position: sticky; top: 0; z-index: 5; }
+        .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--line); color: #fff; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px; }
+        .filter-btn.active { background: var(--blue, #3E8BFF); border-color: var(--blue, #3E8BFF); }
+        .details-row { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+        .details-row.open { display: block; }
+        .details-row h4 { color: #fff; margin: 10px 0 4px; font-size: 13px; }
+        .timeline { list-style: none; margin: 0; padding: 0; }
+        .timeline li { padding: 6px 0 6px 18px; border-left: 2px solid var(--line); position: relative; }
+        .timeline li:last-child { border-left-color: transparent; }
+        .timeline li::before { content: ''; position: absolute; left: -6px; top: 10px; width: 9px; height: 9px; border-radius: 50%; background: var(--blue,#3E8BFF); }
+        .pod-photo { max-width: 200px; border-radius: 8px; margin-top: 6px; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="driver-dashboard.html">← Eko<span>quick</span> Driver</a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h1>Delivery History</h1>
+            <input class="field-plain" id="histSearch" placeholder="Search by Job ID, customer, recipient or address...">
+            <div class="filter-row">
+                <label class="meta">From <input type="date" class="field-plain" id="dateFrom" style="width:auto;"></label>
+                <label class="meta">To <input type="date" class="field-plain" id="dateTo" style="width:auto;"></label>
+                <button class="btn btn-outline-blue" id="exportCsvBtn" style="width:auto;">Export CSV</button>
+                <button class="btn btn-outline-blue" id="refreshBtn" style="width:auto;">Refresh</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="summary-cards" id="summaryCards"></div>
+        </div>
+
+        <div class="card">
+            <div class="filter-row" id="statusFilters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="delivered">Completed</button>
+                <button class="filter-btn" data-filter="cancelled">Cancelled</button>
+            </div>
+            <div class="filter-row" id="sortFilters">
+                <button class="filter-btn active" data-sort="newest">Newest</button>
+                <button class="filter-btn" data-sort="oldest">Oldest</button>
+                <button class="filter-btn" data-sort="earnings">Highest Earnings</button>
+                <button class="filter-btn" data-sort="distance">Longest Distance</button>
+            </div>
+            <div class="table-scroll">
+                <table class="hist-table">
+                    <thead><tr><th>Job ID</th><th>Customer</th><th>Pickup</th><th>Drop-off</th><th>Date</th><th>Status</th><th>Fee</th><th>Earnings</th><th>Rating</th><th>Actions</th></tr></thead>
+                    <tbody id="histBody"></tbody>
+                </table>
+            </div>
+            <div class="empty hidden" id="emptyState">No delivery history available.</div>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="driver-history.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>
