@@ -1,24 +1,54 @@
 let currentUser = null;
+let currentProfile = null;
 let selectedVehicle = VEHICLES[0];
 let currentDistance = 0;
 let currentDuration = '';
 let currentQuote = 0;
+let selectedPaymentMethod = 'cash';
+
+const PAYMENT_METHODS = [
+    { id: 'cash', label: 'Cash on delivery', available: true, note: 'Pay the driver directly when your parcel is collected or delivered.' },
+    { id: 'card', label: 'Card', available: false, note: 'Coming soon — card payments will be available once our payment gateway is connected.' },
+    { id: 'eft', label: 'EFT (Business accounts only)', available: false, businessOnly: true, note: 'Manually verified bank transfer. Upload proof of payment after booking.' },
+];
 
 document.addEventListener('DOMContentLoaded', async function () {
     currentUser = await requireSession('login.html');
     if (!currentUser) return;
 
-    const profile = await getProfile(currentUser.id);
-    if (profile && profile.account_status !== 'active') {
+    currentProfile = await getProfile(currentUser.id);
+    if (currentProfile && currentProfile.account_status !== 'active') {
         await supabase.auth.signOut();
         window.location.href = 'login.html';
         return;
     }
 
     renderVehicles();
+    renderPaymentOptions();
     document.getElementById('calcBtn').addEventListener('click', calculateDistance);
     document.getElementById('bookBtn').addEventListener('click', bookNow);
 });
+
+function renderPaymentOptions() {
+    const isBusiness = currentProfile && currentProfile.customer_type === 'business';
+    const el = document.getElementById('paymentOptions');
+    el.innerHTML = PAYMENT_METHODS.map(function (m) {
+        const unlocked = m.id === 'eft' ? (m.available || isBusiness) : m.available;
+        return (
+            '<label style="display:flex; align-items:flex-start; gap:8px; margin-bottom:10px; opacity:' + (unlocked ? '1' : '0.5') + ';">' +
+                '<input type="radio" name="paymentMethod" value="' + m.id + '" ' + (m.id === 'cash' ? 'checked' : '') + (unlocked ? '' : ' disabled') + '>' +
+                '<span><b>' + m.label + '</b><br><span style="font-size:11px; color:var(--muted-dim);">' + m.note + '</span></span>' +
+            '</label>'
+        );
+    }).join('');
+
+    el.querySelectorAll('input[name="paymentMethod"]').forEach(function (input) {
+        input.addEventListener('change', function () {
+            selectedPaymentMethod = input.value;
+            document.getElementById('eftProofArea').classList.toggle('hidden', selectedPaymentMethod !== 'eft');
+        });
+    });
+}
 
 function renderVehicles() {
     const grid = document.getElementById('vehicleGrid');
@@ -89,6 +119,7 @@ function calculateQuote() {
     document.getElementById('quoteAmount').textContent = 'R' + currentQuote;
     document.getElementById('quoteDetail').textContent = selectedVehicle.label + ' • ' + currentDistance + ' km' + (currentDuration ? ' • ~' + currentDuration : '');
     document.getElementById('quoteBox').classList.remove('hidden');
+    document.getElementById('paymentCard').classList.remove('hidden');
     document.getElementById('bookBtn').classList.remove('hidden');
 }
 
@@ -120,11 +151,30 @@ async function bookNow() {
         return;
     }
 
+    let eftProofFile = null;
+    if (selectedPaymentMethod === 'eft') {
+        eftProofFile = document.getElementById('eftProofFile').files[0];
+        if (!eftProofFile) { showMsg('error', 'Please upload your proof of EFT payment'); return; }
+    }
+
     const btn = document.getElementById('bookBtn');
     btn.disabled = true;
     btn.textContent = 'Booking...';
 
     const [pickupCoords, dropoffCoords] = await Promise.all([geocodeAddress(pickup), geocodeAddress(dropoff)]);
+
+    let eftProofUrl = null;
+    if (eftProofFile) {
+        const path = currentUser.id + '/' + Date.now() + '-' + eftProofFile.name;
+        const { error: uploadError } = await supabase.storage.from('payment-proofs').upload(path, eftProofFile);
+        if (uploadError) {
+            btn.disabled = false;
+            btn.textContent = 'Confirm Delivery';
+            showMsg('error', 'Failed to upload proof of payment: ' + uploadError.message);
+            return;
+        }
+        eftProofUrl = path;
+    }
 
     const { data, error } = await supabase.from('jobs').insert({
         customer_id: currentUser.id,
@@ -144,6 +194,9 @@ async function bookNow() {
         collection_code: generateCode(),
         delivery_code: generateCode(),
         status: 'pending',
+        payment_method: selectedPaymentMethod,
+        payment_status: 'pending',
+        eft_proof_url: eftProofUrl,
     }).select().single();
 
     if (error) {

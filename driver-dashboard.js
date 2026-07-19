@@ -275,7 +275,7 @@ function stopTracking() {
 }
 
 async function markDelivered(jobId) {
-    const { data: job } = await supabase.from('jobs').select('delivery_code').eq('id', jobId).single();
+    const { data: job } = await supabase.from('jobs').select('delivery_code, payment_method').eq('id', jobId).single();
     const entered = (document.getElementById('deliveryInput-' + jobId).value || '').trim();
 
     if (job && job.delivery_code && entered !== job.delivery_code) {
@@ -283,7 +283,10 @@ async function markDelivered(jobId) {
         return;
     }
 
-    const { error } = await supabase.from('jobs').update({ status: 'delivered', delivered_at: new Date().toISOString() }).eq('id', jobId);
+    const fields = { status: 'delivered', delivered_at: new Date().toISOString() };
+    if (job && job.payment_method === 'cash') fields.payment_status = 'paid';
+
+    const { error } = await supabase.from('jobs').update(fields).eq('id', jobId);
     if (error) { alert('Failed to update: ' + error.message); return; }
     if (activeJobId === jobId) stopTracking();
     loadJobs();

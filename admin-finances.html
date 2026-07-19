@@ -110,12 +110,35 @@
                     <select class="field-plain" id="txnDriverFilter" style="width:auto;">
                         <option value="">All drivers</option>
                     </select>
+                    <select class="field-plain" id="txnPaymentMethodFilter" style="width:auto;">
+                        <option value="">All payment methods</option>
+                        <option value="cash">Cash</option>
+                        <option value="card">Card</option>
+                        <option value="eft">EFT</option>
+                    </select>
                     <input class="field-plain" type="date" id="txnDateFrom" style="width:auto;">
                     <input class="field-plain" type="date" id="txnDateTo" style="width:auto;">
                 </div>
                 <button class="btn btn-outline-blue" id="exportTxnBtn" style="width: auto; margin-bottom: 10px;">Export Transactions</button>
                 <div id="txnTableWrap" class="cmd-panel-scroll" style="max-height: 560px;"><div class="empty">Loading...</div></div>
                 <div id="txnPagination" style="margin-top: 10px; display:flex; gap:8px; align-items:center;"></div>
+            </div>
+
+            <div class="cmd-panel">
+                <h2>Payment Methods</h2>
+                <div id="paymentMethodsWrap"><div class="empty">Loading...</div></div>
+            </div>
+
+            <div class="cmd-panel">
+                <h2>Weekly Payouts</h2>
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom: 12px;">
+                    <button class="btn btn-outline-blue" id="prevWeekBtn" style="width:auto;">‹ Prev Week</button>
+                    <span class="meta" id="payoutWeekLabel"></span>
+                    <button class="btn btn-outline-blue" id="nextWeekBtn" style="width:auto;">Next Week ›</button>
+                </div>
+                <div id="payoutsWrap"><div class="empty">Loading...</div></div>
+                <h3 style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-dim); margin: 20px 0 8px;">Payout History</h3>
+                <div id="payoutHistoryWrap" class="cmd-panel-scroll" style="max-height: 400px;"><div class="empty">Loading...</div></div>
             </div>
 
             <div class="cmd-panel">

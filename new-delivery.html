@@ -50,8 +50,18 @@
                 <div class="amt" id="quoteAmount">R0</div>
                 <div style="font-size:13px;" id="quoteDetail"></div>
             </div>
+        </div>
 
-            <button class="btn btn-orange hidden" id="bookBtn" style="margin-top: 10px;">Confirm Delivery</button>
+        <div class="card hidden" id="paymentCard">
+            <h2>4. Payment Method</h2>
+            <div id="paymentOptions"></div>
+            <div id="eftProofArea" class="hidden" style="margin-top: 10px;">
+                <div style="font-size: 11px; color: var(--muted-dim); font-family: var(--font-mono); margin-bottom: 6px;">
+                    EFT payments are verified manually. Please make payment to the bank details we'll send to your WhatsApp, then upload your proof of payment here — your booking will be confirmed once an admin verifies it.
+                </div>
+                <input type="file" id="eftProofFile" accept="image/*,.pdf">
+            </div>
+            <button class="btn btn-orange hidden" id="bookBtn" style="margin-top: 14px;">Confirm Delivery</button>
         </div>
     </div>
 

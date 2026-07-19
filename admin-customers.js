@@ -240,6 +240,12 @@ function openDrawer(customerId) {
         '<h3>Personal Information</h3>' +
         kv('Customer ID', c.id) + kv('Full Name', c.full_name) + kv('Phone', c.phone) + kv('Email', c.email) +
         kv('Date Joined', formatDate(c.created_at)) + kv('Account Status', c.account_status) +
+        kv('Account Type', c.customer_type === 'business' ? 'Business' : 'Individual') +
+        '<div style="margin-top:6px;">' +
+            (c.customer_type === 'business'
+                ? '<button class="btn btn-outline-blue" style="width:auto;" data-action="mark-individual">Mark as Individual</button>'
+                : '<button class="btn btn-outline-blue" style="width:auto;" data-action="mark-business">Mark as Business (unlocks EFT)</button>') +
+        '</div>' +
 
         '<h3>Order Summary</h3>' +
         kv('Active Jobs', stats.active) + kv('Completed Jobs', stats.completed) + kv('Cancelled Jobs', stats.cancelled) +
@@ -318,6 +324,10 @@ function openDrawer(customerId) {
     if (unblockBtn) unblockBtn.addEventListener('click', function () { setCustomerStatus(c.id, 'active'); });
     const exportBtn = drawer.querySelector('button[data-action="export"]');
     if (exportBtn) exportBtn.addEventListener('click', function () { exportCustomerHistory(c, jobs); });
+    const markBusinessBtn = drawer.querySelector('button[data-action="mark-business"]');
+    if (markBusinessBtn) markBusinessBtn.addEventListener('click', function () { setCustomerType(c.id, 'business'); });
+    const markIndividualBtn = drawer.querySelector('button[data-action="mark-individual"]');
+    if (markIndividualBtn) markIndividualBtn.addEventListener('click', function () { setCustomerType(c.id, 'individual'); });
 
     drawer.classList.add('open');
     document.getElementById('drawerBackdrop').classList.add('open');
@@ -347,6 +357,13 @@ async function setCustomerStatus(customerId, status) {
     if (error) { alert('Failed to update: ' + error.message); return; }
     closeDrawer();
     loadAll();
+}
+
+async function setCustomerType(customerId, type) {
+    const { error } = await supabase.from('profiles').update({ customer_type: type }).eq('id', customerId);
+    if (error) { alert('Failed to update: ' + error.message); return; }
+    await loadAll();
+    openDrawer(customerId);
 }
 
 function exportCustomers(customers) {

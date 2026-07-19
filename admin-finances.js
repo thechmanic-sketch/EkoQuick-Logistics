@@ -8,6 +8,10 @@ let txnPage = 1;
 const TXN_PAGE_SIZE = 25;
 let activePeriod = 'today';
 let revenueTrendChart = null, volumeChart = null, avgFeeChart = null, revenueVsRefundsChart = null;
+let allPayouts = [];
+let payoutWeekStart = startOfWeekDate(new Date());
+
+function startOfWeekDate(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - x.getDay()); return x; }
 
 document.addEventListener('DOMContentLoaded', async function () {
     const user = await requireSession('admin-login.html');
@@ -30,11 +34,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('txnSearch').addEventListener('input', function () { txnPage = 1; applyTxnFilters(); });
     document.getElementById('txnStatusFilter').addEventListener('change', function () { txnPage = 1; applyTxnFilters(); });
     document.getElementById('txnDriverFilter').addEventListener('change', function () { txnPage = 1; applyTxnFilters(); });
+    document.getElementById('txnPaymentMethodFilter').addEventListener('change', function () { txnPage = 1; applyTxnFilters(); });
     document.getElementById('txnDateFrom').addEventListener('change', function () { txnPage = 1; applyTxnFilters(); });
     document.getElementById('txnDateTo').addEventListener('change', function () { txnPage = 1; applyTxnFilters(); });
     document.getElementById('exportTxnBtn').addEventListener('click', function () { exportTransactions(filteredTxns); });
     document.getElementById('exportDriverEarningsBtn').addEventListener('click', exportDriverEarnings);
     document.getElementById('exportRefundsBtn').addEventListener('click', exportRefunds);
+    document.getElementById('prevWeekBtn').addEventListener('click', function () { payoutWeekStart.setDate(payoutWeekStart.getDate() - 7); renderPayouts(); });
+    document.getElementById('nextWeekBtn').addEventListener('click', function () { payoutWeekStart.setDate(payoutWeekStart.getDate() + 7); renderPayouts(); });
 
     document.querySelectorAll('.period-tab').forEach(function (tab) {
         tab.addEventListener('click', function () {
@@ -91,10 +98,12 @@ async function loadAll() {
     const { data: jobs } = await supabase.from('jobs').select('*').order('created_at', { ascending: false });
     const { data: drivers } = await supabase.from('profiles').select('*').eq('role', 'driver');
     const { data: customers } = await supabase.from('profiles').select('*').eq('role', 'customer');
+    const { data: payouts } = await supabase.from('driver_payouts').select('*').order('created_at', { ascending: false });
 
     allJobs = jobs || [];
     allDrivers = drivers || [];
     allCustomers = customers || [];
+    allPayouts = payouts || [];
     driversById = {};
     allDrivers.forEach(function (d) { driversById[d.id] = d; });
     customersById = {};
@@ -106,6 +115,9 @@ async function loadAll() {
     renderCharts();
     renderDriverEarnings();
     applyTxnFilters();
+    renderPaymentMethods();
+    renderPayouts();
+    renderPayoutHistory();
     renderRefunds();
     renderTopDrivers();
     renderTopCustomers();
@@ -269,6 +281,7 @@ function applyTxnFilters() {
     const q = document.getElementById('txnSearch').value.trim().toLowerCase();
     const statusFilter = document.getElementById('txnStatusFilter').value;
     const driverFilter = document.getElementById('txnDriverFilter').value;
+    const paymentMethodFilter = document.getElementById('txnPaymentMethodFilter').value;
     const dateFrom = document.getElementById('txnDateFrom').value;
     const dateTo = document.getElementById('txnDateTo').value;
 
@@ -276,6 +289,7 @@ function applyTxnFilters() {
         const status = txnStatus(j);
         if (statusFilter && status !== statusFilter) return false;
         if (driverFilter && j.driver_id !== driverFilter) return false;
+        if (paymentMethodFilter && j.payment_method !== paymentMethodFilter) return false;
         if (dateFrom && new Date(j.created_at) < new Date(dateFrom)) return false;
         if (dateTo && new Date(j.created_at) > new Date(dateTo + 'T23:59:59')) return false;
         if (q) {
@@ -300,7 +314,7 @@ function renderTxnTable() {
     const pageItems = filteredTxns.slice(start, start + TXN_PAGE_SIZE);
 
     wrap.innerHTML =
-        '<table class="simple-table"><thead><tr><th>Transaction ID</th><th>Job ID</th><th>Customer</th><th>Driver</th><th>Fee</th><th>Commission</th><th>Driver Earnings</th><th>Status</th><th>Date</th></tr></thead><tbody>' +
+        '<table class="simple-table"><thead><tr><th>Transaction ID</th><th>Job ID</th><th>Customer</th><th>Driver</th><th>Fee</th><th>Commission</th><th>Driver Earnings</th><th>Payment Method</th><th>Status</th><th>Date</th></tr></thead><tbody>' +
         pageItems.map(function (j) {
             const driver = driversById[j.driver_id];
             const customer = customersById[j.customer_id];
@@ -311,6 +325,7 @@ function renderTxnTable() {
                 '<td>' + escapeHtml(customer ? customer.full_name : (j.customer_phone || '—')) + '</td>' +
                 '<td>' + escapeHtml(driver ? driver.full_name : '—') + '</td>' +
                 '<td>' + money(j.quote) + '</td><td>' + money(platformFee(j.quote)) + '</td><td>' + money(driverEarning(j.quote)) + '</td>' +
+                '<td>' + paymentMethodLabel(j.payment_method) + '</td>' +
                 '<td><span class="badge ' + badge + '">' + status + '</span></td>' +
                 '<td>' + formatDate(j.created_at) + '</td></tr>';
         }).join('') +
@@ -363,7 +378,9 @@ function openTxnDrawer(jobId) {
 
         '<h3>Payment</h3>' +
         kv('Delivery Fee', money(j.quote)) + kv('Platform Commission', money(platformFee(j.quote))) + kv('Driver Earnings', money(driverEarning(j.quote))) +
-        kv('Payment Method', 'Cash (direct, no gateway integration)') + kv('Payment Status', status) +
+        kv('Payment Method', paymentMethodLabel(j.payment_method)) + kv('Payment Status', j.payment_status || '—') +
+        (j.payment_method === 'eft' && j.eft_proof_url ? '<div class="kv-row"><span>Proof of Payment</span><span><button class="btn btn-outline-blue" style="width:auto; padding:2px 10px;" id="viewProofBtn">View</button></span></div>' : '') +
+        (j.payment_verified_by ? kv('Payment Verified By', j.payment_verified_by + (j.payment_verified_at ? ' on ' + formatDate(j.payment_verified_at) : '')) : '') +
         (j.refunded ? kv('Refund Amount', money(j.refund_amount)) + kv('Refund Reason', j.refund_reason) + kv('Refunded At', formatTime(j.refunded_at)) : '') +
 
         '<h3>Delivery</h3>' +
@@ -374,11 +391,16 @@ function openTxnDrawer(jobId) {
             '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" href="admin-jobs.html?job=' + j.id + '">View Job</a>' +
             (customer ? '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" href="admin-customers.html?customer=' + customer.id + '">View Customer</a>' : '') +
             (j.status === 'delivered' && !j.refunded ? '<button class="btn btn-outline-blue" style="width:auto;" id="refundBtn">Issue Refund</button>' : '') +
+            (j.payment_method === 'eft' && j.payment_status === 'pending' ? '<button class="btn btn-blue" style="width:auto;" id="verifyEftBtn">Mark EFT as Paid</button>' : '') +
         '</div>';
 
     document.getElementById('closeDrawerBtn').addEventListener('click', closeDrawer);
     const refundBtn = document.getElementById('refundBtn');
     if (refundBtn) refundBtn.addEventListener('click', function () { issueRefund(j.id); });
+    const viewProofBtn = document.getElementById('viewProofBtn');
+    if (viewProofBtn) viewProofBtn.addEventListener('click', function () { viewEftProof(j.eft_proof_url); });
+    const verifyEftBtn = document.getElementById('verifyEftBtn');
+    if (verifyEftBtn) verifyEftBtn.addEventListener('click', function () { verifyEftPayment(j.id); });
 
     drawer.classList.add('open');
     document.getElementById('drawerBackdrop').classList.add('open');
@@ -400,6 +422,127 @@ async function issueRefund(jobId) {
     if (error) { alert('Failed to issue refund: ' + error.message); return; }
     closeDrawer();
     loadAll();
+}
+
+function paymentMethodLabel(method) {
+    return method === 'card' ? 'Card' : method === 'eft' ? 'EFT' : 'Cash';
+}
+
+async function viewEftProof(path) {
+    const { data, error } = await supabase.storage.from('payment-proofs').createSignedUrl(path, 300);
+    if (error) { alert('Failed to open proof of payment: ' + error.message); return; }
+    window.open(data.signedUrl, '_blank', 'noopener');
+}
+
+async function verifyEftPayment(jobId) {
+    if (!confirm('Confirm this EFT payment has been received and mark it as paid?')) return;
+    const { error } = await supabase.from('jobs').update({
+        payment_status: 'paid', payment_verified_by: window.currentAdminName || 'Admin', payment_verified_at: new Date().toISOString(),
+    }).eq('id', jobId);
+    if (error) { alert('Failed to update: ' + error.message); return; }
+    closeDrawer();
+    loadAll();
+}
+
+function renderPaymentMethods() {
+    const wrap = document.getElementById('paymentMethodsWrap');
+    const delivered = deliveredJobs();
+    if (!delivered.length) { wrap.innerHTML = '<div class="empty">No completed deliveries.</div>'; return; }
+
+    const totalRevenue = delivered.reduce(function (s, j) { return s + netRevenue(j); }, 0);
+    const methods = ['cash', 'card', 'eft'];
+    const rows = methods.map(function (m) {
+        const jobs = delivered.filter(function (j) { return (j.payment_method || 'cash') === m; });
+        const amount = jobs.reduce(function (s, j) { return s + netRevenue(j); }, 0);
+        const pct = totalRevenue ? (amount / totalRevenue * 100) : 0;
+        return { method: m, count: jobs.length, amount: amount, pct: pct };
+    });
+
+    wrap.innerHTML =
+        '<table class="simple-table"><thead><tr><th>Method</th><th>Transactions</th><th>Total Amount</th><th>% of Revenue</th></tr></thead><tbody>' +
+        rows.map(function (r) {
+            return '<tr><td>' + paymentMethodLabel(r.method) + '</td><td>' + r.count + '</td><td>' + money(r.amount) + '</td><td>' + r.pct.toFixed(1) + '%</td></tr>';
+        }).join('') +
+        '</tbody></table>';
+}
+
+function weekLabel(start) {
+    const end = new Date(start); end.setDate(end.getDate() + 6);
+    return start.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short' }) + ' – ' + end.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function renderPayouts() {
+    document.getElementById('payoutWeekLabel').textContent = weekLabel(payoutWeekStart);
+    const weekEnd = new Date(payoutWeekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+
+    const wrap = document.getElementById('payoutsWrap');
+    const rows = allDrivers.map(function (d) {
+        const jobs = allJobs.filter(function (j) {
+            return j.driver_id === d.id && j.status === 'delivered' && !j.payout_id &&
+                j.delivered_at && new Date(j.delivered_at) >= payoutWeekStart && new Date(j.delivered_at) < weekEnd;
+        });
+        const amount = jobs.reduce(function (s, j) { return s + driverEarning(j.quote); }, 0);
+        return { driver: d, jobs: jobs, amount: amount };
+    }).filter(function (r) { return r.jobs.length > 0; });
+
+    if (!rows.length) { wrap.innerHTML = '<div class="empty">No unpaid earnings for this week.</div>'; return; }
+
+    wrap.innerHTML =
+        '<table class="simple-table"><thead><tr><th>Driver</th><th>Deliveries</th><th>Amount Owed</th><th>Action</th></tr></thead><tbody>' +
+        rows.map(function (r) {
+            return '<tr><td>' + escapeHtml(r.driver.full_name) + '</td><td>' + r.jobs.length + '</td><td>' + money(r.amount) + '</td>' +
+                '<td><button class="btn btn-blue" style="width:auto;" data-action="allocate" data-driver="' + r.driver.id + '">Allocate & Mark Paid</button></td></tr>';
+        }).join('') +
+        '</tbody></table>';
+
+    wrap.querySelectorAll('button[data-action="allocate"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { allocatePayout(btn.dataset.driver); });
+    });
+}
+
+async function allocatePayout(driverId) {
+    const weekEnd = new Date(payoutWeekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+    const jobs = allJobs.filter(function (j) {
+        return j.driver_id === driverId && j.status === 'delivered' && !j.payout_id &&
+            j.delivered_at && new Date(j.delivered_at) >= payoutWeekStart && new Date(j.delivered_at) < weekEnd;
+    });
+    if (!jobs.length) return;
+    const amount = jobs.reduce(function (s, j) { return s + driverEarning(j.quote); }, 0);
+    const driver = driversById[driverId];
+
+    if (!confirm('Allocate ' + money(amount) + ' to ' + (driver ? driver.full_name : driverId) + ' for ' + jobs.length + ' deliveries this week?')) return;
+
+    const periodStart = payoutWeekStart.toISOString().slice(0, 10);
+    const periodEnd = new Date(weekEnd.getTime() - 86400000).toISOString().slice(0, 10);
+
+    const { data: payout, error } = await supabase.from('driver_payouts').insert({
+        driver_id: driverId, period_start: periodStart, period_end: periodEnd,
+        total_amount: amount, job_count: jobs.length, status: 'paid',
+        paid_by: window.currentAdminName || 'Admin', paid_at: new Date().toISOString(),
+    }).select().single();
+    if (error) { alert('Failed to create payout: ' + error.message); return; }
+
+    for (const job of jobs) {
+        await supabase.from('jobs').update({ payout_id: payout.id }).eq('id', job.id);
+    }
+    loadAll();
+}
+
+function renderPayoutHistory() {
+    const wrap = document.getElementById('payoutHistoryWrap');
+    if (!allPayouts.length) { wrap.innerHTML = '<div class="empty">No payouts recorded yet.</div>'; return; }
+
+    wrap.innerHTML =
+        '<table class="simple-table"><thead><tr><th>Driver</th><th>Period</th><th>Deliveries</th><th>Amount</th><th>Status</th><th>Paid By</th><th>Paid At</th></tr></thead><tbody>' +
+        allPayouts.map(function (p) {
+            const driver = driversById[p.driver_id];
+            return '<tr><td>' + escapeHtml(driver ? driver.full_name : p.driver_id.slice(0, 8)) + '</td>' +
+                '<td>' + formatDate(p.period_start) + ' – ' + formatDate(p.period_end) + '</td>' +
+                '<td>' + p.job_count + '</td><td>' + money(p.total_amount) + '</td>' +
+                '<td><span class="badge delivered">' + p.status + '</span></td>' +
+                '<td>' + escapeHtml(p.paid_by || '—') + '</td><td>' + formatDate(p.paid_at) + '</td></tr>';
+        }).join('') +
+        '</tbody></table>';
 }
 
 function renderRefunds() {
