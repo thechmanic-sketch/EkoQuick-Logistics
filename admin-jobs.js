@@ -560,3 +560,4 @@ function CATEGORY_LABEL(cat) {
     };
     return labels[cat] || cat;
 }
+
