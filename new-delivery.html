@@ -4,11 +4,30 @@
     <meta charset="UTF-8">
     <style>html{background:#0B0F16}</style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ekoquick — New Delivery</title>
+    <title>Ekoquick — Book Delivery</title>
+    <link rel="stylesheet" href="vendor/leaflet.css">
     <link rel="stylesheet" href="auth.css">
     <link rel="stylesheet" href="app.css">
     <link rel="stylesheet" href="support-widget.css">
     <script src="transitions.js"></script>
+    <style>
+        .step-indicator { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .step-dot { flex: 1; text-align: center; font-family: var(--font-mono); font-size: 10px; color: var(--muted-dim); position: relative; padding-top: 22px; }
+        .step-dot::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); background: var(--ink); }
+        .step-dot.active { color: var(--orange); }
+        .step-dot.active::before { border-color: var(--orange); background: var(--orange); }
+        .step-dot.done::before { border-color: #1E8E3E; background: #1E8E3E; }
+        .step-panel { display: none; }
+        .step-panel.active { display: block; }
+        .mini-map { height: 180px; border: 1px solid var(--line); margin: 8px 0; }
+        .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; }
+        .summary-line { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; border-bottom: 1px solid var(--line); }
+        .summary-line:last-child { border-bottom: none; }
+        .wizard-nav { display: flex; gap: 8px; margin-top: 14px; }
+        .schedule-toggle { display: flex; gap: 8px; margin-bottom: 10px; }
+        .schedule-toggle button { flex: 1; padding: 10px; background: var(--ink); border: 1px solid var(--line); color: var(--paper); cursor: pointer; }
+        .schedule-toggle button.selected { border-color: var(--orange); color: var(--orange); }
+    </style>
 </head>
 <body>
     <div class="navbar">
@@ -17,54 +36,172 @@
 
     <div class="page-wrap">
         <div class="card">
-            <h2>1. Choose Your Vehicle</h2>
-            <div class="vehicle-grid" id="vehicleGrid"></div>
-        </div>
+            <h2>Book Delivery</h2>
+            <div class="step-indicator" id="stepIndicator"></div>
 
-        <div class="card">
-            <h2>2. Pickup &amp; Destination</h2>
-            <label>Pickup Location</label>
-            <input class="field-plain" id="pickup" placeholder="e.g. 45 West Street, Durban CBD">
-            <label>Drop-off Location</label>
-            <input class="field-plain" id="dropoff" placeholder="e.g. 12 Main Road, Pietermaritzburg">
-            <label>Your WhatsApp</label>
-            <input class="field-plain" id="phone" placeholder="0676659966">
-        </div>
+            <!-- STEP 1: PICKUP -->
+            <div class="step-panel active" data-step="1">
+                <h3 style="margin-top:0;">1. Pickup Information</h3>
+                <label>Your Full Name</label>
+                <input class="field-plain" id="senderName">
+                <label>Your Phone Number</label>
+                <input class="field-plain" id="senderPhone" placeholder="0676659966">
+                <label>Your Email (optional)</label>
+                <input class="field-plain" id="senderEmail" type="email">
 
-        <div class="card">
-            <h2>3. Who's receiving it?</h2>
-            <label>Receiver's Name</label>
-            <input class="field-plain" id="receiverName" placeholder="Who will collect the parcel">
-            <label>Receiver's WhatsApp</label>
-            <input class="field-plain" id="receiverPhone" placeholder="0676659966">
-            <div style="font-size: 11px; color: var(--muted-dim); font-family: var(--font-mono); margin-top: 4px;">
-                We'll generate a pickup code (for you/your sender) and a delivery code (for the receiver) — the driver must be given both before the job can be started and completed.
-            </div>
-
-            <div id="msgArea"></div>
-
-            <button class="btn btn-blue" id="calcBtn" style="margin-top: 10px;">3. Calculate Distance &amp; Price</button>
-
-            <div class="quote-box hidden" id="quoteBox">
-                <div style="font-size:12px;">Your Delivery Quote</div>
-                <div class="amt" id="quoteAmount">R0</div>
-                <div style="font-size:13px;" id="quoteDetail"></div>
-            </div>
-        </div>
-
-        <div class="card hidden" id="paymentCard">
-            <h2>4. Payment Method</h2>
-            <div id="paymentOptions"></div>
-            <div id="eftProofArea" class="hidden" style="margin-top: 10px;">
-                <div style="font-size: 11px; color: var(--muted-dim); font-family: var(--font-mono); margin-bottom: 6px;">
-                    EFT payments are verified manually. Please make payment to the bank details we'll send to your WhatsApp, then upload your proof of payment here — your booking will be confirmed once an admin verifies it.
+                <label style="margin-top:10px;">Pickup Address</label>
+                <input class="field-plain" id="pickup" placeholder="e.g. 45 West Street, Durban CBD">
+                <div style="display:flex; gap:8px; margin:6px 0;">
+                    <button class="btn btn-outline-blue" id="pickMapBtn1" style="width:auto;">📍 Select on Map</button>
+                    <button class="btn btn-outline-blue" id="savedAddrBtn1" style="width:auto;">❤️ Saved Addresses</button>
                 </div>
-                <input type="file" id="eftProofFile" accept="image/*,.pdf">
+                <div id="savedAddrEmpty1" class="empty hidden">No saved addresses.</div>
+                <div id="pickupMap" class="mini-map hidden"></div>
+
+                <label>Pickup Contact Person (if different from you)</label>
+                <input class="field-plain" id="pickupContactName" placeholder="Optional">
+                <label>Pickup Contact Number</label>
+                <input class="field-plain" id="pickupContactPhone" placeholder="Optional">
+                <label>Pickup Notes</label>
+                <input class="field-plain" id="pickupNotes" placeholder="e.g. Call before arriving">
+
+                <div id="msgArea1"></div>
+                <div class="wizard-nav"><button class="btn btn-blue" id="next1">Continue</button></div>
             </div>
-            <button class="btn btn-orange hidden" id="bookBtn" style="margin-top: 14px;">Confirm Delivery</button>
+
+            <!-- STEP 2: RECIPIENT -->
+            <div class="step-panel" data-step="2">
+                <h3 style="margin-top:0;">2. Recipient Information</h3>
+                <label>Recipient's Full Name</label>
+                <input class="field-plain" id="receiverName">
+                <label>Recipient's Phone Number</label>
+                <input class="field-plain" id="receiverPhone" placeholder="0676659966">
+                <label>Recipient's Email (optional)</label>
+                <input class="field-plain" id="receiverEmail" type="email">
+
+                <label style="margin-top:10px;">Delivery Address</label>
+                <input class="field-plain" id="dropoff" placeholder="e.g. 12 Main Road, Pietermaritzburg">
+                <div style="display:flex; gap:8px; margin:6px 0;">
+                    <button class="btn btn-outline-blue" id="pickMapBtn2" style="width:auto;">📍 Select on Map</button>
+                </div>
+                <div id="dropoffMap" class="mini-map hidden"></div>
+
+                <label>Recipient Notes</label>
+                <input class="field-plain" id="dropoffNotes" placeholder="e.g. Deliver to reception">
+
+                <div style="font-size: 11px; color: var(--muted-dim); font-family: var(--font-mono); margin-top: 8px;">
+                    We'll generate a pickup code (for you) and a delivery code (for the receiver) — the driver must be given both before the job can be started and completed.
+                </div>
+
+                <div id="msgArea2"></div>
+                <div class="wizard-nav">
+                    <button class="btn btn-outline-blue" id="back2">Back</button>
+                    <button class="btn btn-blue" id="next2">Continue</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: PARCEL -->
+            <div class="step-panel" data-step="3">
+                <h3 style="margin-top:0;">3. Parcel Information</h3>
+                <label>Package Type</label>
+                <select class="field-plain" id="packageType">
+                    <option value="parcel">Parcel</option>
+                    <option value="documents">Documents</option>
+                    <option value="electronics">Electronics</option>
+                    <option value="food">Food</option>
+                    <option value="clothing">Clothing</option>
+                    <option value="furniture">Furniture</option>
+                    <option value="other">Other</option>
+                </select>
+                <label>Description</label>
+                <input class="field-plain" id="packageDescription" placeholder="What are you sending?">
+                <label>Quantity</label>
+                <input class="field-plain" type="number" id="packageQuantity" min="1" value="1">
+                <label>Estimated Weight (kg, optional)</label>
+                <input class="field-plain" type="number" id="packageWeight" min="0" step="0.1">
+                <label>Dimensions (optional)</label>
+                <input class="field-plain" id="packageDimensions" placeholder="e.g. 30x20x15 cm">
+
+                <label style="margin-top:10px;">Special Handling</label>
+                <div class="checkbox-row"><input type="checkbox" id="fragile"> Fragile</div>
+                <div class="checkbox-row"><input type="checkbox" id="keepUpright"> Keep Upright</div>
+                <div class="checkbox-row"><input type="checkbox" id="handleWithCare"> Handle With Care</div>
+
+                <div class="wizard-nav">
+                    <button class="btn btn-outline-blue" id="back3">Back</button>
+                    <button class="btn btn-blue" id="next3">Continue</button>
+                </div>
+            </div>
+
+            <!-- STEP 4: VEHICLE & SCHEDULE -->
+            <div class="step-panel" data-step="4">
+                <h3 style="margin-top:0;">4. Vehicle &amp; Schedule</h3>
+                <label>Vehicle Class</label>
+                <div class="vehicle-grid" id="vehicleGrid"></div>
+
+                <label style="margin-top:10px;">Delivery Type</label>
+                <div class="schedule-toggle">
+                    <button type="button" data-type="standard" class="selected">Standard</button>
+                    <button type="button" data-type="express">Express (+50%, faster priority)</button>
+                </div>
+
+                <label>Schedule</label>
+                <div class="schedule-toggle">
+                    <button type="button" data-when="now" class="selected">Deliver Now</button>
+                    <button type="button" data-when="later">Schedule for Later</button>
+                </div>
+                <div id="scheduleFields" class="hidden">
+                    <label>Date</label>
+                    <input class="field-plain" type="date" id="scheduleDate">
+                    <label>Time</label>
+                    <input class="field-plain" type="time" id="scheduleTime">
+                </div>
+
+                <div id="msgArea4"></div>
+                <button class="btn btn-blue" id="calcBtn" style="margin-top: 10px;">Calculate Distance &amp; Price</button>
+
+                <div class="quote-box hidden" id="quoteBox">
+                    <div style="font-size:12px;">Estimated Delivery Fee</div>
+                    <div class="amt" id="quoteAmount">R0</div>
+                    <div style="font-size:13px;" id="quoteDetail"></div>
+                    <div style="font-size:12px; margin-top:4px;" id="quoteEta"></div>
+                </div>
+
+                <div class="wizard-nav">
+                    <button class="btn btn-outline-blue" id="back4">Back</button>
+                    <button class="btn btn-blue hidden" id="next4">Continue</button>
+                </div>
+            </div>
+
+            <!-- STEP 5: PAYMENT & CONFIRM -->
+            <div class="step-panel" data-step="5">
+                <h3 style="margin-top:0;">5. Payment &amp; Confirmation</h3>
+                <div id="paymentOptions"></div>
+                <div id="eftProofArea" class="hidden" style="margin-top: 10px;">
+                    <div style="font-size: 11px; color: var(--muted-dim); font-family: var(--font-mono); margin-bottom: 6px;">
+                        EFT payments are verified manually. Please make payment to the bank details we'll send to your WhatsApp, then upload your proof of payment here — your booking will be confirmed once an admin verifies it.
+                    </div>
+                    <input type="file" id="eftProofFile" accept="image/*,.pdf">
+                </div>
+
+                <h3>Order Summary</h3>
+                <div id="orderSummary"></div>
+
+                <div class="checkbox-row" style="margin-top:12px;">
+                    <input type="checkbox" id="agreeCheckbox">
+                    <label style="margin:0;">I confirm that the information provided is correct.</label>
+                </div>
+
+                <div id="msgArea5"></div>
+                <div class="wizard-nav">
+                    <button class="btn btn-outline-blue" id="back5">Back</button>
+                    <button class="btn btn-orange" id="bookBtn">Book Delivery</button>
+                </div>
+            </div>
         </div>
     </div>
 
+    <script src="vendor/leaflet.js"></script>
     <script src="vendor/supabase.js"></script>
     <script src="config.js"></script>
     <script src="delivery.js"></script>

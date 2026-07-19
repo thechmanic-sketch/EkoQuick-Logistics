@@ -499,15 +499,34 @@ function openJobDrawer(jobId) {
         kv('Job ID', job.id) + kv('Current Status', STATUS_LABELS[job.status]) +
         kv('Created', formatTime(job.created_at)) + kv('Assigned', formatTime(job.assigned_at)) +
         kv('Delivered', formatTime(job.delivered_at)) + kv('Delivery Duration', durationLabel) +
+        kv('Delivery Type', job.delivery_type === 'express' ? 'Express' : 'Standard') +
+        (job.scheduled_at ? kv('Scheduled For', formatTime(job.scheduled_at)) : '') +
 
         '<h3>Customer</h3>' +
-        kv('Name', customer ? customer.full_name : '—') + kv('Phone', job.customer_phone || (customer ? customer.phone : '—')) + kv('Email', customer ? customer.email : '—') +
+        kv('Sender Name', job.sender_name || (customer ? customer.full_name : '—')) +
+        kv('Phone', job.customer_phone || (customer ? customer.phone : '—')) +
+        kv('Email', job.sender_email || (customer ? customer.email : '—')) +
 
         '<h3>Pickup</h3>' +
-        kv('Address', job.pickup) + kv('Contact Person', customer ? customer.full_name : '—') + kv('Contact Number', job.customer_phone) +
+        kv('Address', job.pickup) +
+        kv('Contact Person', job.pickup_contact_name || (customer ? customer.full_name : '—')) +
+        kv('Contact Number', job.pickup_contact_phone || job.customer_phone) +
+        (job.pickup_notes ? kv('Notes', job.pickup_notes) : '') +
 
         '<h3>Drop-off</h3>' +
         kv('Address', job.dropoff) + kv('Recipient Name', job.receiver_name) + kv('Recipient Phone', job.receiver_phone) +
+        (job.receiver_email ? kv('Recipient Email', job.receiver_email) : '') +
+        (job.dropoff_notes ? kv('Notes', job.dropoff_notes) : '') +
+
+        '<h3>Parcel</h3>' +
+        kv('Type', job.package_type ? job.package_type.charAt(0).toUpperCase() + job.package_type.slice(1) : '—') +
+        (job.package_description ? kv('Description', job.package_description) : '') +
+        kv('Quantity', job.package_quantity || 1) +
+        (job.package_weight_kg ? kv('Weight', job.package_weight_kg + ' kg') : '') +
+        (job.package_dimensions ? kv('Dimensions', job.package_dimensions) : '') +
+        (job.fragile || job.keep_upright || job.handle_with_care
+            ? kv('Special Handling', [job.fragile ? 'Fragile' : null, job.keep_upright ? 'Keep Upright' : null, job.handle_with_care ? 'Handle With Care' : null].filter(Boolean).join(', '))
+            : '') +
 
         '<h3>Driver</h3>' +
         (driver ? kv('Name', driver.full_name) + kv('Phone', driver.phone) + kv('Vehicle Class', vehicleLabel(driver.vehicle_class)) : '<div class="meta">No driver assigned yet.</div>') +

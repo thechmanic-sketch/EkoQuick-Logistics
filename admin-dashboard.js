@@ -384,7 +384,7 @@ function renderSystemStatus(drivers) {
 let autoAssigning = false;
 async function autoAssignPending(jobs, drivers) {
     if (autoAssigning) return;
-    const unassigned = jobs.filter(function (j) { return j.status === 'pending' && !j.driver_id; });
+    const unassigned = jobs.filter(function (j) { return j.status === 'pending' && !j.driver_id && (!j.scheduled_at || new Date(j.scheduled_at) <= new Date()); });
     if (!unassigned.length) return;
 
     const maxActiveJobs = parseInt(appSetting('driver_max_active_jobs', '1'), 10) || 1;

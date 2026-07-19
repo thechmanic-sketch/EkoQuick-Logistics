@@ -196,6 +196,7 @@ function renderUnassigned() {
         return (
             '<div class="job dispatch-job' + (job.id === selectedJobId ? ' selected' : '') + '" data-job="' + job.id + '" style="cursor:pointer;">' +
                 '<span class="badge ' + priorityBadge[priority] + '">' + priority + '</span>' +
+                (job.scheduled_at && new Date(job.scheduled_at) > new Date() ? ' <span class="badge pending">Scheduled: ' + formatTime(job.scheduled_at) + '</span>' : '') +
                 '<div class="route" style="margin-top:6px;">' + escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff) + '</div>' +
                 '<div class="meta">' + vehicleLabel(job.vehicle) + ' • ' + (job.distance || 0) + ' km • R' + (job.quote || 0) + '</div>' +
                 '<div class="meta">Customer: ' + escapeHtml(customer ? customer.full_name : (job.customer_phone || '—')) + '</div>' +
@@ -507,7 +508,7 @@ function setupAutoAssignTimer() {
 let autoAssigning = false;
 async function runAutoAssign() {
     if (autoAssigning) return;
-    const unassigned = allJobs.filter(function (j) { return j.status === 'pending' && !j.driver_id; });
+    const unassigned = allJobs.filter(function (j) { return j.status === 'pending' && !j.driver_id && (!j.scheduled_at || new Date(j.scheduled_at) <= new Date()); });
     if (!unassigned.length) return;
 
     autoAssigning = true;

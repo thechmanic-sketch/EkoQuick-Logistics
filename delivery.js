@@ -3,8 +3,17 @@ let currentProfile = null;
 let selectedVehicle = VEHICLES[0];
 let currentDistance = 0;
 let currentDuration = '';
+let currentDurationSeconds = 0;
 let currentQuote = 0;
 let selectedPaymentMethod = 'cash';
+let selectedDeliveryType = 'standard';
+let selectedSchedule = 'now';
+let currentStep = 1;
+let pickupCoords = null;
+let dropoffCoords = null;
+let pickupMap = null, dropoffMap = null, pickupMarker = null, dropoffMarker = null;
+
+const TOTAL_STEPS = 5;
 
 const PAYMENT_METHODS = [
     { id: 'cash', label: 'Cash on delivery', available: true, note: 'Pay the driver directly when your parcel is collected or delivered.' },
@@ -24,11 +33,154 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     await loadAppSettings();
+
+    if (currentProfile) {
+        document.getElementById('senderName').value = currentProfile.full_name || '';
+        document.getElementById('senderPhone').value = currentProfile.phone || '';
+        document.getElementById('senderEmail').value = currentProfile.email || '';
+    }
+
+    renderStepIndicator();
     renderVehicles();
     renderPaymentOptions();
+    wireNav();
+    wireMapPickers();
+    wireScheduleToggles();
+
+    document.getElementById('savedAddrBtn1').addEventListener('click', function () {
+        document.getElementById('savedAddrEmpty1').classList.toggle('hidden');
+    });
     document.getElementById('calcBtn').addEventListener('click', calculateDistance);
     document.getElementById('bookBtn').addEventListener('click', bookNow);
 });
+
+function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+}
+
+function showMsg(elId, type, text) {
+    document.getElementById(elId).innerHTML = '<div class="msg ' + type + '">' + text + '</div>';
+}
+function clearMsg(elId) {
+    document.getElementById(elId).innerHTML = '';
+}
+
+function phoneLooksValid(p) {
+    return /^[0-9+][0-9 ]{6,}$/.test(p.trim());
+}
+
+// ---- Step indicator / navigation ----
+
+function renderStepIndicator() {
+    const labels = ['Pickup', 'Recipient', 'Parcel', 'Vehicle', 'Payment'];
+    const el = document.getElementById('stepIndicator');
+    el.innerHTML = labels.map(function (label, i) {
+        const n = i + 1;
+        return '<div class="step-dot' + (n === currentStep ? ' active' : n < currentStep ? ' done' : '') + '">' + label + '</div>';
+    }).join('');
+}
+
+function goToStep(n) {
+    currentStep = n;
+    document.querySelectorAll('.step-panel').forEach(function (p) { p.classList.toggle('active', parseInt(p.dataset.step, 10) === n); });
+    renderStepIndicator();
+    if (n === 5) renderOrderSummary();
+    window.scrollTo(0, 0);
+}
+
+function wireNav() {
+    document.getElementById('next1').addEventListener('click', function () {
+        clearMsg('msgArea1');
+        const name = document.getElementById('senderName').value.trim();
+        const phone = document.getElementById('senderPhone').value.trim();
+        const pickup = document.getElementById('pickup').value.trim();
+        if (!name) { showMsg('msgArea1', 'error', 'Your full name is required.'); return; }
+        if (!phone || !phoneLooksValid(phone)) { showMsg('msgArea1', 'error', 'A valid phone number is required.'); return; }
+        if (!pickup) { showMsg('msgArea1', 'error', 'Pickup address missing.'); return; }
+        goToStep(2);
+    });
+
+    document.getElementById('back2').addEventListener('click', function () { goToStep(1); });
+    document.getElementById('next2').addEventListener('click', function () {
+        clearMsg('msgArea2');
+        const name = document.getElementById('receiverName').value.trim();
+        const phone = document.getElementById('receiverPhone').value.trim();
+        const dropoff = document.getElementById('dropoff').value.trim();
+        if (!name) { showMsg('msgArea2', 'error', 'Recipient name is required.'); return; }
+        if (!phone || !phoneLooksValid(phone)) { showMsg('msgArea2', 'error', 'Recipient phone invalid.'); return; }
+        if (!dropoff) { showMsg('msgArea2', 'error', 'Delivery address missing.'); return; }
+        goToStep(3);
+    });
+
+    document.getElementById('back3').addEventListener('click', function () { goToStep(2); });
+    document.getElementById('next3').addEventListener('click', function () { goToStep(4); });
+
+    document.getElementById('back4').addEventListener('click', function () { goToStep(3); });
+    document.getElementById('next4').addEventListener('click', function () {
+        if (currentQuote <= 0) { showMsg('msgArea4', 'error', 'Please calculate the price first.'); return; }
+        goToStep(5);
+    });
+
+    document.getElementById('back5').addEventListener('click', function () { goToStep(4); });
+}
+
+// ---- Map pickers (Leaflet + Nominatim, no Google Maps key connected) ----
+
+function wireMapPickers() {
+    document.getElementById('pickMapBtn1').addEventListener('click', function () {
+        const mapEl = document.getElementById('pickupMap');
+        mapEl.classList.toggle('hidden');
+        if (!mapEl.classList.contains('hidden') && !pickupMap) {
+            pickupMap = L.map('pickupMap').setView([-29.6, 30.9], 8);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(pickupMap);
+            pickupMap.on('click', async function (e) {
+                pickupCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
+                if (pickupMarker) pickupMarker.setLatLng(e.latlng); else pickupMarker = L.marker(e.latlng).addTo(pickupMap);
+                const addr = await reverseGeocode(e.latlng.lat, e.latlng.lng);
+                if (addr) document.getElementById('pickup').value = addr;
+            });
+        }
+    });
+
+    document.getElementById('pickMapBtn2').addEventListener('click', function () {
+        const mapEl = document.getElementById('dropoffMap');
+        mapEl.classList.toggle('hidden');
+        if (!mapEl.classList.contains('hidden') && !dropoffMap) {
+            dropoffMap = L.map('dropoffMap').setView([-29.6, 30.9], 8);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(dropoffMap);
+            dropoffMap.on('click', async function (e) {
+                dropoffCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
+                if (dropoffMarker) dropoffMarker.setLatLng(e.latlng); else dropoffMarker = L.marker(e.latlng).addTo(dropoffMap);
+                const addr = await reverseGeocode(e.latlng.lat, e.latlng.lng);
+                if (addr) document.getElementById('dropoff').value = addr;
+            });
+        }
+    });
+}
+
+async function reverseGeocode(lat, lng) {
+    try {
+        const res = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng);
+        const data = await res.json();
+        return data && data.display_name ? data.display_name : null;
+    } catch (err) { return null; }
+}
+
+async function geocodeAddress(address) {
+    try {
+        const q = encodeURIComponent(address + ', KwaZulu-Natal, South Africa');
+        const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + q);
+        const results = await res.json();
+        if (results && results[0]) {
+            return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
+        }
+    } catch (err) { /* best effort — falls back gracefully with no coordinates */ }
+    return null;
+}
+
+// ---- Payment options ----
 
 function renderPaymentOptions() {
     const isBusiness = currentProfile && currentProfile.customer_type === 'business';
@@ -47,9 +199,12 @@ function renderPaymentOptions() {
         input.addEventListener('change', function () {
             selectedPaymentMethod = input.value;
             document.getElementById('eftProofArea').classList.toggle('hidden', selectedPaymentMethod !== 'eft');
+            renderOrderSummary();
         });
     });
 }
+
+// ---- Vehicles / delivery type / schedule ----
 
 function renderVehicles() {
     const grid = document.getElementById('vehicleGrid');
@@ -71,16 +226,34 @@ function renderVehicles() {
     });
 }
 
-function showMsg(type, text) {
-    document.getElementById('msgArea').innerHTML = '<div class="msg ' + type + '">' + text + '</div>';
+function wireScheduleToggles() {
+    document.querySelectorAll('.schedule-toggle button[data-type]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.schedule-toggle button[data-type]').forEach(function (b) { b.classList.remove('selected'); });
+            btn.classList.add('selected');
+            selectedDeliveryType = btn.dataset.type;
+            if (currentDistance > 0) calculateQuote();
+        });
+    });
+    document.querySelectorAll('.schedule-toggle button[data-when]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.schedule-toggle button[data-when]').forEach(function (b) { b.classList.remove('selected'); });
+            btn.classList.add('selected');
+            selectedSchedule = btn.dataset.when;
+            document.getElementById('scheduleFields').classList.toggle('hidden', selectedSchedule !== 'later');
+        });
+    });
 }
+
+// ---- Distance / price calculation ----
 
 async function calculateDistance() {
     const pickup = document.getElementById('pickup').value.trim();
     const dropoff = document.getElementById('dropoff').value.trim();
     const btn = document.getElementById('calcBtn');
+    clearMsg('msgArea4');
 
-    if (!pickup || !dropoff) { showMsg('error', 'Please enter both pickup and drop-off locations'); return; }
+    if (!pickup || !dropoff) { showMsg('msgArea4', 'error', 'Pickup and drop-off addresses are required.'); return; }
 
     btn.disabled = true;
     btn.textContent = 'Calculating...';
@@ -93,11 +266,11 @@ async function calculateDistance() {
         const el = data && data.rows && data.rows[0] && data.rows[0].elements && data.rows[0].elements[0];
         if (data.status === 'OK' && el && el.status === 'OK') {
             currentDistance = Math.round(el.distance.value / 1000);
+            currentDurationSeconds = el.duration.value;
             currentDuration = formatDuration(el.duration.value);
-            showMsg('success', 'Real driving distance: ' + currentDistance + ' km');
             calculateQuote();
             btn.disabled = false;
-            btn.textContent = '3. Calculate Distance & Price';
+            btn.textContent = 'Calculate Distance & Price';
             return;
         }
     } catch (err) { /* fall through */ }
@@ -105,50 +278,73 @@ async function calculateDistance() {
     const fb = fallbackDistance(pickup, dropoff);
     if (fb) {
         currentDistance = fb;
-        currentDuration = '';
-        showMsg('success', 'Estimated distance: ' + fb + ' km');
+        currentDurationSeconds = Math.round((fb / 30) * 3600);
+        currentDuration = formatDuration(currentDurationSeconds);
         calculateQuote();
     } else {
-        showMsg('error', 'Could not calculate distance. Try more specific addresses.');
+        showMsg('msgArea4', 'error', 'Could not calculate distance. Try more specific addresses.');
     }
     btn.disabled = false;
-    btn.textContent = '3. Calculate Distance & Price';
+    btn.textContent = 'Calculate Distance & Price';
 }
 
 function calculateQuote() {
-    currentQuote = Math.round(selectedVehicle.base + currentDistance * selectedVehicle.rate);
+    const minFee = parseFloat(appSetting('min_delivery_fee', '0')) || 0;
+    let base = Math.round(selectedVehicle.base + currentDistance * selectedVehicle.rate);
+    if (selectedDeliveryType === 'express') base = Math.round(base * 1.5);
+    currentQuote = Math.max(base, minFee);
+
     document.getElementById('quoteAmount').textContent = 'R' + currentQuote;
-    document.getElementById('quoteDetail').textContent = selectedVehicle.label + ' • ' + currentDistance + ' km' + (currentDuration ? ' • ~' + currentDuration : '');
+    document.getElementById('quoteDetail').textContent = selectedVehicle.label + ' • ' + currentDistance + ' km' +
+        (selectedDeliveryType === 'express' ? ' • Express (+50%)' : '');
+    document.getElementById('quoteEta').textContent = 'Estimated travel time: ' + (currentDuration || '—');
     document.getElementById('quoteBox').classList.remove('hidden');
-    document.getElementById('paymentCard').classList.remove('hidden');
-    document.getElementById('bookBtn').classList.remove('hidden');
+    document.getElementById('next4').classList.remove('hidden');
 }
 
 function generateCode() {
     return String(Math.floor(1000 + Math.random() * 9000));
 }
 
-async function geocodeAddress(address) {
-    try {
-        const q = encodeURIComponent(address + ', KwaZulu-Natal, South Africa');
-        const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + q);
-        const results = await res.json();
-        if (results && results[0]) {
-            return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
-        }
-    } catch (err) { /* best effort — falls back gracefully with no coordinates */ }
-    return null;
+// ---- Order summary (step 5) ----
+
+function renderOrderSummary() {
+    const scheduleLabel = selectedSchedule === 'later'
+        ? ('Scheduled: ' + (document.getElementById('scheduleDate').value || '—') + ' ' + (document.getElementById('scheduleTime').value || ''))
+        : 'Deliver now';
+    const lines = [
+        ['Pickup Address', document.getElementById('pickup').value.trim()],
+        ['Delivery Address', document.getElementById('dropoff').value.trim()],
+        ['Vehicle Class', selectedVehicle.label],
+        ['Distance', currentDistance + ' km'],
+        ['Delivery Fee', 'R' + currentQuote],
+        ['Estimated Time', currentDuration || '—'],
+        ['Delivery Type', selectedDeliveryType === 'express' ? 'Express' : 'Standard'],
+        ['Schedule', scheduleLabel],
+        ['Payment Method', selectedPaymentMethod.toUpperCase()],
+    ];
+    document.getElementById('orderSummary').innerHTML = lines.map(function (l) {
+        return '<div class="summary-line"><span>' + l[0] + '</span><span>' + escapeHtml(String(l[1])) + '</span></div>';
+    }).join('');
 }
 
+// ---- Booking submission ----
+
 async function bookNow() {
+    clearMsg('msgArea5');
+
     const pickup = document.getElementById('pickup').value.trim();
     const dropoff = document.getElementById('dropoff').value.trim();
-    const phone = document.getElementById('phone').value.trim();
+    const senderPhone = document.getElementById('senderPhone').value.trim();
     const receiverName = document.getElementById('receiverName').value.trim();
     const receiverPhone = document.getElementById('receiverPhone').value.trim();
 
-    if (!pickup || !dropoff || !phone || !receiverName || !receiverPhone || currentQuote <= 0) {
-        showMsg('error', 'Please fill in all fields and calculate a price first');
+    if (!pickup || !dropoff || !senderPhone || !receiverName || !receiverPhone || currentQuote <= 0 || !selectedVehicle) {
+        showMsg('msgArea5', 'error', 'Please complete all required fields and calculate a price first.');
+        return;
+    }
+    if (!document.getElementById('agreeCheckbox').checked) {
+        showMsg('msgArea5', 'error', 'Please confirm the information provided is correct.');
         return;
     }
 
@@ -156,7 +352,7 @@ async function bookNow() {
     if (maxActiveOrders > 0) {
         const { data: activeJobs } = await supabase.from('jobs').select('id').eq('customer_id', currentUser.id).in('status', ['pending', 'offered', 'to_pickup', 'to_dropoff']);
         if ((activeJobs || []).length >= maxActiveOrders) {
-            showMsg('error', 'You have reached the maximum of ' + maxActiveOrders + ' active order(s). Please wait for a current order to complete before booking another.');
+            showMsg('msgArea5', 'error', 'You have reached the maximum of ' + maxActiveOrders + ' active order(s). Please wait for a current order to complete before booking another.');
             return;
         }
     }
@@ -164,14 +360,23 @@ async function bookNow() {
     let eftProofFile = null;
     if (selectedPaymentMethod === 'eft') {
         eftProofFile = document.getElementById('eftProofFile').files[0];
-        if (!eftProofFile) { showMsg('error', 'Please upload your proof of EFT payment'); return; }
+        if (!eftProofFile) { showMsg('msgArea5', 'error', 'Please upload your proof of EFT payment'); return; }
+    }
+
+    let scheduledAt = null;
+    if (selectedSchedule === 'later') {
+        const date = document.getElementById('scheduleDate').value;
+        const time = document.getElementById('scheduleTime').value;
+        if (!date || !time) { showMsg('msgArea5', 'error', 'Please select a date and time for scheduled delivery.'); return; }
+        scheduledAt = new Date(date + 'T' + time).toISOString();
     }
 
     const btn = document.getElementById('bookBtn');
     btn.disabled = true;
     btn.textContent = 'Booking...';
 
-    const [pickupCoords, dropoffCoords] = await Promise.all([geocodeAddress(pickup), geocodeAddress(dropoff)]);
+    if (!pickupCoords) pickupCoords = await geocodeAddress(pickup);
+    if (!dropoffCoords) dropoffCoords = await geocodeAddress(dropoff);
 
     let eftProofUrl = null;
     if (eftProofFile) {
@@ -179,8 +384,8 @@ async function bookNow() {
         const { error: uploadError } = await supabase.storage.from('payment-proofs').upload(path, eftProofFile);
         if (uploadError) {
             btn.disabled = false;
-            btn.textContent = 'Confirm Delivery';
-            showMsg('error', 'Failed to upload proof of payment: ' + uploadError.message);
+            btn.textContent = 'Book Delivery';
+            showMsg('msgArea5', 'error', 'Failed to upload proof of payment: ' + uploadError.message);
             return;
         }
         eftProofUrl = path;
@@ -198,9 +403,26 @@ async function bookNow() {
         distance: currentDistance,
         duration: currentDuration,
         quote: currentQuote,
-        customer_phone: phone,
+        customer_phone: senderPhone,
+        sender_name: document.getElementById('senderName').value.trim(),
+        sender_email: document.getElementById('senderEmail').value.trim() || null,
+        pickup_contact_name: document.getElementById('pickupContactName').value.trim() || null,
+        pickup_contact_phone: document.getElementById('pickupContactPhone').value.trim() || null,
+        pickup_notes: document.getElementById('pickupNotes').value.trim() || null,
         receiver_name: receiverName,
         receiver_phone: receiverPhone,
+        receiver_email: document.getElementById('receiverEmail').value.trim() || null,
+        dropoff_notes: document.getElementById('dropoffNotes').value.trim() || null,
+        package_type: document.getElementById('packageType').value,
+        package_description: document.getElementById('packageDescription').value.trim() || null,
+        package_quantity: parseInt(document.getElementById('packageQuantity').value, 10) || 1,
+        package_weight_kg: parseFloat(document.getElementById('packageWeight').value) || null,
+        package_dimensions: document.getElementById('packageDimensions').value.trim() || null,
+        fragile: document.getElementById('fragile').checked,
+        keep_upright: document.getElementById('keepUpright').checked,
+        handle_with_care: document.getElementById('handleWithCare').checked,
+        delivery_type: selectedDeliveryType,
+        scheduled_at: scheduledAt,
         collection_code: generateCode(),
         delivery_code: generateCode(),
         status: 'pending',
@@ -211,8 +433,8 @@ async function bookNow() {
 
     if (error) {
         btn.disabled = false;
-        btn.textContent = 'Confirm Delivery';
-        showMsg('error', 'Booking failed: ' + error.message);
+        btn.textContent = 'Book Delivery';
+        showMsg('msgArea5', 'error', 'Booking failed: ' + error.message);
         return;
     }
 
