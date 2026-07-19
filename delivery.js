@@ -8,6 +8,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     currentUser = await requireSession('login.html');
     if (!currentUser) return;
 
+    const profile = await getProfile(currentUser.id);
+    if (profile && profile.account_status !== 'active') {
+        await supabase.auth.signOut();
+        window.location.href = 'login.html';
+        return;
+    }
+
     renderVehicles();
     document.getElementById('calcBtn').addEventListener('click', calculateDistance);
     document.getElementById('bookBtn').addEventListener('click', bookNow);

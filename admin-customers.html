@@ -10,6 +10,25 @@
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="support-widget.css">
     <script src="transitions.js"></script>
+    <style>
+        .drawer-backdrop {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            z-index: 20; display: none;
+        }
+        .drawer-backdrop.open { display: block; }
+        .drawer {
+            position: fixed; top: 0; right: 0; height: 100vh; width: min(600px, 100vw);
+            background: var(--ink-2); border-left: 1px solid var(--line);
+            z-index: 21; transform: translateX(100%); transition: transform 0.25s ease;
+            overflow-y: auto; padding: 20px;
+        }
+        .drawer.open { transform: translateX(0); }
+        .drawer-close { float: right; background: transparent; border: 1px solid var(--line); border-radius: 8px; color: var(--paper); width: 32px; height: 32px; cursor: pointer; }
+        .drawer h3 { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-dim); margin: 20px 0 8px; border-top: 1px solid var(--line); padding-top: 14px; }
+        .drawer h3:first-of-type { border-top: none; padding-top: 0; }
+        .kv-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; gap: 10px; }
+        .kv-row span:first-child { color: var(--muted); }
+    </style>
 </head>
 <body>
     <div class="cmd-shell">
@@ -33,18 +52,48 @@
         </aside>
 
         <main class="cmd-main">
-            <div class="cmd-stats-row">
-                <div class="cmd-stat"><div class="amt" id="statCustomerCount">0</div><div class="lbl">Total customers</div></div>
-                <div class="cmd-stat"><div class="amt" id="statCustomerSpend">R0</div><div class="lbl">Total lifetime spend</div></div>
+            <div class="cmd-header">
+                <div class="cmd-header-title">
+                    <h1>Customers</h1>
+                    <div class="cmd-breadcrumb" id="customerCountLabel">Loading...</div>
+                </div>
+                <div class="cmd-header-right">
+                    <button class="btn btn-outline-blue" id="exportBtn" style="width: auto;">Export CSV</button>
+                    <button class="btn btn-outline-blue" id="refreshBtn" style="width: auto;">Refresh</button>
+                </div>
+            </div>
+
+            <div id="summaryCards" class="kpi-grid">
+                <div class="skeleton" style="height:80px;"></div>
+                <div class="skeleton" style="height:80px;"></div>
+                <div class="skeleton" style="height:80px;"></div>
             </div>
 
             <div class="cmd-panel">
-                <h2>Customers</h2>
-                <input class="field-plain" id="customerSearch" placeholder="Search by name or phone..." style="margin-bottom: 12px;">
-                <div id="customersList" class="cmd-panel-scroll" style="max-height: 640px;"><div class="empty">Loading...</div></div>
+                <div style="display:flex; gap:8px; margin-bottom: 12px; flex-wrap: wrap;">
+                    <input class="field-plain" id="customerSearch" placeholder="Search name, phone, email, customer ID, order ID..." style="flex:1; min-width:220px;">
+                    <select class="field-plain" id="statusFilter" style="width:auto;">
+                        <option value="">All customers</option>
+                        <option value="active">Active</option>
+                        <option value="new">New this month</option>
+                        <option value="returning">Returning</option>
+                        <option value="active-jobs">With active jobs</option>
+                        <option value="complaints">With complaints</option>
+                    </select>
+                    <select class="field-plain" id="pageSizeSelect" style="width:auto;">
+                        <option value="25">25 / page</option>
+                        <option value="50">50 / page</option>
+                        <option value="100">100 / page</option>
+                    </select>
+                </div>
+                <div id="customersTableWrap" class="cmd-panel-scroll" style="max-height: 600px;"><div class="empty">Loading...</div></div>
+                <div id="pagination" style="margin-top: 10px; display:flex; gap:8px; align-items:center;"></div>
             </div>
         </main>
     </div>
+
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+    <div class="drawer" id="customerDrawer"></div>
 
     <script src="vendor/supabase.js"></script>
     <script src="config.js"></script>
