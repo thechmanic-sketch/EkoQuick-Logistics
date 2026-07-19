@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Profile &amp; Settings</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        .settings-section { margin-top: 6px; }
+        .settings-section h3 { margin-bottom: 4px; }
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--line); }
+        .toggle-row:last-child { border-bottom: none; }
+        img.avatar-lg { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); }
+        .danger-btn { background: #C0392B; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="dashboard.html">← Eko<span>quick</span></a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h1>Profile &amp; Settings</h1>
+        </div>
+
+        <!-- PERSONAL INFORMATION -->
+        <div class="card">
+            <h2>Personal Information</h2>
+            <div style="display:flex; align-items:center; gap:14px;">
+                <img class="avatar-lg" id="avatarPreview" src="">
+                <div>
+                    <input type="file" id="avatarFile" accept="image/*">
+                    <button class="btn btn-outline-blue" id="avatarSaveBtn" style="margin-top:6px; width:auto;">Upload Profile Picture</button>
+                </div>
+            </div>
+            <label style="margin-top:10px;">Full Name</label>
+            <input class="field-plain" id="fFullName">
+            <label>Phone Number</label>
+            <input class="field-plain" id="fPhone">
+            <label>Email Address</label>
+            <input class="field-plain" id="fEmail" disabled title="Email changes aren't supported yet.">
+            <div class="meta" id="dateJoined" style="margin-top:6px;"></div>
+            <div class="meta" id="customerId"></div>
+            <button class="btn btn-blue" id="saveProfileBtn" style="margin-top:10px;">Save Changes</button>
+            <div class="meta" id="profileMsg"></div>
+        </div>
+
+        <!-- IDENTITY -->
+        <div class="card">
+            <h2>Identity</h2>
+            <div class="meta">Phone Verified: <i>Not available — phone/email OTP verification isn't built yet.</i></div>
+            <div class="meta">Email Verified: <i>Not available — phone/email OTP verification isn't built yet.</i></div>
+        </div>
+
+        <!-- SECURITY -->
+        <div class="card">
+            <h2>Security</h2>
+            <label>Change Password</label>
+            <input class="field-plain" id="fNewPassword" type="password" placeholder="New password">
+            <button class="btn btn-outline-blue" id="changePasswordBtn" style="margin-top:6px; width:auto;">Change Password</button>
+            <div class="meta" id="passwordMsg"></div>
+            <div class="toggle-row" style="margin-top:10px;">
+                <span>Enable Two-Factor Authentication</span>
+                <button class="btn btn-outline-blue" style="width:auto;" disabled title="Not available yet — no 2FA/TOTP infrastructure is connected.">Enable (soon)</button>
+            </div>
+            <div class="meta" style="margin-top:6px;">Active Sessions / Login History: <i>Not available — session tracking isn't built yet.</i></div>
+            <button class="btn btn-outline-blue" id="logoutAllBtn" style="margin-top:10px; width:auto;">Logout All Devices</button>
+        </div>
+
+        <!-- SAVED CONTACTS -->
+        <div class="card">
+            <h2>Saved Contacts</h2>
+            <label>Emergency Contact Name</label>
+            <input class="field-plain" id="fEmergencyName">
+            <label>Emergency Contact Phone</label>
+            <input class="field-plain" id="fEmergencyPhone">
+            <label>Alternate Contact Name</label>
+            <input class="field-plain" id="fAlternateName">
+            <label>Alternate Contact Phone</label>
+            <input class="field-plain" id="fAlternatePhone">
+        </div>
+
+        <!-- DELIVERY PREFERENCES -->
+        <div class="card">
+            <h2>Delivery Preferences</h2>
+            <label>Default Vehicle Class</label>
+            <select class="field-plain" id="fDefaultVehicle"></select>
+            <div class="meta">Default Pickup / Delivery Address: managed in <a href="saved-addresses.html">Saved Addresses</a>.</div>
+            <label style="margin-top:8px;">Default Payment Method</label>
+            <select class="field-plain" id="fDefaultPayment">
+                <option value="cash">Cash on Delivery</option>
+                <option value="card">Card (soon)</option>
+                <option value="eft">EFT</option>
+            </select>
+            <label>Preferred Delivery Time</label>
+            <input class="field-plain" id="fPreferredTime" placeholder="e.g. Mornings, After 5pm">
+        </div>
+
+        <!-- COMMUNICATION PREFERENCES -->
+        <div class="card">
+            <h2>Communication Preferences</h2>
+            <div class="toggle-row"><span>SMS</span><input type="checkbox" disabled title="No SMS provider connected yet."></div>
+            <div class="toggle-row"><span>Email</span><input type="checkbox" disabled title="No email provider connected yet."></div>
+            <div class="toggle-row"><span>Push Notifications</span><input type="checkbox" disabled title="No push notification provider connected yet."></div>
+            <div class="toggle-row"><span>WhatsApp</span><input type="checkbox" checked disabled title="WhatsApp deep-links are used throughout the app already."></div>
+            <div class="meta">Only WhatsApp deep-links are actually connected right now — SMS/Email/Push require a provider that isn't set up yet.</div>
+        </div>
+
+        <!-- ACCOUNT STATISTICS -->
+        <div class="card">
+            <h2>Account Statistics</h2>
+            <div class="summary-cards" id="statsCards"></div>
+        </div>
+
+        <!-- GENERAL -->
+        <div class="card">
+            <h2>General</h2>
+            <label>Language</label>
+            <select class="field-plain" id="fLanguage"><option value="en">English</option><option value="zu">isiZulu</option><option value="af">Afrikaans</option></select>
+            <label>Time Zone</label>
+            <input class="field-plain" id="fTimezone" placeholder="Africa/Johannesburg">
+            <label>Date Format</label>
+            <select class="field-plain" id="fDateFormat"><option value="DD/MM/YYYY">DD/MM/YYYY</option><option value="MM/DD/YYYY">MM/DD/YYYY</option><option value="YYYY-MM-DD">YYYY-MM-DD</option></select>
+        </div>
+
+        <!-- APPEARANCE -->
+        <div class="card">
+            <h2>Appearance</h2>
+            <select class="field-plain" id="fTheme">
+                <option value="dark">Dark Mode</option>
+                <option value="light">Light Mode (soon)</option>
+                <option value="system">System Theme (soon)</option>
+            </select>
+            <div class="meta">Only Dark Mode is actually implemented across the app right now.</div>
+        </div>
+
+        <!-- NOTIFICATIONS -->
+        <div class="card">
+            <h2>Notifications</h2>
+            <div class="toggle-row"><span>Driver Assigned</span><input type="checkbox" id="notifAssigned"></div>
+            <div class="toggle-row"><span>Driver Near Pickup</span><input type="checkbox" id="notifNearPickup"></div>
+            <div class="toggle-row"><span>Parcel Picked Up</span><input type="checkbox" id="notifPickedUp"></div>
+            <div class="toggle-row"><span>Driver Near Destination</span><input type="checkbox" id="notifNearDest"></div>
+            <div class="toggle-row"><span>Delivery Completed</span><input type="checkbox" id="notifCompleted"></div>
+            <div class="toggle-row"><span>Promotions</span><input type="checkbox" id="notifPromotions"></div>
+            <div class="toggle-row"><span>Support Replies</span><input type="checkbox" id="notifSupportReplies"></div>
+            <div class="meta">These control what appears in your in-app notification bell on the Dashboard — there's no SMS/email/push delivery yet.</div>
+        </div>
+
+        <!-- PRIVACY -->
+        <div class="card">
+            <h2>Privacy</h2>
+            <button class="btn btn-outline-blue" id="downloadDataBtn" style="width:auto;">Download My Data</button>
+            <button class="btn btn-outline-blue" id="exportOrdersBtn" style="width:auto; margin-left:8px;">Export My Orders</button>
+            <div class="meta" style="margin-top:8px;">Manage Cookies: not applicable — Ekoquick doesn't use tracking cookies.</div>
+            <div class="meta">Data Sharing Preferences: <i>Not available — no third-party data sharing is set up.</i></div>
+        </div>
+
+        <!-- CONNECTED ACCOUNTS -->
+        <div class="card">
+            <h2>Connected Accounts</h2>
+            <div class="meta">Google, Apple, Facebook, Microsoft: <i>Not available — social sign-in isn't connected yet. Ekoquick currently uses email/password login only.</i></div>
+        </div>
+
+        <!-- DANGER ZONE -->
+        <div class="card">
+            <h2>Danger Zone</h2>
+            <button class="danger-btn" id="requestDeleteBtn">Request Account Deletion</button>
+            <div class="meta" style="margin-top:6px;">This opens a support ticket for our team to process your deletion request — accounts aren't deleted automatically.</div>
+            <button class="btn btn-outline-blue" id="logoutBtn" style="margin-top:10px; width:auto;">Logout</button>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="profile-settings.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>

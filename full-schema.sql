@@ -40,6 +40,24 @@ create table if not exists profiles (
     check (customer_type in ('individual', 'business')),
   staff_role text not null default 'super_admin'
     check (staff_role in ('super_admin', 'admin', 'dispatcher', 'finance', 'support', 'read_only')),
+  emergency_contact_name text,
+  emergency_contact_phone text,
+  alternate_contact_name text,
+  alternate_contact_phone text,
+  default_vehicle_class text,
+  preferred_delivery_time text,
+  default_payment_method text check (default_payment_method in ('cash', 'card', 'eft')),
+  language text not null default 'en',
+  timezone text not null default 'Africa/Johannesburg',
+  date_format text not null default 'DD/MM/YYYY',
+  theme_preference text not null default 'dark' check (theme_preference in ('dark', 'light', 'system')),
+  notif_driver_assigned boolean not null default true,
+  notif_driver_near_pickup boolean not null default true,
+  notif_parcel_picked_up boolean not null default true,
+  notif_driver_near_destination boolean not null default true,
+  notif_delivery_completed boolean not null default true,
+  notif_promotions boolean not null default true,
+  notif_support_replies boolean not null default true,
   created_at timestamptz not null default now()
 );
 
