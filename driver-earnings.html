@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Earnings</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        table.earn-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        table.earn-table th, table.earn-table td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+        .table-scroll { overflow-x: auto; }
+        .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+        .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--line); color: #fff; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px; }
+        .filter-btn.active { background: var(--blue, #3E8BFF); border-color: var(--blue, #3E8BFF); }
+        .bar-chart { display: flex; align-items: flex-end; gap: 3px; height: 120px; margin-top: 10px; }
+        .bar-chart .bar { flex: 1; background: var(--blue,#3E8BFF); min-height: 2px; border-radius: 2px 2px 0 0; position: relative; }
+        .bar-chart .bar:hover::after { content: attr(data-label); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); font-size: 10px; background: #000; padding: 2px 4px; white-space: nowrap; }
+        .details-row { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+        .details-row.open { display: block; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="driver-dashboard.html">← Eko<span>quick</span> Driver</a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h1>Earnings</h1>
+            <div class="filter-row">
+                <label class="meta">From <input type="date" class="field-plain" id="dateFrom" style="width:auto;"></label>
+                <label class="meta">To <input type="date" class="field-plain" id="dateTo" style="width:auto;"></label>
+                <button class="btn btn-outline-blue" id="exportBtn" style="width:auto;">Export Statement (CSV)</button>
+                <button class="btn btn-outline-blue" id="refreshBtn" style="width:auto;">Refresh</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="summary-cards" id="summaryCards"></div>
+        </div>
+
+        <div class="card">
+            <h2>Daily Earnings (Last 30 Days)</h2>
+            <div class="bar-chart" id="dailyChart"></div>
+        </div>
+        <div class="card">
+            <h2>Weekly Earnings (Last 8 Weeks)</h2>
+            <div class="bar-chart" id="weeklyChart"></div>
+        </div>
+        <div class="card">
+            <h2>Monthly Earnings (Last 6 Months)</h2>
+            <div class="bar-chart" id="monthlyChart"></div>
+        </div>
+
+        <div class="card">
+            <h2>Current Balance</h2>
+            <div class="summary-cards" id="balanceCards"></div>
+        </div>
+
+        <div class="card">
+            <h2>Bank Details</h2>
+            <label>Bank Name</label>
+            <input class="field-plain" id="fBankName">
+            <label>Account Holder</label>
+            <input class="field-plain" id="fAccountHolder">
+            <label>Account Number</label>
+            <input class="field-plain" id="fAccountNumber">
+            <label>Branch Code</label>
+            <input class="field-plain" id="fBranchCode">
+            <button class="btn btn-blue" id="saveBankBtn" style="margin-top:8px;">Save Bank Details</button>
+            <div class="meta" id="bankMsg"></div>
+        </div>
+
+        <div class="card">
+            <h2>Request Withdrawal</h2>
+            <div class="meta" id="minWithdrawalNote"></div>
+            <button class="btn btn-blue" id="requestWithdrawalBtn" style="margin-top:8px;">Request Withdrawal</button>
+            <div class="meta" id="withdrawalMsg"></div>
+            <h3 style="margin-top:16px;">Withdrawal History</h3>
+            <div class="table-scroll">
+                <table class="earn-table">
+                    <thead><tr><th>Requested</th><th>Amount</th><th>Status</th><th>Processed</th></tr></thead>
+                    <tbody id="withdrawalBody"></tbody>
+                </table>
+            </div>
+            <div class="empty hidden" id="withdrawalEmpty">No withdrawal requests yet.</div>
+        </div>
+
+        <div class="card">
+            <div class="filter-row" id="statusFilters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="paid">Paid</button>
+                <button class="filter-btn" data-filter="pending">Pending</button>
+            </div>
+            <h2>Delivery Earnings</h2>
+            <div class="table-scroll">
+                <table class="earn-table">
+                    <thead><tr><th>Job ID</th><th>Date</th><th>Delivery Fee</th><th>Platform Commission</th><th>Driver Earnings</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="earnBody"></tbody>
+                </table>
+            </div>
+            <div class="empty hidden" id="earnEmpty">No earnings available.</div>
+        </div>
+
+        <div class="card">
+            <h2>Payout History</h2>
+            <div class="table-scroll">
+                <table class="earn-table">
+                    <thead><tr><th>Payout ID</th><th>Period</th><th>Amount</th><th>Status</th></tr></thead>
+                    <tbody id="payoutBody"></tbody>
+                </table>
+            </div>
+            <div class="empty hidden" id="payoutEmpty">No payouts yet.</div>
+        </div>
+
+        <div class="card">
+            <h2>Financial Breakdown</h2>
+            <div class="meta" id="breakdownText"></div>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="driver-earnings.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>

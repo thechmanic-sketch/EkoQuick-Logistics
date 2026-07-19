@@ -59,6 +59,10 @@ create table if not exists profiles (
   notif_promotions boolean not null default true,
   notif_support_replies boolean not null default true,
   is_online boolean not null default false,
+  bank_name text,
+  bank_account_holder text,
+  bank_account_number text,
+  bank_branch_code text,
   created_at timestamptz not null default now()
 );
 
@@ -549,6 +553,32 @@ alter table jobs add constraint jobs_payout_id_fkey foreign key (payout_id) refe
 
 alter publication supabase_realtime add table driver_payouts;
 
+create table if not exists withdrawal_requests (
+  id uuid primary key default gen_random_uuid(),
+  driver_id uuid not null references profiles (id) on delete cascade,
+  amount numeric not null,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'paid', 'rejected')),
+  requested_at timestamptz not null default now(),
+  processed_at timestamptz,
+  notes text
+);
+
+alter table withdrawal_requests enable row level security;
+
+drop policy if exists "withdrawal_requests driver select own" on withdrawal_requests;
+create policy "withdrawal_requests driver select own" on withdrawal_requests
+  for select using (driver_id = auth.uid() or is_admin());
+
+drop policy if exists "withdrawal_requests driver insert own" on withdrawal_requests;
+create policy "withdrawal_requests driver insert own" on withdrawal_requests
+  for insert with check (driver_id = auth.uid());
+
+drop policy if exists "withdrawal_requests admin update" on withdrawal_requests;
+create policy "withdrawal_requests admin update" on withdrawal_requests
+  for update using (is_admin());
+
+alter publication supabase_realtime add table withdrawal_requests;
+
 -- ---------------------------------------------------------------------
 -- Platform settings (e.g. commission rate) — editable without a code deploy
 -- ---------------------------------------------------------------------
@@ -557,6 +587,7 @@ create table if not exists settings (
   value text not null
 );
 insert into settings (key, value) values ('driver_share', '0.85') on conflict (key) do nothing;
+insert into settings (key, value) values ('min_withdrawal_amount', '100') on conflict (key) do nothing;
 insert into settings (key, value) values
   ('company_name', 'Ekoquick'),
   ('company_logo_url', ''),
