@@ -217,6 +217,12 @@ create table if not exists jobs (
   payment_verified_by text,
   payment_verified_at timestamptz,
   payout_id uuid,
+  arrived_at_pickup_at timestamptz,
+  arrived_at_dropoff_at timestamptz,
+  delivery_photo_url text,
+  delivery_signature_url text,
+  delivery_photo_lat double precision,
+  delivery_photo_lng double precision,
   created_at timestamptz not null default now()
 );
 
@@ -325,6 +331,7 @@ insert into storage.buckets (id, name, public) values ('driver-docs', 'driver-do
 insert into storage.buckets (id, name, public) values ('complaint-evidence', 'complaint-evidence', false) on conflict (id) do nothing;
 insert into storage.buckets (id, name, public) values ('payment-proofs', 'payment-proofs', false) on conflict (id) do nothing;
 insert into storage.buckets (id, name, public) values ('review-photos', 'review-photos', true) on conflict (id) do nothing;
+insert into storage.buckets (id, name, public) values ('delivery-proofs', 'delivery-proofs', true) on conflict (id) do nothing;
 
 drop policy if exists "avatars public read" on storage.objects;
 create policy "avatars public read" on storage.objects
@@ -397,38 +404,46 @@ alter publication supabase_realtime add table complaint_attachments;
 -- ---------------------------------------------------------------------
 create table if not exists support_tickets (
   id uuid primary key default gen_random_uuid(),
-  customer_id uuid not null references profiles (id) on delete cascade,
+  customer_id uuid references profiles (id) on delete cascade,
+  driver_id uuid references profiles (id) on delete cascade,
   job_id uuid references jobs (id) on delete set null,
   category text not null check (category in (
-    'delivery_issue', 'driver_complaint', 'payment_issue', 'technical_problem', 'missing_parcel', 'damaged_parcel', 'other'
+    'delivery_issue', 'driver_complaint', 'payment_issue', 'technical_problem', 'missing_parcel', 'damaged_parcel', 'other',
+    'customer_issue', 'vehicle_breakdown', 'navigation_problem', 'account_issue', 'accident_report', 'safety_concern'
   )),
   priority text not null default 'medium' check (priority in ('low', 'medium', 'high', 'urgent')),
   subject text not null,
   description text not null,
-  status text not null default 'open' check (status in ('open', 'in_progress', 'waiting_customer', 'resolved', 'closed')),
+  status text not null default 'open' check (status in ('open', 'in_progress', 'waiting_customer', 'waiting_driver', 'resolved', 'closed')),
+  incident_type text,
+  incident_at timestamptz,
+  incident_lat double precision,
+  incident_lng double precision,
+  witness_info text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  closed_at timestamptz
+  closed_at timestamptz,
+  constraint support_tickets_reporter_check check (customer_id is not null or driver_id is not null)
 );
 
 alter table support_tickets enable row level security;
 
-drop policy if exists "support_tickets customer select own" on support_tickets;
-create policy "support_tickets customer select own" on support_tickets
-  for select using (customer_id = auth.uid() or is_admin());
+drop policy if exists "support_tickets select own" on support_tickets;
+create policy "support_tickets select own" on support_tickets
+  for select using (customer_id = auth.uid() or driver_id = auth.uid() or is_admin());
 
-drop policy if exists "support_tickets customer insert own" on support_tickets;
-create policy "support_tickets customer insert own" on support_tickets
-  for insert with check (customer_id = auth.uid());
+drop policy if exists "support_tickets insert own" on support_tickets;
+create policy "support_tickets insert own" on support_tickets
+  for insert with check (customer_id = auth.uid() or driver_id = auth.uid());
 
-drop policy if exists "support_tickets customer or admin update" on support_tickets;
-create policy "support_tickets customer or admin update" on support_tickets
-  for update using (customer_id = auth.uid() or is_admin());
+drop policy if exists "support_tickets owner or admin update" on support_tickets;
+create policy "support_tickets owner or admin update" on support_tickets
+  for update using (customer_id = auth.uid() or driver_id = auth.uid() or is_admin());
 
 create table if not exists support_ticket_messages (
   id uuid primary key default gen_random_uuid(),
   ticket_id uuid not null references support_tickets (id) on delete cascade,
-  sender_type text not null check (sender_type in ('customer', 'staff')),
+  sender_type text not null check (sender_type in ('customer', 'driver', 'staff')),
   sender_name text not null,
   message text not null,
   attachment_url text,
@@ -440,13 +455,13 @@ alter table support_ticket_messages enable row level security;
 drop policy if exists "support_ticket_messages select own ticket or admin" on support_ticket_messages;
 create policy "support_ticket_messages select own ticket or admin" on support_ticket_messages
   for select using (
-    is_admin() or exists (select 1 from support_tickets t where t.id = ticket_id and t.customer_id = auth.uid())
+    is_admin() or exists (select 1 from support_tickets t where t.id = ticket_id and (t.customer_id = auth.uid() or t.driver_id = auth.uid()))
   );
 
 drop policy if exists "support_ticket_messages insert own ticket or admin" on support_ticket_messages;
 create policy "support_ticket_messages insert own ticket or admin" on support_ticket_messages
   for insert with check (
-    is_admin() or exists (select 1 from support_tickets t where t.id = ticket_id and t.customer_id = auth.uid())
+    is_admin() or exists (select 1 from support_tickets t where t.id = ticket_id and (t.customer_id = auth.uid() or t.driver_id = auth.uid()))
   );
 
 alter publication supabase_realtime add table support_tickets;
