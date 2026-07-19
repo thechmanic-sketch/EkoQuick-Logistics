@@ -77,6 +77,7 @@ async function loadJob() {
         return;
     }
     job = data;
+    document.getElementById('needHelpBtn').href = 'driver-admin-chat.html?delivery=' + job.id;
     render();
 }
 

@@ -167,6 +167,7 @@ function renderJobCard(job) {
 
 function renderEmergencyRow(job) {
     return '<div class="emergency-row">' +
+        '<a class="emergency-btn" style="text-decoration:none; display:inline-block;" href="driver-admin-chat.html?delivery=' + job.id + '">Need Help</a>' +
         '<button class="emergency-btn" data-job="' + job.id + '" data-action="report-issue">Report Issue</button>' +
         '<button class="emergency-btn" data-job="' + job.id + '" data-action="contact-dispatch">Contact Dispatch</button>' +
         '<button class="emergency-btn" data-job="' + job.id + '" data-action="emergency">Emergency Assistance</button>' +

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Broadcasts</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="admin.css">
+    <script src="transitions.js"></script>
+    <style>
+        table.bc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        table.bc-table th, table.bc-table td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="cmd-shell">
+        <aside class="cmd-sidebar">
+            <div class="cmd-brand">Eko<span>quick</span></div>
+            <div class="cmd-tag">Admin Command Center</div>
+            <nav class="cmd-nav">
+                <a href="admin-dashboard.html">Dashboard</a>
+                <a href="admin-drivers.html">Drivers</a>
+                <a href="admin-reviews.html">Reviews & Complaints</a>
+                <a href="admin-jobs.html">All Jobs</a>
+                <a href="admin-fleet-map.html">Live Fleet Map</a>
+                <a href="admin-dispatch.html">Dispatch Center</a>
+                <a href="admin-customers.html">Customers</a>
+                <a href="admin-finances.html">Finances</a>
+                <a href="admin-commissions.html">Commissions</a>
+                <a href="admin-chat.html">Communications</a>
+                <a href="admin-broadcasts.html" class="active">Broadcasts</a>
+                <a href="admin-settings.html">Settings</a>
+            </nav>
+            <div class="cmd-sidebar-bottom">
+                <button class="nav-logout" id="logoutBtn" style="width: 100%;">Log Out</button>
+            </div>
+        </aside>
+
+        <main class="cmd-main">
+            <div class="cmd-header">
+                <div class="cmd-header-title">
+                    <h1>Broadcasts</h1>
+                    <div class="cmd-breadcrumb">Send an announcement to drivers or customers — delivered as an in-app notification (no SMS/email/push provider connected)</div>
+                </div>
+            </div>
+
+            <div class="cmd-panel" style="max-width: 560px;">
+                <h2>New Broadcast</h2>
+                <label>Audience</label>
+                <select class="field-plain" id="fAudience">
+                    <option value="all_drivers">All Active Drivers</option>
+                    <option value="all_customers">All Customers</option>
+                    <option value="selected_drivers">Selected Drivers</option>
+                    <option value="selected_customers">Selected Customers</option>
+                </select>
+                <div id="selectedWrap" class="hidden">
+                    <label>Select recipients</label>
+                    <select class="field-plain" id="fSelected" multiple size="6"></select>
+                </div>
+                <label>Region (optional)</label>
+                <input class="field-plain" id="fRegion" placeholder="e.g. Durban, Pietermaritzburg">
+                <label>Message</label>
+                <textarea class="field-plain" id="fMessage" rows="4" placeholder="Heavy rain expected. Drive carefully. Deliveries may experience delays."></textarea>
+                <div id="msgArea" class="meta"></div>
+                <button class="btn btn-blue" id="sendBtn" style="margin-top:8px;">Send Broadcast</button>
+            </div>
+
+            <div class="cmd-panel">
+                <h2>Broadcast History</h2>
+                <table class="bc-table">
+                    <thead><tr><th>Date</th><th>Audience</th><th>Region</th><th>Message</th><th>Recipients</th></tr></thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+                <div class="empty hidden" id="emptyState">No broadcasts sent yet.</div>
+            </div>
+        </main>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="admin-broadcasts.js"></script>
+</body>
+</html>

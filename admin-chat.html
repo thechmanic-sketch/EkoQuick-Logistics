@@ -54,7 +54,8 @@
                 <a href="admin-customers.html">Customers</a>
                 <a href="admin-finances.html">Finances</a>
                 <a href="admin-commissions.html">Commissions</a>
-                <a href="admin-chat.html" class="active">Chat</a>
+                <a href="admin-chat.html" class="active">Communications</a>
+                <a href="admin-broadcasts.html">Broadcasts</a>
                 <a href="admin-settings.html">Settings</a>
             </nav>
             <div class="cmd-sidebar-bottom">
@@ -75,8 +76,12 @@
                     <div style="padding:10px;"><input class="field-plain" id="roomSearch" placeholder="Search conversations..."></div>
                     <div class="filter-row">
                         <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="customer">Customer Chats</button>
+                        <button class="filter-btn" data-filter="driver">Driver Chats</button>
+                        <button class="filter-btn" data-filter="escalated">Escalated</button>
+                        <button class="filter-btn" data-filter="waiting">Waiting for Admin</button>
                         <button class="filter-btn" data-filter="unread">Unread</button>
-                        <button class="filter-btn" data-filter="pinned">Pinned</button>
+                        <button class="filter-btn" data-filter="archived">Archived</button>
                     </div>
                     <div id="roomListItems"></div>
                 </div>
@@ -89,6 +94,7 @@
                         </span>
                     </div>
                     <div id="adminMessageArea"><div class="empty-state">Select a conversation from the left to view messages.</div></div>
+                    <div id="suggestionsPanel" class="hidden" style="padding:6px 12px; border-top:1px solid var(--line);"></div>
                     <div class="chat-input-row" id="adminInputRow" style="display:none;">
                         <input class="field-plain" id="adminMessageInput" placeholder="Reply as Admin...">
                         <button class="btn btn-blue" id="adminSendBtn" style="width:auto;">Send</button>

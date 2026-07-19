@@ -193,6 +193,12 @@ function wireUi() {
         document.getElementById('messageArea').style.backgroundImage = url ? 'url(' + url + ')' : 'none';
     });
     document.getElementById('blockBtn').addEventListener('click', toggleBlock);
+    if (myRole === 'driver') {
+        const escalateBtn = document.getElementById('escalateBtn');
+        escalateBtn.classList.remove('hidden');
+        escalateBtn.textContent = room.escalated ? '✅ Admin Assistance Requested' : '🆘 Request Admin Assistance';
+        escalateBtn.addEventListener('click', requestAdminAssistance);
+    }
 
     document.getElementById('sendBtn').addEventListener('click', function () {
         const input = document.getElementById('messageInput');
@@ -244,6 +250,16 @@ async function saveSettings(patch) {
     await supabase.from('chat_participant_settings').upsert({ room_id: room.id, user_id: currentUser.id, ...settings, updated_at: new Date().toISOString() });
     document.getElementById('muteBtn').textContent = settings.muted ? '🔔 Unmute' : '🔕 Mute';
     document.getElementById('archiveBtn').textContent = settings.archived ? '📤 Unarchive' : '📥 Archive';
+    document.getElementById('menuPanel').classList.remove('open');
+}
+
+async function requestAdminAssistance() {
+    if (room.escalated) return;
+    if (!confirm('Request admin assistance? An administrator will be able to join this conversation.')) return;
+    await supabase.from('chat_rooms').update({ escalated: true }).eq('id', room.id);
+    room.escalated = true;
+    await supabase.from('chat_messages').insert({ room_id: room.id, sender_type: 'system', message: 'Admin assistance requested.', message_type: 'system' });
+    document.getElementById('escalateBtn').textContent = '✅ Admin Assistance Requested';
     document.getElementById('menuPanel').classList.remove('open');
 }
 
