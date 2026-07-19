@@ -91,6 +91,11 @@ function wireCustomerLogin() {
                 showFormError(form, 'This account is not a customer account.');
                 return;
             }
+            if (profile.account_status !== 'active') {
+                await supabase.auth.signOut();
+                showFormError(form, profile.account_status === 'banned' ? 'This account has been blocked.' : 'This account is currently paused.');
+                return;
+            }
             window.location.href = 'dashboard.html';
         } catch (err) {
             showFormError(form, 'Something went wrong: ' + (err && err.message ? err.message : err));
@@ -153,6 +158,11 @@ function wireDriverLogin() {
             if (!profile || profile.role !== 'driver') {
                 await supabase.auth.signOut();
                 showFormError(form, 'This account is not a driver account.');
+                return;
+            }
+            if (profile.account_status !== 'active') {
+                await supabase.auth.signOut();
+                showFormError(form, profile.account_status === 'banned' ? 'This account has been banned.' : 'This account is currently paused.');
                 return;
             }
             window.location.href = 'driver-dashboard.html';

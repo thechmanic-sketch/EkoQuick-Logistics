@@ -23,6 +23,8 @@
                 <a href="#drivers">Drivers</a>
                 <a href="#reviews">Reviews & Complaints</a>
                 <a href="#jobs">All Jobs</a>
+                <a href="admin-dispatch.html">Dispatch Center</a>
+                <a href="admin-customers.html">Customers</a>
                 <a href="admin-finances.html">Finances</a>
                 <a href="admin-commissions.html">Commissions</a>
             </nav>
@@ -49,7 +51,19 @@
 
                     <div class="cmd-panel" id="jobs">
                         <h2>All Jobs</h2>
-                        <button class="btn btn-outline-blue" id="refreshBtn" style="width: auto; margin-bottom: 10px;">Refresh</button>
+                        <div style="display:flex; gap:8px; margin-bottom: 10px; flex-wrap: wrap;">
+                            <input class="field-plain" id="jobSearch" placeholder="Search pickup, dropoff, phone..." style="flex:1; min-width: 160px;">
+                            <select class="field-plain" id="jobStatusFilter" style="width: auto;">
+                                <option value="">All statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="offered">Awaiting driver</option>
+                                <option value="to_pickup">Heading to pickup</option>
+                                <option value="to_dropoff">Heading to drop-off</option>
+                                <option value="delivered">Delivered</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                            <button class="btn btn-outline-blue" id="refreshBtn" style="width: auto;">Refresh</button>
+                        </div>
                         <div id="jobsList" class="cmd-panel-scroll"><div class="empty">Loading...</div></div>
                     </div>
                 </div>

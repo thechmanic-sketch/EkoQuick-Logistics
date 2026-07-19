@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <style>html{background:#0B0F16}</style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ekoquick — Finances</title>
+    <title>Ekoquick — Customers</title>
     <link rel="stylesheet" href="auth.css">
     <link rel="stylesheet" href="app.css">
     <link rel="stylesheet" href="admin.css">
@@ -34,23 +34,21 @@
 
         <main class="cmd-main">
             <div class="cmd-stats-row">
-                <div class="cmd-stat"><div class="amt" id="statTotalRevenue">R0</div><div class="lbl">Total revenue (delivered)</div></div>
-                <div class="cmd-stat"><div class="amt" id="statTotalPlatform">R0</div><div class="lbl">Platform commission</div></div>
-                <div class="cmd-stat"><div class="amt" id="statTotalDrivers">R0</div><div class="lbl">Paid to drivers</div></div>
-                <div class="cmd-stat"><div class="amt" id="statTotalTrips">0</div><div class="lbl">Delivered trips</div></div>
+                <div class="cmd-stat"><div class="amt" id="statCustomerCount">0</div><div class="lbl">Total customers</div></div>
+                <div class="cmd-stat"><div class="amt" id="statCustomerSpend">R0</div><div class="lbl">Total lifetime spend</div></div>
             </div>
 
             <div class="cmd-panel">
-                <h2>Daily breakdown</h2>
-                <button class="btn btn-outline-blue" id="exportBtn" style="width: auto; margin-bottom: 12px;">Export CSV</button>
-                <div id="financesTable" class="cmd-panel-scroll" style="max-height: 640px;"><div class="empty">Loading...</div></div>
+                <h2>Customers</h2>
+                <input class="field-plain" id="customerSearch" placeholder="Search by name or phone..." style="margin-bottom: 12px;">
+                <div id="customersList" class="cmd-panel-scroll" style="max-height: 640px;"><div class="empty">Loading...</div></div>
             </div>
         </main>
     </div>
 
     <script src="vendor/supabase.js"></script>
     <script src="config.js"></script>
-    <script src="admin-finances.js"></script>
+    <script src="admin-customers.js"></script>
     <script src="support-widget.js"></script>
 </body>
 </html>

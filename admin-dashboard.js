@@ -1,5 +1,6 @@
 let currentUser = null;
 let driversCache = [];
+let allJobsCache = [];
 let fleetMap = null;
 let fleetMarkers = {};
 let onlineMarkers = {};
@@ -23,6 +24,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         window.location.href = 'login.html';
     });
     document.getElementById('refreshBtn').addEventListener('click', loadJobs);
+    document.getElementById('jobSearch').addEventListener('input', applyJobFilters);
+    document.getElementById('jobStatusFilter').addEventListener('change', applyJobFilters);
 
     fleetMap = L.map('fleetMap').setView([-29.6, 30.9], 8);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(fleetMap);
@@ -333,6 +336,7 @@ async function loadJobs() {
 
     const { data: drivers } = await supabase.from('profiles').select('id, full_name, phone, vehicle_class, last_lat, last_lng, last_seen_at, avatar_url, verification_status, account_status, license_url, id_doc_url, vehicle_reg_url, insurance_url').eq('role', 'driver');
     driversCache = drivers || [];
+    allJobsCache = jobs || [];
 
     renderStats(jobs || []);
     renderFleetMap(jobs || []);
@@ -340,7 +344,29 @@ async function loadJobs() {
     renderReviews(jobs || []);
     await autoAssignPending(jobs || []);
 
-    if (!jobs || jobs.length === 0) { list.innerHTML = '<div class="empty">No jobs yet.</div>'; return; }
+    applyJobFilters();
+}
+
+function applyJobFilters() {
+    const query = (document.getElementById('jobSearch').value || '').trim().toLowerCase();
+    const status = document.getElementById('jobStatusFilter').value;
+
+    let filtered = allJobsCache;
+    if (status) filtered = filtered.filter(function (j) { return j.status === status; });
+    if (query) {
+        filtered = filtered.filter(function (j) {
+            return (j.pickup || '').toLowerCase().indexOf(query) !== -1 ||
+                (j.dropoff || '').toLowerCase().indexOf(query) !== -1 ||
+                (j.customer_phone || '').toLowerCase().indexOf(query) !== -1 ||
+                (j.receiver_phone || '').toLowerCase().indexOf(query) !== -1;
+        });
+    }
+    renderJobsList(filtered);
+}
+
+function renderJobsList(jobs) {
+    const list = document.getElementById('jobsList');
+    if (!jobs || jobs.length === 0) { list.innerHTML = '<div class="empty">No jobs match.</div>'; return; }
 
     const driverOptions = driversCache.map(function (d) {
         return '<option value="' + d.id + '">' + escapeHtml(d.full_name || d.id) + ' — ' + vehicleLabel(d.vehicle_class) + '</option>';
