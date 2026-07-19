@@ -20,6 +20,7 @@
             <h1>Rate Your Driver</h1>
             <p class="auth-subtitle">How was your delivery experience?</p>
 
+            <label style="text-align:left; display:block;">Overall Experience</label>
             <div class="star-rating" id="starRating">
                 <span class="star" data-value="1">★</span>
                 <span class="star" data-value="2">★</span>
@@ -28,12 +29,20 @@
                 <span class="star" data-value="5">★</span>
             </div>
 
-            <label style="text-align:left; display:block;">Additional Comments (optional)</label>
-            <textarea id="comment" class="field-plain" rows="3" placeholder="Tell us more..."></textarea>
+            <div id="categoryRatings" style="text-align:left; margin-top:10px;"></div>
+
+            <label style="text-align:left; display:block; margin-top:10px;">Additional Comments (optional, max 1000 characters)</label>
+            <textarea id="comment" class="field-plain" rows="3" maxlength="1000" placeholder="Tell us more..."></textarea>
+
+            <label style="text-align:left; display:block; margin-top:10px;">Delivery Photo (optional)</label>
+            <input type="file" id="reviewPhoto" accept="image/*" class="field-plain">
 
             <div id="msgArea"></div>
 
-            <button class="btn btn-blue" id="submitRating" style="margin-top: 10px;">Submit Rating</button>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn btn-blue" id="submitRating">Submit Review</button>
+                <a class="btn btn-outline-blue" href="reviews.html">Cancel</a>
+            </div>
         </div>
     </div>
 

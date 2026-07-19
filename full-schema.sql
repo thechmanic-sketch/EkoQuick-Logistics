@@ -171,6 +171,12 @@ create table if not exists jobs (
   review_hidden boolean not null default false,
   review_reply text,
   review_reply_at timestamptz,
+  rating_professionalism int2 check (rating_professionalism between 1 and 5),
+  rating_communication int2 check (rating_communication between 1 and 5),
+  rating_speed int2 check (rating_speed between 1 and 5),
+  rating_parcel_condition int2 check (rating_parcel_condition between 1 and 5),
+  review_image_url text,
+  review_edited_at timestamptz,
   assigned_at timestamptz,
   to_pickup_at timestamptz,
   to_dropoff_at timestamptz,
@@ -299,6 +305,7 @@ insert into storage.buckets (id, name, public) values ('avatars', 'avatars', tru
 insert into storage.buckets (id, name, public) values ('driver-docs', 'driver-docs', false) on conflict (id) do nothing;
 insert into storage.buckets (id, name, public) values ('complaint-evidence', 'complaint-evidence', false) on conflict (id) do nothing;
 insert into storage.buckets (id, name, public) values ('payment-proofs', 'payment-proofs', false) on conflict (id) do nothing;
+insert into storage.buckets (id, name, public) values ('review-photos', 'review-photos', true) on conflict (id) do nothing;
 
 drop policy if exists "avatars public read" on storage.objects;
 create policy "avatars public read" on storage.objects
@@ -335,6 +342,18 @@ create policy "payment-proofs owner write" on storage.objects
 drop policy if exists "payment-proofs owner or admin read" on storage.objects;
 create policy "payment-proofs owner or admin read" on storage.objects
   for select using (bucket_id = 'payment-proofs' and ((storage.foldername(name))[1] = auth.uid()::text or is_admin()));
+
+drop policy if exists "review-photos public read" on storage.objects;
+create policy "review-photos public read" on storage.objects
+  for select using (bucket_id = 'review-photos');
+
+drop policy if exists "review-photos owner write" on storage.objects;
+create policy "review-photos owner write" on storage.objects
+  for insert with check (bucket_id = 'review-photos' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "review-photos owner update" on storage.objects;
+create policy "review-photos owner update" on storage.objects
+  for update using (bucket_id = 'review-photos' and (storage.foldername(name))[1] = auth.uid()::text);
 
 create table if not exists complaint_attachments (
   id uuid primary key default gen_random_uuid(),
