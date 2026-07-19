@@ -22,6 +22,13 @@
             .dispatch-grid { grid-template-columns: 1fr; }
         }
         .dispatch-job.selected { border-color: var(--orange); }
+        .recommend-card { border: 2px solid var(--orange); padding: 10px; margin-bottom: 12px; }
+        .recommend-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--orange); }
+        #liveIndicator { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+        #liveIndicator .dot { width: 8px; height: 8px; border-radius: 50%; background: #1E8E3E; }
+        .toggle-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+        .kv-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; gap: 10px; }
+        .kv-row span:first-child { color: var(--muted); }
     </style>
 </head>
 <body>
@@ -46,21 +53,70 @@
         </aside>
 
         <main class="cmd-main">
+            <div class="cmd-header">
+                <div class="cmd-header-title">
+                    <h1>Dispatch Center</h1>
+                    <div class="cmd-breadcrumb"><span id="liveIndicator"><span class="dot"></span>Live</span> · Queue: <span id="queueCount">0</span></div>
+                </div>
+                <div class="cmd-header-right">
+                    <label class="toggle-row"><input type="checkbox" id="autoAssignToggle"> Auto Assign</label>
+                    <button class="btn btn-outline-blue" id="refreshBtn" style="width: auto;">Refresh</button>
+                </div>
+            </div>
+
+            <input class="field-plain" id="globalSearch" placeholder="Search job ID, customer, driver, address..." style="margin-bottom: 12px;">
+
+            <div id="summaryCards" class="kpi-grid">
+                <div class="skeleton" style="height:70px;"></div>
+            </div>
+
             <div class="dispatch-grid">
                 <div class="cmd-panel">
-                    <h2>Unassigned Orders</h2>
-                    <div id="unassignedList" class="cmd-panel-scroll" style="max-height: 640px;"><div class="empty">Loading...</div></div>
+                    <h2>Pending Jobs</h2>
+                    <div style="display:flex; gap:6px; margin-bottom:8px;">
+                        <select class="field-plain" id="priorityFilter" style="width:auto;">
+                            <option value="">All priorities</option>
+                            <option value="high">High</option>
+                            <option value="normal">Normal</option>
+                            <option value="low">Low</option>
+                        </select>
+                        <select class="field-plain" id="jobVehicleFilter" style="width:auto;">
+                            <option value="">All vehicles</option>
+                        </select>
+                    </div>
+                    <div id="unassignedList" class="cmd-panel-scroll" style="max-height: 560px;"><div class="empty">Loading...</div></div>
                 </div>
 
                 <div class="cmd-panel">
-                    <h2>Nearby Drivers</h2>
-                    <div id="nearbyDrivers" class="cmd-panel-scroll" style="max-height: 640px;"><div class="empty">Select an order to see matching drivers.</div></div>
+                    <h2>Available Drivers</h2>
+                    <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+                        <select class="field-plain" id="driverVehicleFilter" style="width:auto;">
+                            <option value="">All vehicles</option>
+                        </select>
+                        <select class="field-plain" id="driverSortBy" style="width:auto;">
+                            <option value="distance">Sort: Closest</option>
+                            <option value="rating">Sort: Highest Rated</option>
+                            <option value="deliveries">Sort: Most Deliveries Today</option>
+                            <option value="earnings">Sort: Highest Earnings Today</option>
+                        </select>
+                    </div>
+                    <div id="nearbyDrivers" class="cmd-panel-scroll" style="max-height: 560px;"><div class="empty">Select an order to see matching drivers.</div></div>
                 </div>
 
                 <div class="cmd-panel">
                     <h2>Map</h2>
-                    <div id="dispatchMap" style="height: 500px; border: 1px solid var(--line);"></div>
+                    <div id="dispatchMap" style="height: 620px; border: 1px solid var(--line);"></div>
                 </div>
+            </div>
+
+            <div class="cmd-panel">
+                <h2>Active Deliveries</h2>
+                <div id="activeDeliveries"><div class="empty">Loading...</div></div>
+            </div>
+
+            <div class="cmd-panel">
+                <h2>Dispatch Timeline</h2>
+                <div id="dispatchTimeline"><div class="empty">No recent events.</div></div>
             </div>
         </main>
     </div>
