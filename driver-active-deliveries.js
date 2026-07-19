@@ -154,7 +154,10 @@ function renderJobCard(job) {
         '<span class="badge in_progress">' + (arrivedPickup && job.status === 'to_pickup' ? 'Arrived at Pickup' : arrivedDropoff && job.status === 'to_dropoff' ? 'Arrived at Destination' : STATUS_LABELS[job.status]) + '</span>' +
         '<div class="meta" style="margin-top:6px;">ETA: ' + (etaMin !== null ? etaMin + ' min' : '—') + ' · Remaining distance: ' + (remainingKm !== null ? remainingKm.toFixed(1) + ' km' : '—') + ' · Vehicle: ' + escapeHtml(job.vehicle || '') + '</div>' +
         '<div style="margin-top:10px;">' + actionArea + '</div>' +
-        '<div style="margin-top:8px;"><button class="btn btn-outline-blue" style="width:auto;" data-action="toggle-details" data-job="' + job.id + '">View Details</button></div>' +
+        '<div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">' +
+            '<button class="btn btn-outline-blue" style="width:auto;" data-action="toggle-details" data-job="' + job.id + '">View Details</button>' +
+            '<a class="btn btn-outline-blue" style="width:auto;" href="driver-navigation.html?job=' + job.id + '">Full-Screen Navigation</a>' +
+        '</div>' +
         '<div class="details-row" id="details-' + job.id + '"></div>' +
         renderEmergencyRow(job) +
     '</div>';

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Live Navigation</title>
+    <link rel="stylesheet" href="vendor/leaflet.css">
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <script src="transitions.js"></script>
+    <style>
+        html, body { height: 100%; margin: 0; }
+        .nav-wrap { display: flex; flex-direction: column; height: 100vh; }
+        .top-bar { background: var(--ink-2); border-bottom: 1px solid var(--line); padding: 10px 14px; font-size: 13px; }
+        .top-bar .route { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .top-bar .stats { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); }
+        #navMap { flex: 1; position: relative; }
+        .map-controls { position: absolute; right: 8px; top: 8px; z-index: 500; display: flex; flex-direction: column; gap: 6px; }
+        .map-btn { background: #12161F; border: 1px solid var(--line); color: #fff; width: 38px; height: 38px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        .bottom-panel { background: var(--ink-2); border-top: 1px solid var(--line); padding: 12px 14px; }
+        .bottom-panel .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .bottom-panel .actions .btn { width: auto; }
+        .emergency-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .emergency-btn { background: #C0392B; color: #fff; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 12px; }
+        canvas#sigCanvas { border: 1px solid var(--line); background: #fff; width: 100%; height: 100px; touch-action: none; }
+    </style>
+</head>
+<body>
+    <div class="nav-wrap">
+        <div class="top-bar">
+            <div class="route" id="jobRoute">Loading…</div>
+            <div class="stats">
+                <span id="statusText"></span>
+                <span id="etaText"></span>
+                <span id="distanceText"></span>
+                <span id="speedText"></span>
+            </div>
+        </div>
+
+        <div id="navMap">
+            <div class="map-controls">
+                <button class="map-btn" id="recenterBtn" title="Center Map">🎯</button>
+                <button class="map-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
+            </div>
+        </div>
+
+        <div class="bottom-panel">
+            <div id="customerPanel" class="meta hidden"></div>
+            <div id="actionPanel" class="actions"></div>
+            <div class="emergency-row">
+                <button class="emergency-btn" id="contactDispatchBtn">Contact Dispatch</button>
+                <button class="emergency-btn" id="emergencyCallBtn">Emergency Call</button>
+                <button class="emergency-btn" id="reportAccidentBtn">Report Accident</button>
+                <button class="emergency-btn" id="breakdownBtn">Vehicle Breakdown</button>
+            </div>
+            <div id="completionExtras" class="hidden" style="margin-top:8px;">
+                <label>Delivery Photo (optional)</label>
+                <input type="file" id="photoInput" accept="image/*" capture="environment" class="field-plain">
+                <label>Customer Signature</label>
+                <canvas id="sigCanvas" width="280" height="100"></canvas>
+                <button type="button" class="btn btn-outline-blue" id="clearSigBtn" style="margin-top:4px;">Clear Signature</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/leaflet.js"></script>
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="driver-navigation.js"></script>
+</body>
+</html>
