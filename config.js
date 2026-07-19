@@ -25,6 +25,35 @@ async function loadDriverShare() {
     if (data && data.value) DRIVER_SHARE = parseFloat(data.value);
 }
 
+// Vehicle-class / driver / campaign overrides on top of DRIVER_SHARE, set
+// from the admin Commissions page. Loaded once per page via
+// loadCommissionRules(); driverEarningForJob()/platformFeeForJob() apply
+// the most specific active rule (driver > vehicle class > campaign > default).
+let COMMISSION_RULES = [];
+
+async function loadCommissionRules() {
+    const { data } = await supabase.from('commission_rules').select('*').eq('active', true);
+    COMMISSION_RULES = data || [];
+}
+
+function effectiveDriverShare(job) {
+    if (!job) return DRIVER_SHARE;
+    const driverRule = COMMISSION_RULES.find(function (r) { return r.rule_type === 'driver' && r.driver_id === job.driver_id; });
+    if (driverRule) return driverRule.driver_share;
+    const vehicleRule = COMMISSION_RULES.find(function (r) { return r.rule_type === 'vehicle_class' && r.vehicle_class === job.vehicle; });
+    if (vehicleRule) return vehicleRule.driver_share;
+    const jobDate = job.created_at ? new Date(job.created_at) : null;
+    const campaignRule = COMMISSION_RULES.find(function (r) {
+        return r.rule_type === 'campaign' && jobDate && r.start_date && r.end_date &&
+            jobDate >= new Date(r.start_date) && jobDate <= new Date(r.end_date + 'T23:59:59');
+    });
+    if (campaignRule) return campaignRule.driver_share;
+    return DRIVER_SHARE;
+}
+
+function driverEarningForJob(job) { return Math.round((Number(job.quote) || 0) * effectiveDriverShare(job) * 100) / 100; }
+function platformFeeForJob(job) { return Math.round((Number(job.quote) || 0) * (1 - effectiveDriverShare(job)) * 100) / 100; }
+
 function mapsDirectionsUrl(lat, lng) {
     return 'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng;
 }

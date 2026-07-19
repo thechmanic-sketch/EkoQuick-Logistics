@@ -10,6 +10,15 @@
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="support-widget.css">
     <script src="transitions.js"></script>
+    <style>
+        .kv-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; gap: 10px; }
+        .kv-row span:first-child { color: var(--muted); }
+        .vehicle-comm-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .vehicle-comm-row .name { width: 140px; }
+        .calc-result { display: flex; gap: 24px; margin-top: 12px; }
+        .calc-result .box { flex: 1; border: 1px solid var(--line); padding: 12px; text-align: center; }
+        .calc-result .amt { font-family: var(--font-display); font-size: 22px; }
+    </style>
 </head>
 <body>
     <div class="cmd-shell">
@@ -33,14 +42,71 @@
         </aside>
 
         <main class="cmd-main">
+            <div class="cmd-header">
+                <div class="cmd-header-title">
+                    <h1>Commissions</h1>
+                    <div class="cmd-breadcrumb">Applies to future deliveries only — completed jobs keep the rate they were paid at</div>
+                </div>
+                <div class="cmd-header-right">
+                    <input class="field-plain" id="historySearch" placeholder="Search history..." style="width:180px;">
+                    <button class="btn btn-outline-blue" id="refreshBtn" style="width: auto;">Refresh</button>
+                </div>
+            </div>
+
+            <div id="summaryCards" class="kpi-grid">
+                <div class="skeleton" style="height:80px;"></div>
+                <div class="skeleton" style="height:80px;"></div>
+            </div>
+
             <div class="cmd-panel" style="max-width: 480px;">
-                <h2>Commission rate</h2>
-                <div class="meta" style="margin-bottom: 12px;">Applies to every future job. Past completed jobs keep the rate they were paid at.</div>
+                <h2>Default Commission</h2>
                 <label>Driver share (%)</label>
                 <input class="field-plain" type="number" id="driverShareInput" min="0" max="100" step="1">
                 <div class="meta" id="platformShareNote" style="margin-bottom: 10px;"></div>
+                <label>Reason for change (recorded in history)</label>
+                <input class="field-plain" id="defaultReasonInput" placeholder="e.g. Quarterly rate review">
                 <div id="msgArea"></div>
-                <button class="btn btn-blue" id="saveBtn" style="margin-top: 10px;">Save rate</button>
+                <button class="btn btn-blue" id="saveBtn" style="margin-top: 10px;">Save Changes</button>
+            </div>
+
+            <div class="cmd-panel">
+                <h2>Vehicle Class Commissions</h2>
+                <div class="meta" style="margin-bottom:12px;">Overrides the default rate for deliveries using this vehicle class. Leave blank to use the default.</div>
+                <div id="vehicleClassRows"></div>
+                <button class="btn btn-blue" id="saveVehicleRatesBtn" style="width:auto; margin-top:6px;">Save Vehicle Class Rates</button>
+            </div>
+
+            <div class="cmd-panel">
+                <h2>Special Commissions</h2>
+                <div class="meta" style="margin-bottom:12px;">VIP driver overrides and time-bound promotional/holiday campaigns. Corporate account pricing is a separate, not-yet-built feature (a customer-side fee model, distinct from driver commission share).</div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+                    <select class="field-plain" id="specialType" style="width:auto;">
+                        <option value="driver">VIP Driver Override</option>
+                        <option value="campaign">Promotional / Holiday Campaign</option>
+                    </select>
+                    <select class="field-plain hidden" id="specialDriverSelect" style="width:auto;"></select>
+                    <input class="field-plain hidden" id="specialName" placeholder="Campaign name (e.g. December Promo)" style="width:auto;">
+                    <input class="field-plain hidden" type="date" id="specialStartDate" style="width:auto;">
+                    <input class="field-plain hidden" type="date" id="specialEndDate" style="width:auto;">
+                    <input class="field-plain" type="number" id="specialShare" placeholder="Driver %" min="0" max="100" style="width:100px;">
+                    <button class="btn btn-blue" id="addSpecialBtn" style="width:auto;">Add Rule</button>
+                </div>
+                <div id="specialRulesList"><div class="empty">Loading...</div></div>
+            </div>
+
+            <div class="cmd-panel">
+                <h2>Commission Calculator</h2>
+                <label>Delivery Fee (R)</label>
+                <input class="field-plain" type="number" id="calcFee" placeholder="100" style="max-width:200px;">
+                <div class="calc-result">
+                    <div class="box"><div class="meta">Driver Share</div><div class="amt" id="calcDriver">R0</div></div>
+                    <div class="box"><div class="meta">Platform Share</div><div class="amt" id="calcPlatform">R0</div></div>
+                </div>
+            </div>
+
+            <div class="cmd-panel">
+                <h2>Commission History</h2>
+                <div id="historyTableWrap" class="cmd-panel-scroll" style="max-height: 500px;"><div class="empty">Loading...</div></div>
             </div>
 
             <div class="cmd-panel">

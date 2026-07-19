@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('drawerBackdrop').addEventListener('click', closeDrawer);
 
     await loadDriverShare();
+    await loadCommissionRules();
     await loadAll();
     openDriverFromUrl();
 
@@ -125,10 +126,10 @@ function driverStats(driverId) {
 
     const todayStart = startOfToday(), weekStart = startOfWeek(), monthStart = startOfMonth();
     const deliveredToday = delivered.filter(function (j) { return new Date(j.delivered_at) >= todayStart; });
-    const earningsToday = deliveredToday.reduce(function (s, j) { return s + driverEarning(j.quote); }, 0);
-    const earningsWeek = delivered.filter(function (j) { return new Date(j.delivered_at) >= weekStart; }).reduce(function (s, j) { return s + driverEarning(j.quote); }, 0);
-    const earningsMonth = delivered.filter(function (j) { return new Date(j.delivered_at) >= monthStart; }).reduce(function (s, j) { return s + driverEarning(j.quote); }, 0);
-    const earningsLifetime = delivered.reduce(function (s, j) { return s + driverEarning(j.quote); }, 0);
+    const earningsToday = deliveredToday.reduce(function (s, j) { return s + driverEarningForJob(j); }, 0);
+    const earningsWeek = delivered.filter(function (j) { return new Date(j.delivered_at) >= weekStart; }).reduce(function (s, j) { return s + driverEarningForJob(j); }, 0);
+    const earningsMonth = delivered.filter(function (j) { return new Date(j.delivered_at) >= monthStart; }).reduce(function (s, j) { return s + driverEarningForJob(j); }, 0);
+    const earningsLifetime = delivered.reduce(function (s, j) { return s + driverEarningForJob(j); }, 0);
 
     const withDuration = delivered.filter(function (j) { return j.created_at && j.delivered_at; });
     let avgDeliveryMins = null;
@@ -443,7 +444,7 @@ function renderAnalytics() {
         const mins = Math.round(avgMs / 60000);
         avgDeliveryLabel = mins >= 60 ? Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm' : mins + ' mins';
     }
-    const lifetimeEarnings = delivered.reduce(function (s, j) { return s + driverEarning(j.quote); }, 0);
+    const lifetimeEarnings = delivered.reduce(function (s, j) { return s + driverEarningForJob(j); }, 0);
 
     function card(title, value) {
         return '<div class="kpi-card"><div class="kpi-title">' + title + '</div><div class="kpi-value">' + value + '</div></div>';
@@ -460,7 +461,7 @@ function renderAnalytics() {
     months.forEach(function (m) { deliveriesByMonth[m] = 0; earningsByMonth[m] = 0; });
     delivered.forEach(function (j) {
         const m = j.delivered_at.slice(0, 7);
-        if (deliveriesByMonth[m] !== undefined) { deliveriesByMonth[m] += 1; earningsByMonth[m] += driverEarning(j.quote); }
+        if (deliveriesByMonth[m] !== undefined) { deliveriesByMonth[m] += 1; earningsByMonth[m] += driverEarningForJob(j); }
     });
     const labels = months.map(function (m) { return m; });
     const chartTextColor = '#8891A0';

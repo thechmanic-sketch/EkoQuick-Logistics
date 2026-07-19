@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     startClock();
     await loadDriverShare();
+    await loadCommissionRules();
     await loadDashboard();
 
     supabase

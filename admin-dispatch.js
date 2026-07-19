@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(dispatchMap);
 
     await loadDriverShare();
+    await loadCommissionRules();
     await loadAll();
     setupAutoAssignTimer();
 
@@ -239,7 +240,7 @@ function driverStatsToday(driverId) {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const delivered = allJobs.filter(function (j) { return j.driver_id === driverId && j.status === 'delivered' && j.delivered_at; });
     const deliveredToday = delivered.filter(function (j) { return new Date(j.delivered_at) >= todayStart; });
-    const earningsToday = deliveredToday.reduce(function (s, j) { return s + driverEarning(j.quote); }, 0);
+    const earningsToday = deliveredToday.reduce(function (s, j) { return s + driverEarningForJob(j); }, 0);
     const rated = allJobs.filter(function (j) { return j.driver_id === driverId && j.rating; });
     const avgRating = rated.length ? (rated.reduce(function (s, j) { return s + j.rating; }, 0) / rated.length) : null;
     return { deliveredToday: deliveredToday.length, earningsToday: earningsToday, avgRating: avgRating };

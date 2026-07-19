@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('refreshBtn').addEventListener('click', loadJobs);
 
     await loadDriverShare();
+    await loadCommissionRules();
     beginPresence();
     loadJobs();
 
@@ -148,7 +149,7 @@ function renderActiveJobs(jobs) {
         return (
             '<div class="job">' +
                 '<div class="route">' + escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff) + '</div>' +
-                '<div class="meta">' + (job.distance || 0) + ' km • You earn R' + driverEarning(job.quote).toFixed(2) + '</div>' +
+                '<div class="meta">' + (job.distance || 0) + ' km • You earn R' + driverEarningForJob(job).toFixed(2) + '</div>' +
                 '<div class="meta">Sender: ' + escapeHtml(job.customer_phone || '') + '</div>' +
                 '<div class="meta">Receiver: ' + escapeHtml(job.receiver_name || '') + (job.receiver_phone ? ' (' + escapeHtml(job.receiver_phone) + ')' : '') + '</div>' +
                 '<span class="badge ' + job.status + '">' + (STATUS_LABELS[job.status] || job.status) + '</span>' +
@@ -185,7 +186,7 @@ function renderHistory(jobs) {
     const delivered = jobs.filter(function (j) { return j.status === 'delivered'; });
 
     if (totalEl) {
-        const total = delivered.reduce(function (sum, j) { return sum + driverEarning(j.quote); }, 0);
+        const total = delivered.reduce(function (sum, j) { return sum + driverEarningForJob(j); }, 0);
         totalEl.textContent = delivered.length + ' completed trips • Total earned: R' + total.toFixed(2);
     }
 
@@ -195,7 +196,7 @@ function renderHistory(jobs) {
         return (
             '<div class="job">' +
                 '<div class="route">' + escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff) + '</div>' +
-                '<div class="meta">' + (job.distance || 0) + ' km • You earned R' + driverEarning(job.quote).toFixed(2) + '</div>' +
+                '<div class="meta">' + (job.distance || 0) + ' km • You earned R' + driverEarningForJob(job).toFixed(2) + '</div>' +
                 '<span class="badge ' + job.status + '">' + (STATUS_LABELS[job.status] || job.status) + '</span>' +
                 (job.rating ? '<div class="meta" style="margin-top: 6px;">Rating: ' + '★'.repeat(job.rating) + (job.rating_comment ? ' — "' + escapeHtml(job.rating_comment) + '"' : '') + '</div>' : '') +
             '</div>'

@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
 
     await loadDriverShare();
+    await loadCommissionRules();
     await loadAll();
 
     supabase.channel('finances-page-jobs').on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, loadAll).subscribe();
@@ -142,8 +143,8 @@ function renderSummaryCards() {
     const revWeek = delivered.filter(function (j) { return new Date(j.delivered_at) >= weekStart; }).reduce(function (s, j) { return s + netRevenue(j); }, 0);
     const revMonth = delivered.filter(function (j) { return new Date(j.delivered_at) >= monthStart; }).reduce(function (s, j) { return s + netRevenue(j); }, 0);
     const revLifetime = delivered.reduce(function (s, j) { return s + netRevenue(j); }, 0);
-    const earningsToday = delivered.filter(function (j) { return new Date(j.delivered_at) >= todayStart; }).reduce(function (s, j) { return s + driverEarning(j.quote); }, 0);
-    const commission = delivered.reduce(function (s, j) { return s + platformFee(j.quote); }, 0);
+    const earningsToday = delivered.filter(function (j) { return new Date(j.delivered_at) >= todayStart; }).reduce(function (s, j) { return s + driverEarningForJob(j); }, 0);
+    const commission = delivered.reduce(function (s, j) { return s + platformFeeForJob(j); }, 0);
     const avgFee = delivered.length ? delivered.reduce(function (s, j) { return s + (Number(j.quote) || 0); }, 0) / delivered.length : 0;
 
     function card(title, value) {
@@ -243,10 +244,10 @@ function renderCharts() {
 function driverEarningsRow(driverId) {
     const jobs = deliveredJobs().filter(function (j) { return j.driver_id === driverId; });
     const todayStart = startOfToday(), weekStart = startOfWeek(), monthStart = startOfMonth();
-    const earningsToday = jobs.filter(function (j) { return new Date(j.delivered_at) >= todayStart; }).reduce(function (s, j) { return s + driverEarning(j.quote); }, 0);
-    const earningsWeek = jobs.filter(function (j) { return new Date(j.delivered_at) >= weekStart; }).reduce(function (s, j) { return s + driverEarning(j.quote); }, 0);
-    const earningsMonth = jobs.filter(function (j) { return new Date(j.delivered_at) >= monthStart; }).reduce(function (s, j) { return s + driverEarning(j.quote); }, 0);
-    const lifetime = jobs.reduce(function (s, j) { return s + driverEarning(j.quote); }, 0);
+    const earningsToday = jobs.filter(function (j) { return new Date(j.delivered_at) >= todayStart; }).reduce(function (s, j) { return s + driverEarningForJob(j); }, 0);
+    const earningsWeek = jobs.filter(function (j) { return new Date(j.delivered_at) >= weekStart; }).reduce(function (s, j) { return s + driverEarningForJob(j); }, 0);
+    const earningsMonth = jobs.filter(function (j) { return new Date(j.delivered_at) >= monthStart; }).reduce(function (s, j) { return s + driverEarningForJob(j); }, 0);
+    const lifetime = jobs.reduce(function (s, j) { return s + driverEarningForJob(j); }, 0);
     return { deliveries: jobs.length, earningsToday: earningsToday, earningsWeek: earningsWeek, earningsMonth: earningsMonth, lifetime: lifetime, avgPerDelivery: jobs.length ? lifetime / jobs.length : 0 };
 }
 
@@ -324,7 +325,7 @@ function renderTxnTable() {
                 '<td>' + j.id.slice(0, 8) + '</td><td>' + j.id.slice(0, 8) + '</td>' +
                 '<td>' + escapeHtml(customer ? customer.full_name : (j.customer_phone || '—')) + '</td>' +
                 '<td>' + escapeHtml(driver ? driver.full_name : '—') + '</td>' +
-                '<td>' + money(j.quote) + '</td><td>' + money(platformFee(j.quote)) + '</td><td>' + money(driverEarning(j.quote)) + '</td>' +
+                '<td>' + money(j.quote) + '</td><td>' + money(platformFeeForJob(j)) + '</td><td>' + money(driverEarningForJob(j)) + '</td>' +
                 '<td>' + paymentMethodLabel(j.payment_method) + '</td>' +
                 '<td><span class="badge ' + badge + '">' + status + '</span></td>' +
                 '<td>' + formatDate(j.created_at) + '</td></tr>';
@@ -377,7 +378,7 @@ function openTxnDrawer(jobId) {
         (driver ? kv('Name', driver.full_name) + kv('Vehicle Class', vehicleLabel(driver.vehicle_class)) : '<div class="meta">No driver assigned.</div>') +
 
         '<h3>Payment</h3>' +
-        kv('Delivery Fee', money(j.quote)) + kv('Platform Commission', money(platformFee(j.quote))) + kv('Driver Earnings', money(driverEarning(j.quote))) +
+        kv('Delivery Fee', money(j.quote)) + kv('Platform Commission', money(platformFeeForJob(j))) + kv('Driver Earnings', money(driverEarningForJob(j))) +
         kv('Payment Method', paymentMethodLabel(j.payment_method)) + kv('Payment Status', j.payment_status || '—') +
         (j.payment_method === 'eft' && j.eft_proof_url ? '<div class="kv-row"><span>Proof of Payment</span><span><button class="btn btn-outline-blue" style="width:auto; padding:2px 10px;" id="viewProofBtn">View</button></span></div>' : '') +
         (j.payment_verified_by ? kv('Payment Verified By', j.payment_verified_by + (j.payment_verified_at ? ' on ' + formatDate(j.payment_verified_at) : '')) : '') +
@@ -481,7 +482,7 @@ function renderPayouts() {
             return j.driver_id === d.id && j.status === 'delivered' && !j.payout_id &&
                 j.delivered_at && new Date(j.delivered_at) >= payoutWeekStart && new Date(j.delivered_at) < weekEnd;
         });
-        const amount = jobs.reduce(function (s, j) { return s + driverEarning(j.quote); }, 0);
+        const amount = jobs.reduce(function (s, j) { return s + driverEarningForJob(j); }, 0);
         return { driver: d, jobs: jobs, amount: amount };
     }).filter(function (r) { return r.jobs.length > 0; });
 
@@ -507,7 +508,7 @@ async function allocatePayout(driverId) {
             j.delivered_at && new Date(j.delivered_at) >= payoutWeekStart && new Date(j.delivered_at) < weekEnd;
     });
     if (!jobs.length) return;
-    const amount = jobs.reduce(function (s, j) { return s + driverEarning(j.quote); }, 0);
+    const amount = jobs.reduce(function (s, j) { return s + driverEarningForJob(j); }, 0);
     const driver = driversById[driverId];
 
     if (!confirm('Allocate ' + money(amount) + ' to ' + (driver ? driver.full_name : driverId) + ' for ' + jobs.length + ' deliveries this week?')) return;
@@ -620,7 +621,7 @@ function exportTransactions(jobs) {
     jobs.forEach(function (j) {
         const driver = driversById[j.driver_id];
         const customer = customersById[j.customer_id];
-        rows.push(csvRow([j.id, j.id, customer ? customer.full_name : '', driver ? driver.full_name : '', j.quote || 0, platformFee(j.quote).toFixed(2), driverEarning(j.quote).toFixed(2), txnStatus(j), j.created_at]));
+        rows.push(csvRow([j.id, j.id, customer ? customer.full_name : '', driver ? driver.full_name : '', j.quote || 0, platformFeeForJob(j).toFixed(2), driverEarningForJob(j).toFixed(2), txnStatus(j), j.created_at]));
     });
     downloadCsv(rows.join('\n'), 'ekoquick-transactions-' + new Date().toISOString().slice(0, 10) + '.csv');
 }
@@ -655,7 +656,7 @@ function generateReport(type) {
         jobs.forEach(function (j) {
             const driver = driversById[j.driver_id];
             const customer = customersById[j.customer_id];
-            rows.push(csvRow([j.id, customer ? customer.full_name : '', driver ? driver.full_name : '', j.quote || 0, platformFee(j.quote).toFixed(2), driverEarning(j.quote).toFixed(2), j.delivered_at]));
+            rows.push(csvRow([j.id, customer ? customer.full_name : '', driver ? driver.full_name : '', j.quote || 0, platformFeeForJob(j).toFixed(2), driverEarningForJob(j).toFixed(2), j.delivered_at]));
         });
         downloadCsv(rows.join('\n'), 'ekoquick-' + type + '-revenue-report-' + new Date().toISOString().slice(0, 10) + '.csv');
     } else if (type === 'driver') {
