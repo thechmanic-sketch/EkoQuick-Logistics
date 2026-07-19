@@ -222,6 +222,7 @@ alter publication supabase_realtime add table complaint_notes;
 -- ---------------------------------------------------------------------
 insert into storage.buckets (id, name, public) values ('avatars', 'avatars', true) on conflict (id) do nothing;
 insert into storage.buckets (id, name, public) values ('driver-docs', 'driver-docs', false) on conflict (id) do nothing;
+insert into storage.buckets (id, name, public) values ('complaint-evidence', 'complaint-evidence', false) on conflict (id) do nothing;
 
 drop policy if exists "avatars public read" on storage.objects;
 create policy "avatars public read" on storage.objects
@@ -246,6 +247,28 @@ create policy "driver-docs owner update" on storage.objects
 drop policy if exists "driver-docs owner or admin read" on storage.objects;
 create policy "driver-docs owner or admin read" on storage.objects
   for select using (bucket_id = 'driver-docs' and ((storage.foldername(name))[1] = auth.uid()::text or is_admin()));
+
+drop policy if exists "complaint-evidence admin all" on storage.objects;
+create policy "complaint-evidence admin all" on storage.objects
+  for all using (bucket_id = 'complaint-evidence' and is_admin());
+
+create table if not exists complaint_attachments (
+  id uuid primary key default gen_random_uuid(),
+  complaint_id uuid not null references complaints (id) on delete cascade,
+  file_path text not null,
+  file_name text not null,
+  file_type text,
+  uploaded_by text,
+  created_at timestamptz not null default now()
+);
+
+alter table complaint_attachments enable row level security;
+
+drop policy if exists "complaint_attachments admin all" on complaint_attachments;
+create policy "complaint_attachments admin all" on complaint_attachments
+  for all using (is_admin());
+
+alter publication supabase_realtime add table complaint_attachments;
 
 -- ---------------------------------------------------------------------
 -- Platform settings (e.g. commission rate) — editable without a code deploy

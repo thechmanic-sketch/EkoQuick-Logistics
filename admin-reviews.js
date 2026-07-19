@@ -14,6 +14,7 @@ const CATEGORY_LABELS = {
 let allJobs = [];
 let allComplaints = [];
 let allNotes = [];
+let allAttachments = [];
 let profilesById = {};
 let activeTab = 'reviews';
 
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     supabase.channel('reviews-page-jobs').on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, loadAll).subscribe();
     supabase.channel('reviews-page-complaints').on('postgres_changes', { event: '*', schema: 'public', table: 'complaints' }, loadAll).subscribe();
+    supabase.channel('reviews-page-attachments').on('postgres_changes', { event: '*', schema: 'public', table: 'complaint_attachments' }, loadAll).subscribe();
 });
 
 function escapeHtml(s) {
@@ -68,11 +70,13 @@ async function loadAll() {
     const { data: jobs } = await supabase.from('jobs').select('*').not('rating', 'is', null).order('created_at', { ascending: false });
     const { data: complaints } = await supabase.from('complaints').select('*').order('created_at', { ascending: false });
     const { data: notes } = await supabase.from('complaint_notes').select('*').order('created_at', { ascending: true });
+    const { data: attachments } = await supabase.from('complaint_attachments').select('*').order('created_at', { ascending: false });
     const { data: profiles } = await supabase.from('profiles').select('id, full_name, phone, vehicle_class, account_status');
 
     allJobs = jobs || [];
     allComplaints = complaints || [];
     allNotes = notes || [];
+    allAttachments = attachments || [];
     profilesById = {};
     (profiles || []).forEach(function (p) { profilesById[p.id] = p; });
 
@@ -319,6 +323,7 @@ function openComplaintDrawer(complaintId) {
     const driver = profilesById[c.driver_id];
     const job = c.job_id ? allJobs.find(function (j) { return j.id === c.job_id; }) : null;
     const notes = allNotes.filter(function (n) { return n.complaint_id === c.id; });
+    const attachments = allAttachments.filter(function (a) { return a.complaint_id === c.id; });
     const risk = driver ? computeDriverRisk(c.driver_id) : null;
 
     const drawer = document.getElementById('complaintDrawer');
@@ -349,6 +354,15 @@ function openComplaintDrawer(complaintId) {
         '<h3>Complaint Description</h3>' +
         '<div class="meta">' + escapeHtml(c.description) + '</div>' +
         kv('Category', CATEGORY_LABELS[c.category] || c.category) + kv('Priority', c.priority) + kv('Status', c.status) + kv('Assigned Staff', c.assigned_staff || '—') +
+
+        '<h3>Supporting Images & Files</h3>' +
+        '<div id="attachmentsList">' + (attachments.length ? attachments.map(function (a) {
+            return '<div class="kv-row"><span>' + escapeHtml(a.file_name) + (a.uploaded_by ? ' <span style="color:var(--muted-dim);">· ' + escapeHtml(a.uploaded_by) + '</span>' : '') + '</span>' +
+                '<span><button class="btn btn-outline-blue" style="width:auto; padding:2px 10px;" data-action="view-attachment" data-path="' + escapeHtml(a.file_path) + '">View</button> ' +
+                '<button class="btn btn-outline-blue" style="width:auto; padding:2px 10px;" data-action="delete-attachment" data-id="' + a.id + '" data-path="' + escapeHtml(a.file_path) + '">✕</button></span></div>';
+        }).join('') : '<div class="empty">No supporting images or files attached yet.</div>') + '</div>' +
+        '<input type="file" id="attachmentFile" style="margin-top:8px; font-size:12px;">' +
+        '<button class="btn btn-outline-blue" id="uploadAttachmentBtn" style="width:auto; margin-top:6px;">Upload</button>' +
 
         '<h3>Resolution Timeline</h3>' +
         timelineStep('Complaint Submitted', c.created_at) +
@@ -381,6 +395,13 @@ function openComplaintDrawer(complaintId) {
 
     document.getElementById('closeDrawerBtn').addEventListener('click', closeDrawer);
     document.getElementById('addNoteBtn').addEventListener('click', function () { addComplaintNote(c.id); });
+    document.getElementById('uploadAttachmentBtn').addEventListener('click', function () { uploadComplaintAttachment(c.id); });
+    drawer.querySelectorAll('button[data-action="view-attachment"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { viewAttachment(btn.dataset.path); });
+    });
+    drawer.querySelectorAll('button[data-action="delete-attachment"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { deleteAttachment(btn.dataset.id, btn.dataset.path, c.id); });
+    });
 
     const actionHandlers = {
         'assign': function () { assignInvestigator(c.id); },
@@ -424,6 +445,41 @@ async function addComplaintNote(complaintId) {
     const text = document.getElementById('newNoteText').value.trim();
     if (!text) return;
     await logNote(complaintId, text);
+    openComplaintDrawer(complaintId);
+}
+
+async function uploadComplaintAttachment(complaintId) {
+    const input = document.getElementById('attachmentFile');
+    const file = input.files[0];
+    if (!file) { alert('Choose a file first.'); return; }
+
+    const path = complaintId + '/' + Date.now() + '-' + file.name;
+    const { error: uploadError } = await supabase.storage.from('complaint-evidence').upload(path, file);
+    if (uploadError) { alert('Failed to upload: ' + uploadError.message); return; }
+
+    const { error } = await supabase.from('complaint_attachments').insert({
+        complaint_id: complaintId,
+        file_path: path,
+        file_name: file.name,
+        file_type: file.type,
+        uploaded_by: window.currentAdminName || 'Admin',
+    });
+    if (error) { alert('Failed to save attachment record: ' + error.message); return; }
+    await loadAll();
+    openComplaintDrawer(complaintId);
+}
+
+async function viewAttachment(path) {
+    const { data, error } = await supabase.storage.from('complaint-evidence').createSignedUrl(path, 300);
+    if (error) { alert('Failed to open file: ' + error.message); return; }
+    window.open(data.signedUrl, '_blank', 'noopener');
+}
+
+async function deleteAttachment(id, path, complaintId) {
+    if (!confirm('Remove this attachment?')) return;
+    await supabase.storage.from('complaint-evidence').remove([path]);
+    await supabase.from('complaint_attachments').delete().eq('id', id);
+    await loadAll();
     openComplaintDrawer(complaintId);
 }
 
