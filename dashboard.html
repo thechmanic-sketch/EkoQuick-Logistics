@@ -9,29 +9,98 @@
     <link rel="stylesheet" href="app.css">
     <link rel="stylesheet" href="support-widget.css">
     <script src="transitions.js"></script>
+    <style>
+        .navbar-right { display: flex; align-items: center; gap: 10px; }
+        .bell-btn { position: relative; background: transparent; border: 1px solid var(--line); color: var(--paper); width: 34px; height: 34px; cursor: pointer; }
+        .bell-btn:hover { border-color: var(--orange); }
+        .bell-count { position: absolute; top: -6px; right: -6px; background: var(--orange); color: #1a1a1a; font-size: 10px; font-weight: 700; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; }
+        .dropdown { position: relative; }
+        .dropdown-panel {
+            position: absolute; right: 0; top: 40px; width: 280px; max-height: 340px; overflow-y: auto;
+            background: var(--ink-2); border: 1px solid var(--line); z-index: 30; display: none; padding: 10px;
+        }
+        .dropdown-panel.open { display: block; }
+        .avatar-btn { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); cursor: pointer; background: var(--ink); }
+        .notif-item { font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+        .notif-item:last-child { border-bottom: none; }
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .summary-card { border: 1px solid var(--line); background: var(--ink); padding: 12px; }
+        .summary-card .num { font-family: var(--font-stencil); font-size: 24px; color: var(--paper); }
+        .summary-card .lbl { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-dim); }
+        .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .quick-action { text-align: center; padding: 12px 8px; border: 1px solid var(--line); background: var(--ink); color: var(--paper); text-decoration: none; font-size: 12px; cursor: pointer; }
+        .quick-action:hover { border-color: var(--orange); color: var(--orange); }
+        .quick-action.disabled { opacity: 0.4; cursor: not-allowed; }
+        .timeline-item { display: flex; gap: 8px; font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+        .timeline-item:last-child { border-bottom: none; }
+        .skeleton { background: linear-gradient(90deg, var(--ink) 25%, var(--line) 50%, var(--ink) 75%); background-size: 200% 100%; animation: skeleton-pulse 1.4s ease infinite; }
+        @keyframes skeleton-pulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .details-row { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); }
+        .details-row.open { display: block; }
+    </style>
 </head>
 <body>
     <div class="navbar">
         <div class="brand">Eko<span>quick</span></div>
-        <button class="nav-logout" id="logoutBtn">Log Out</button>
+        <div class="navbar-right">
+            <div class="dropdown">
+                <button class="bell-btn" id="bellBtn">🔔<span class="bell-count hidden" id="bellCount">0</span></button>
+                <div class="dropdown-panel" id="notifPanel"><div class="empty">No notifications.</div></div>
+            </div>
+            <div class="dropdown">
+                <img class="avatar-btn" id="avatarBtn" src="">
+                <div class="dropdown-panel" id="profilePanel">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                        <img id="avatarPreview" class="hidden" style="width:48px; height:48px; object-fit:cover; border:1px solid var(--line); border-radius:50%;">
+                        <div id="profileNameLabel" style="font-size:13px;"></div>
+                    </div>
+                    <input class="field-plain" type="file" id="avatarFile" accept="image/*" style="margin-bottom:6px;">
+                    <button class="btn btn-outline-blue" id="avatarSaveBtn" style="width:100%; margin-bottom:8px;">Save photo</button>
+                    <a class="quick-action disabled" style="display:block; margin-bottom:6px;">Profile & Settings <span class="meta">(coming soon)</span></a>
+                    <button class="btn btn-outline-blue" id="logoutBtn" style="width:100%;">Log Out</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="page-wrap">
         <div class="card">
             <h2 id="welcomeText">Welcome back!</h2>
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom: 12px;">
-                <img id="avatarPreview" class="hidden" style="width:56px; height:56px; object-fit:cover; border:1px solid var(--line);">
-                <div style="flex:1;">
-                    <input class="field-plain" type="file" id="avatarFile" accept="image/*">
-                </div>
-                <button class="btn btn-outline-blue" id="avatarSaveBtn" style="width:auto;">Save photo</button>
+            <input class="field-plain" id="orderSearch" placeholder="Search your orders...">
+        </div>
+
+        <div class="card" id="summaryCardsWrap">
+            <div class="summary-grid" id="summaryCards">
+                <div class="skeleton" style="height:60px;"></div>
+                <div class="skeleton" style="height:60px;"></div>
+                <div class="skeleton" style="height:60px;"></div>
+                <div class="skeleton" style="height:60px;"></div>
             </div>
-            <a class="btn btn-blue" href="new-delivery.html">+ New Delivery</a>
+        </div>
+
+        <div id="activeDeliveriesWrap"></div>
+
+        <div class="card">
+            <h2>Quick Actions</h2>
+            <div class="quick-actions">
+                <a class="quick-action" href="new-delivery.html">📦 Book Delivery</a>
+                <a class="quick-action disabled" id="trackAction" href="#">📍 Track Delivery</a>
+                <a class="quick-action" id="viewOrdersAction" href="#recentOrdersCard">📋 View Orders</a>
+                <span class="quick-action disabled">❤️ Saved Addresses <span class="meta">(soon)</span></span>
+                <span class="quick-action disabled">💳 Payments <span class="meta">(soon)</span></span>
+                <a class="quick-action" id="supportAction" target="_blank" rel="noopener">🎫 Support</a>
+            </div>
+        </div>
+
+        <div class="card" id="recentOrdersCard">
+            <h2>Recent Orders</h2>
+            <div id="recentOrders"><div class="empty">Loading...</div></div>
+            <button class="btn btn-outline-blue" id="showAllOrdersBtn" style="margin-top:8px; display:none;">Show all orders</button>
         </div>
 
         <div class="card">
-            <h2>My Deliveries</h2>
-            <div id="jobsList"><div class="empty">Loading...</div></div>
+            <h2>Recent Activity</h2>
+            <div id="activityTimeline"><div class="empty">No activity yet.</div></div>
         </div>
     </div>
 
