@@ -134,6 +134,7 @@ create table if not exists jobs (
   to_pickup_at timestamptz,
   to_dropoff_at timestamptz,
   delivered_at timestamptz,
+  cancelled_at timestamptz,
   created_at timestamptz not null default now()
 );
 

@@ -4,25 +4,12 @@
     <meta charset="UTF-8">
     <style>html{background:#0B0F16}</style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ekoquick — Dispatch Center</title>
-    <link rel="stylesheet" href="vendor/leaflet.css">
+    <title>Ekoquick — Drivers</title>
     <link rel="stylesheet" href="auth.css">
     <link rel="stylesheet" href="app.css">
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="support-widget.css">
     <script src="transitions.js"></script>
-    <style>
-        .dispatch-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1.2fr;
-            gap: 16px;
-            align-items: start;
-        }
-        @media (max-width: 1100px) {
-            .dispatch-grid { grid-template-columns: 1fr; }
-        }
-        .dispatch-job.selected { border-color: var(--orange); }
-    </style>
 </head>
 <body>
     <div class="cmd-shell">
@@ -46,29 +33,17 @@
         </aside>
 
         <main class="cmd-main">
-            <div class="dispatch-grid">
-                <div class="cmd-panel">
-                    <h2>Unassigned Orders</h2>
-                    <div id="unassignedList" class="cmd-panel-scroll" style="max-height: 640px;"><div class="empty">Loading...</div></div>
-                </div>
-
-                <div class="cmd-panel">
-                    <h2>Nearby Drivers</h2>
-                    <div id="nearbyDrivers" class="cmd-panel-scroll" style="max-height: 640px;"><div class="empty">Select an order to see matching drivers.</div></div>
-                </div>
-
-                <div class="cmd-panel">
-                    <h2>Map</h2>
-                    <div id="dispatchMap" style="height: 500px; border: 1px solid var(--line);"></div>
-                </div>
+            <div class="cmd-panel">
+                <h2>Drivers</h2>
+                <div style="font-size: 11px; color: var(--muted); margin-bottom: 10px;">Set each driver's vehicle class so auto-assign can match them to jobs.</div>
+                <div id="driversList"><div class="empty">Loading...</div></div>
             </div>
         </main>
     </div>
 
-    <script src="vendor/leaflet.js"></script>
     <script src="vendor/supabase.js"></script>
     <script src="config.js"></script>
-    <script src="admin-dispatch.js"></script>
+    <script src="admin-drivers.js"></script>
     <script src="support-widget.js"></script>
 </body>
 </html>

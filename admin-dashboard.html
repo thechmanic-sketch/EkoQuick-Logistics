@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <style>html{background:#0B0F16}</style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ekoquick — Admin Command Center</title>
-    <link rel="stylesheet" href="vendor/leaflet.css">
+    <title>Ekoquick — Dashboard</title>
     <link rel="stylesheet" href="auth.css">
     <link rel="stylesheet" href="app.css">
     <link rel="stylesheet" href="admin.css">
@@ -18,11 +17,11 @@
             <div class="cmd-brand">Eko<span>quick</span></div>
             <div class="cmd-tag">Admin Command Center</div>
             <nav class="cmd-nav">
-                <a href="#overview">Overview</a>
-                <a href="#fleet">Fleet Map</a>
-                <a href="#drivers">Drivers</a>
-                <a href="#reviews">Reviews & Complaints</a>
-                <a href="#jobs">All Jobs</a>
+                <a href="admin-dashboard.html">Dashboard</a>
+                <a href="admin-drivers.html">Drivers</a>
+                <a href="admin-reviews.html">Reviews & Complaints</a>
+                <a href="admin-jobs.html">All Jobs</a>
+                <a href="admin-fleet-map.html">Live Fleet Map</a>
                 <a href="admin-dispatch.html">Dispatch Center</a>
                 <a href="admin-customers.html">Customers</a>
                 <a href="admin-finances.html">Finances</a>
@@ -34,57 +33,82 @@
         </aside>
 
         <main class="cmd-main">
-            <div id="overview" class="cmd-stats-row">
-                <div class="cmd-stat"><div class="amt" id="statRevenue">R0</div><div class="lbl">Revenue (delivered)</div></div>
-                <div class="cmd-stat"><div class="amt" id="statTrips">0</div><div class="lbl">Completed trips</div></div>
-                <div class="cmd-stat"><div class="amt" id="statRating">—</div><div class="lbl">Avg. rating</div></div>
-                <div class="cmd-stat"><div class="amt" id="statPlatform">R0</div><div class="lbl">Our revenue (15%)</div></div>
-                <div class="cmd-stat"><div class="amt" id="statDrivers">R0</div><div class="lbl">Paid to drivers (85%)</div></div>
+            <div class="cmd-header">
+                <div class="cmd-header-title">
+                    <h1>Dashboard</h1>
+                    <div class="cmd-breadcrumb">Home / Dashboard</div>
+                </div>
+                <div class="cmd-header-right">
+                    <span id="clockDisplay"></span>
+                    <button class="btn btn-outline-blue" id="refreshBtn" style="width: auto;">Refresh</button>
+                    <div class="cmd-bell" title="Open complaints">
+                        🔔
+                        <span class="cmd-bell-count hidden" id="bellCount">0</span>
+                    </div>
+                    <span id="adminName"></span>
+                </div>
+            </div>
+
+            <div id="kpiGrid" class="kpi-grid">
+                <div class="skeleton" style="height:90px;"></div>
+                <div class="skeleton" style="height:90px;"></div>
+                <div class="skeleton" style="height:90px;"></div>
+            </div>
+
+            <div class="quick-actions">
+                <a class="quick-action-card" href="admin-fleet-map.html">
+                    <span class="qa-icon">🗺️</span>
+                    <span class="qa-title">Open Live Map</span>
+                </a>
+                <a class="quick-action-card" href="admin-dispatch.html">
+                    <span class="qa-icon">🚚</span>
+                    <span class="qa-title">Dispatch Center</span>
+                </a>
+                <a class="quick-action-card" href="admin-finances.html">
+                    <span class="qa-icon">📊</span>
+                    <span class="qa-title">Generate Reports</span>
+                </a>
             </div>
 
             <div class="cmd-grid">
                 <div class="cmd-col">
-                    <div class="cmd-panel" id="fleet">
-                        <h2>Live Fleet Map</h2>
-                        <div id="fleetMap" style="height: 320px; border: 1px solid var(--line);"></div>
+                    <div class="cmd-panel">
+                        <h2>Revenue Trend (Last 30 Days)</h2>
+                        <canvas id="revenueChart" height="90"></canvas>
                     </div>
-
-                    <div class="cmd-panel" id="jobs">
-                        <h2>All Jobs</h2>
-                        <div style="display:flex; gap:8px; margin-bottom: 10px; flex-wrap: wrap;">
-                            <input class="field-plain" id="jobSearch" placeholder="Search pickup, dropoff, phone..." style="flex:1; min-width: 160px;">
-                            <select class="field-plain" id="jobStatusFilter" style="width: auto;">
-                                <option value="">All statuses</option>
-                                <option value="pending">Pending</option>
-                                <option value="offered">Awaiting driver</option>
-                                <option value="to_pickup">Heading to pickup</option>
-                                <option value="to_dropoff">Heading to drop-off</option>
-                                <option value="delivered">Delivered</option>
-                                <option value="cancelled">Cancelled</option>
-                            </select>
-                            <button class="btn btn-outline-blue" id="refreshBtn" style="width: auto;">Refresh</button>
-                        </div>
-                        <div id="jobsList" class="cmd-panel-scroll"><div class="empty">Loading...</div></div>
+                    <div class="cmd-panel">
+                        <h2>Orders Per Day (Last 30 Days)</h2>
+                        <canvas id="ordersChart" height="90"></canvas>
+                    </div>
+                    <div class="cmd-panel">
+                        <h2>Recent Orders</h2>
+                        <div id="recentOrders" class="cmd-panel-scroll" style="max-height: 400px;"><div class="empty">Loading...</div></div>
                     </div>
                 </div>
 
                 <div class="cmd-col">
-                    <div class="cmd-panel" id="drivers">
-                        <h2>Drivers</h2>
-                        <div style="font-size: 11px; color: var(--muted); margin-bottom: 10px;">Set each driver's vehicle class so auto-assign can match them to jobs.</div>
-                        <div id="driversList" class="cmd-panel-scroll"><div class="empty">Loading...</div></div>
+                    <div class="cmd-panel">
+                        <h2>Live Activity Feed</h2>
+                        <div id="activityFeed" class="cmd-panel-scroll" style="max-height: 360px;"><div class="empty">Loading...</div></div>
                     </div>
-
-                    <div class="cmd-panel" id="reviews">
-                        <h2>Reviews & Complaints</h2>
-                        <div id="reviewsList" class="cmd-panel-scroll"><div class="empty">Loading...</div></div>
+                    <div class="cmd-panel">
+                        <h2>Delivery Success Rate</h2>
+                        <canvas id="successChart" height="160"></canvas>
+                    </div>
+                    <div class="cmd-panel">
+                        <h2>Active Drivers</h2>
+                        <div id="driverStatusPanel" class="cmd-panel-scroll" style="max-height: 300px;"><div class="empty">Loading...</div></div>
+                    </div>
+                    <div class="cmd-panel">
+                        <h2>System Status</h2>
+                        <div class="system-status-grid" id="systemStatus"></div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <script src="vendor/leaflet.js"></script>
+    <script src="vendor/chart.js"></script>
     <script src="vendor/supabase.js"></script>
     <script src="config.js"></script>
     <script src="admin-dashboard.js"></script>
