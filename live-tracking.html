@@ -10,6 +10,24 @@
     <link rel="stylesheet" href="app.css">
     <link rel="stylesheet" href="support-widget.css">
     <script src="transitions.js"></script>
+    <style>
+        #trackMap { height: 320px; border-radius: 12px; margin-top: 10px; position: relative; }
+        .progress-track { background: rgba(255,255,255,0.08); border-radius: 8px; height: 8px; overflow: hidden; margin: 10px 0; }
+        .progress-fill { background: var(--blue, #3E8BFF); height: 100%; transition: width .4s ease; }
+        .map-controls { position: absolute; right: 8px; top: 8px; z-index: 500; display: flex; flex-direction: column; gap: 6px; }
+        .map-btn { background: #12161F; border: 1px solid var(--line); color: #fff; width: 34px; height: 34px; border-radius: 8px; cursor: pointer; font-size: 15px; }
+        .timeline { list-style: none; margin: 0; padding: 0; }
+        .timeline li { padding: 8px 0 8px 20px; border-left: 2px solid var(--line); position: relative; }
+        .timeline li:last-child { border-left-color: transparent; }
+        .timeline li::before { content: ''; position: absolute; left: -6px; top: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+        .timeline li.done::before { background: var(--blue, #3E8BFF); }
+        .timeline .t-label { font-weight: 600; }
+        .timeline .t-time { color: var(--muted); font-size: 13px; }
+        .otp-box { display: flex; gap: 12px; flex-wrap: wrap; }
+        .otp-pill { background: rgba(255,255,255,0.05); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; flex: 1; min-width: 140px; }
+        .driver-row { display: flex; align-items: center; gap: 12px; }
+        .driver-row img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); }
+    </style>
 </head>
 <body>
     <div class="navbar">
@@ -17,10 +35,87 @@
     </div>
 
     <div class="page-wrap">
-        <div class="card">
-            <h2 id="statusText">Your driver is on the way!</h2>
-            <div id="trackMap"></div>
-            <div class="empty" id="trackNote">Waiting for driver's live location...</div>
+        <div class="card" id="headerCard">
+            <h1>Live Tracking</h1>
+            <div class="meta" id="orderIdLine"></div>
+        </div>
+
+        <div id="emptyState" class="card hidden">
+            <div class="empty">No active delivery found.</div>
+            <a class="btn btn-blue" href="dashboard.html" style="display:block; text-align:center; margin-top:10px;">Back to Dashboard</a>
+        </div>
+
+        <div id="trackingContent" class="hidden">
+            <div class="card">
+                <h2 id="statusTitle">Status</h2>
+                <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+                <div class="meta">ETA: <span id="etaText">—</span></div>
+                <div class="meta">Last updated: <span id="lastUpdated">—</span></div>
+            </div>
+
+            <div class="card">
+                <h2>Live Map</h2>
+                <div id="trackMap">
+                    <div class="map-controls">
+                        <button class="map-btn" id="recenterBtn" title="Recenter">🎯</button>
+                        <button class="map-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
+                    </div>
+                </div>
+                <div class="empty" id="trackNote">Waiting for driver's live location...</div>
+            </div>
+
+            <div class="card hidden" id="driverCard">
+                <h2>Driver</h2>
+                <div class="driver-row">
+                    <img id="driverAvatar" src="" class="hidden">
+                    <div>
+                        <div class="route" id="driverName"></div>
+                        <div class="meta" id="driverVehicle"></div>
+                        <div class="meta" id="driverRating"></div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <a class="btn btn-outline-blue" id="callDriverBtn" style="width:auto;">Call Driver</a>
+                    <a class="btn btn-outline-blue" id="msgDriverBtn" style="width:auto;" target="_blank" rel="noopener">Message Driver</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Delivery Details</h2>
+                <div class="meta"><b>Pickup:</b> <span id="pickupAddr"></span></div>
+                <div class="meta"><b>Drop-off:</b> <span id="dropoffAddr"></span></div>
+                <div class="meta"><b>Distance:</b> <span id="distanceText"></span></div>
+                <div class="meta"><b>Estimated Delivery Time:</b> <span id="etaText2"></span></div>
+                <div class="meta"><b>Delivery Fee:</b> <span id="feeText"></span></div>
+            </div>
+
+            <div class="card">
+                <h2>Delivery Timeline</h2>
+                <ul class="timeline" id="timelineList"></ul>
+            </div>
+
+            <div class="card hidden" id="otpCard">
+                <h2>OTP Verification</h2>
+                <div class="otp-box">
+                    <div class="otp-pill">
+                        <div class="meta">Pickup Code</div>
+                        <div><b id="collectionStatus">—</b></div>
+                    </div>
+                    <div class="otp-pill">
+                        <div class="meta">Delivery Code</div>
+                        <div><b id="deliveryStatus">—</b></div>
+                    </div>
+                </div>
+                <button class="btn btn-outline-blue" id="requestNewCodeBtn" style="margin-top:10px; width:auto;" disabled title="SMS/email code delivery isn't connected yet — codes are shared via WhatsApp/driver app only.">Request New Code (soon)</button>
+            </div>
+
+            <div class="card">
+                <h2>Support</h2>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <a class="btn btn-outline-blue" id="contactDriverBtn2" style="width:auto;">Contact Driver</a>
+                    <a class="btn btn-outline-blue" id="contactSupportBtn" style="width:auto;" target="_blank" rel="noopener">Contact Support</a>
+                </div>
+            </div>
         </div>
     </div>
 
