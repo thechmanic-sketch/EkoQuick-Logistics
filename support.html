@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Support</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        table.ticket-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        table.ticket-table th, table.ticket-table td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+        .table-scroll { overflow-x: auto; }
+        .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+        .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--line); color: #fff; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px; }
+        .filter-btn.active { background: var(--blue, #3E8BFF); border-color: var(--blue, #3E8BFF); }
+        #ticketModal, #createModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; align-items:center; justify-content:center; }
+        #ticketModal.open, #createModal.open { display:flex; }
+        #ticketModal .card, #createModal .card { max-width: 520px; width: 92%; max-height: 88vh; overflow-y: auto; }
+        .chat-msg { border-radius: 10px; padding: 8px 10px; margin: 6px 0; font-size: 13px; max-width: 85%; }
+        .chat-msg.customer { background: var(--blue,#3E8BFF); margin-left: auto; }
+        .chat-msg.staff { background: rgba(255,255,255,0.08); }
+        .chat-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="dashboard.html">← Eko<span>quick</span></a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h1>Support</h1>
+            <input class="field-plain" id="ticketSearch" placeholder="Search by Ticket ID, subject or Order ID...">
+            <button class="btn btn-blue" id="createTicketBtn" style="margin-top:8px;">+ Create Ticket</button>
+        </div>
+
+        <div class="card">
+            <div class="summary-cards" id="summaryCards"></div>
+        </div>
+
+        <div class="card">
+            <div class="filter-row" id="statusFilters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="open">Open</button>
+                <button class="filter-btn" data-filter="in_progress">In Progress</button>
+                <button class="filter-btn" data-filter="waiting_customer">Waiting</button>
+                <button class="filter-btn" data-filter="resolved">Resolved</button>
+                <button class="filter-btn" data-filter="closed">Closed</button>
+            </div>
+            <div class="table-scroll">
+                <table class="ticket-table">
+                    <thead><tr><th>Ticket ID</th><th>Subject</th><th>Category</th><th>Order</th><th>Status</th><th>Priority</th><th>Created</th><th>Updated</th><th>Actions</th></tr></thead>
+                    <tbody id="ticketBody"></tbody>
+                </table>
+            </div>
+            <div class="empty hidden" id="emptyState">
+                No support tickets found.
+                <div style="margin-top:8px;">Need help? Create your first support ticket.</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Quick Contact</h2>
+            <a class="btn btn-outline-blue" id="whatsappSupportBtn" style="width:auto;" target="_blank" rel="noopener">WhatsApp Support</a>
+        </div>
+    </div>
+
+    <div id="createModal">
+        <div class="card">
+            <h2>Create Support Ticket</h2>
+            <label>Category</label>
+            <select class="field-plain" id="fCategory">
+                <option value="delivery_issue">Delivery Issue</option>
+                <option value="driver_complaint">Driver Complaint</option>
+                <option value="payment_issue">Payment Issue</option>
+                <option value="technical_problem">Technical Problem</option>
+                <option value="missing_parcel">Missing Parcel</option>
+                <option value="damaged_parcel">Damaged Parcel</option>
+                <option value="other">Other</option>
+            </select>
+            <label>Related Order (optional)</label>
+            <select class="field-plain" id="fJob"><option value="">None</option></select>
+            <label>Priority</label>
+            <select class="field-plain" id="fPriority">
+                <option value="low">Low</option><option value="medium" selected>Medium</option>
+                <option value="high">High</option><option value="urgent">Urgent</option>
+            </select>
+            <label>Subject</label>
+            <input class="field-plain" id="fSubject">
+            <label>Description</label>
+            <textarea class="field-plain" id="fDescription" rows="4"></textarea>
+            <label>Attachment (image or PDF, optional)</label>
+            <input type="file" id="fAttachment" accept="image/*,application/pdf" class="field-plain">
+            <div id="createMsg" class="meta"></div>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn btn-blue" id="submitTicketBtn">Submit Ticket</button>
+                <button class="btn btn-outline-blue" id="cancelCreateBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="ticketModal">
+        <div class="card">
+            <h2 id="ticketModalTitle">Ticket</h2>
+            <div class="meta" id="ticketModalMeta"></div>
+            <div id="ticketMessages" style="margin-top:10px; max-height:280px; overflow-y:auto;"></div>
+            <textarea class="field-plain" id="replyText" rows="2" placeholder="Type a reply..." style="margin-top:8px;"></textarea>
+            <div style="display:flex; gap:10px; margin-top:8px;">
+                <button class="btn btn-blue" id="sendReplyBtn">Send Reply</button>
+                <button class="btn btn-outline-blue" id="closeTicketBtn">Close Ticket</button>
+                <button class="btn btn-outline-blue" id="closeModalBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="support.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>

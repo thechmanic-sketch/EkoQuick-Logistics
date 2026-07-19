@@ -61,9 +61,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         renderRecentOrders();
     });
 
-    const supportBtn = document.getElementById('supportAction');
-    supportBtn.href = 'https://wa.me/27676659966?text=' + encodeURIComponent('Hi Ekoquick, I need some help.');
-
     await loadAll();
     supabase.channel('customer-dashboard-jobs').on('postgres_changes', { event: '*', schema: 'public', table: 'jobs', filter: 'customer_id=eq.' + currentUser.id }, loadAll).subscribe();
 });
