@@ -175,6 +175,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         document.getElementById('callDriverBtn').href = driver.phone ? 'tel:' + driver.phone : '#';
         document.getElementById('msgDriverBtn').href = waLink;
         document.getElementById('contactDriverBtn2').href = waLink;
+        document.getElementById('chatDriverBtn').href = 'chat.html?job=' + job.id;
     }
 
     function renderTimeline(job) {

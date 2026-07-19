@@ -249,7 +249,8 @@ function renderActiveDelivery() {
         '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">' +
             (navUrl ? '<a class="btn btn-outline-blue" style="width:auto;" href="' + navUrl + '" target="_blank" rel="noopener">Open Navigation</a>' : '') +
             (custDigits ? '<a class="btn btn-outline-blue" style="width:auto;" href="tel:' + escapeHtml(active.customer_phone) + '">Call Customer</a>' : '') +
-            (custDigits ? '<a class="btn btn-outline-blue" style="width:auto;" target="_blank" rel="noopener" href="https://wa.me/' + custDigits + '?text=' + encodeURIComponent('Hi, this is your Ekoquick driver regarding order ' + active.id.slice(0, 8) + '.') + '">Message Customer</a>' : '') +
+            '<a class="btn btn-blue" style="width:auto;" href="chat.html?job=' + active.id + '">💬 Chat</a>' +
+            (custDigits ? '<a class="btn btn-outline-blue" style="width:auto;" target="_blank" rel="noopener" href="https://wa.me/' + custDigits + '?text=' + encodeURIComponent('Hi, this is your Ekoquick driver regarding order ' + active.id.slice(0, 8) + '.') + '">WhatsApp Customer</a>' : '') +
         '</div>' +
         '<div style="margin-top:10px;">' + actionArea + '</div>';
 

@@ -28,8 +28,9 @@ async function renderCustomerThread() {
     wrap.innerHTML = '<div class="thread-card">' +
         '<div class="route">Job ' + job.id.slice(0, 8) + '</div>' +
         '<div class="meta">Customer: ' + escapeHtml(job.sender_name || '—') + '</div>' +
-        (custDigits ? '<a class="btn btn-outline-blue" style="width:auto; margin-top:6px;" target="_blank" rel="noopener" href="https://wa.me/' + custDigits + '?text=' + encodeURIComponent('Hi, this is your Ekoquick driver.') + '">Message Customer</a>' : '') +
-        (recipDigits ? ' <a class="btn btn-outline-blue" style="width:auto;" target="_blank" rel="noopener" href="https://wa.me/' + recipDigits + '?text=' + encodeURIComponent('Hi, this is your Ekoquick driver, on my way with your delivery.') + '">Message Recipient</a>' : '') +
+        '<a class="btn btn-blue" style="width:auto; margin-top:6px;" href="chat.html?job=' + job.id + '">💬 Open Chat</a>' +
+        (custDigits ? ' <a class="btn btn-outline-blue" style="width:auto;" target="_blank" rel="noopener" href="https://wa.me/' + custDigits + '?text=' + encodeURIComponent('Hi, this is your Ekoquick driver.') + '">WhatsApp Customer</a>' : '') +
+        (recipDigits ? ' <a class="btn btn-outline-blue" style="width:auto;" target="_blank" rel="noopener" href="https://wa.me/' + recipDigits + '?text=' + encodeURIComponent('Hi, this is your Ekoquick driver, on my way with your delivery.') + '">WhatsApp Recipient</a>' : '') +
     '</div>';
 }
 

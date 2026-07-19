@@ -109,11 +109,10 @@ function render() {
 
 function renderCustomerPanel() {
     const panel = document.getElementById('customerPanel');
-    if (job.status === 'to_pickup') {
-        panel.textContent = 'Customer: ' + (job.sender_name || '—') + (job.customer_phone ? ' · ' + job.customer_phone : '');
-    } else {
-        panel.textContent = 'Recipient: ' + (job.receiver_name || '—') + (job.receiver_phone ? ' · ' + job.receiver_phone : '');
-    }
+    const label = job.status === 'to_pickup'
+        ? 'Customer: ' + (job.sender_name || '—') + (job.customer_phone ? ' · ' + job.customer_phone : '')
+        : 'Recipient: ' + (job.receiver_name || '—') + (job.receiver_phone ? ' · ' + job.receiver_phone : '');
+    panel.innerHTML = escapeHtml(label) + ' <a class="btn btn-blue" style="width:auto; margin-left:8px;" href="chat.html?job=' + job.id + '">💬 Chat</a>';
     panel.classList.remove('hidden');
 }
 

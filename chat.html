@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Chat</title>
+    <link rel="stylesheet" href="vendor/leaflet.css">
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <script src="transitions.js"></script>
+    <style>
+        html, body { height: 100%; margin: 0; }
+        .chat-wrap { display: flex; flex-direction: column; height: 100vh; max-width: 680px; margin: 0 auto; background: var(--ink); }
+        .chat-top { background: var(--ink-2); border-bottom: 1px solid var(--line); padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+        .chat-top a.back { color: #fff; text-decoration: none; font-size: 18px; }
+        .chat-top .who { flex: 1; min-width: 0; }
+        .chat-top .who .name { font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .chat-top .who .status { font-size: 11px; color: var(--muted); }
+        .chat-top .job-tag { font-size: 11px; color: var(--muted); }
+        .chat-top .menu-btn { background: transparent; border: none; color: #fff; font-size: 20px; cursor: pointer; }
+        #menuPanel { position: absolute; right: 8px; top: 52px; background: var(--ink-2); border: 1px solid var(--line); z-index: 50; display: none; min-width: 180px; }
+        #menuPanel.open { display: block; }
+        #menuPanel button { display: block; width: 100%; text-align: left; background: transparent; border: none; color: #fff; padding: 10px 14px; cursor: pointer; font-size: 13px; }
+        #menuPanel button:hover { background: rgba(255,255,255,0.06); }
+        #pinnedBar { background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--line); padding: 6px 14px; font-size: 12px; display: none; cursor: pointer; }
+        #pinnedBar.show { display: block; }
+        .chat-search { padding: 6px 14px; border-bottom: 1px solid var(--line); display: none; }
+        .chat-search.show { display: block; }
+        #messageArea { flex: 1; overflow-y: auto; padding: 10px 14px; background-size: cover; background-position: center; }
+        .load-more { text-align: center; margin-bottom: 10px; }
+        .date-sep { text-align: center; font-size: 11px; color: var(--muted); margin: 10px 0; }
+        .unread-sep { text-align: center; font-size: 11px; color: var(--orange); margin: 10px 0; border-top: 1px solid var(--orange); border-bottom: 1px solid var(--orange); padding: 2px 0; }
+        .msg-row { display: flex; margin: 4px 0; }
+        .msg-row.mine { justify-content: flex-end; }
+        .msg-row.system { justify-content: center; }
+        .bubble { max-width: 78%; border-radius: 12px; padding: 8px 10px; font-size: 13px; position: relative; }
+        .msg-row.mine .bubble { background: var(--blue,#3E8BFF); border-bottom-right-radius: 3px; }
+        .msg-row:not(.mine):not(.system) .bubble { background: rgba(255,255,255,0.08); border-bottom-left-radius: 3px; }
+        .msg-row.system .bubble { background: rgba(255,255,255,0.05); color: var(--muted); font-size: 11px; text-align: center; border-radius: 8px; }
+        .bubble .reply-preview { border-left: 3px solid rgba(255,255,255,0.4); padding: 2px 6px; margin-bottom: 4px; font-size: 11px; opacity: 0.8; }
+        .bubble img.msg-img { max-width: 220px; border-radius: 8px; display: block; cursor: pointer; }
+        .bubble .msg-meta { font-size: 10px; opacity: 0.7; margin-top: 3px; display: flex; gap: 4px; align-items: center; justify-content: flex-end; }
+        .bubble .msg-reactions { margin-top: 4px; font-size: 12px; }
+        .bubble .msg-actions { display: none; gap: 6px; margin-top: 4px; font-size: 10px; }
+        .bubble:hover .msg-actions { display: flex; }
+        .bubble .msg-actions span { cursor: pointer; opacity: 0.8; }
+        .bubble .msg-actions span:hover { opacity: 1; text-decoration: underline; }
+        .voice-player { display: flex; align-items: center; gap: 8px; }
+        .location-card { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 6px; }
+        .location-card .mini-loc-map { height: 120px; border-radius: 6px; margin-top: 4px; }
+        #typingIndicator { padding: 2px 14px; font-size: 11px; color: var(--muted); min-height: 16px; }
+        .quick-replies { display: flex; gap: 6px; flex-wrap: wrap; padding: 6px 14px; }
+        .quick-replies button { background: rgba(255,255,255,0.06); border: 1px solid var(--line); color: #fff; border-radius: 14px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
+        #replyPreviewBar { display: none; padding: 6px 14px; background: rgba(255,255,255,0.05); border-top: 1px solid var(--line); font-size: 12px; align-items: center; justify-content: space-between; }
+        #replyPreviewBar.show { display: flex; }
+        .chat-bottom { background: var(--ink-2); border-top: 1px solid var(--line); padding: 8px 10px; }
+        .input-row { display: flex; align-items: center; gap: 6px; }
+        .input-row input[type="text"] { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid var(--line); border-radius: 20px; padding: 9px 14px; color: #fff; font-size: 13px; }
+        .icon-btn { background: transparent; border: none; color: #fff; font-size: 20px; cursor: pointer; padding: 4px 6px; }
+        .send-btn { background: var(--blue,#3E8BFF); border: none; color: #fff; border-radius: 50%; width: 38px; height: 38px; cursor: pointer; font-size: 16px; }
+        #attachMenu { position: absolute; bottom: 60px; background: var(--ink-2); border: 1px solid var(--line); display: none; padding: 8px; gap: 8px; }
+        #attachMenu.open { display: flex; }
+        #attachMenu button { background: transparent; border: none; color: #fff; font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .blocked-note { padding: 10px 14px; text-align: center; color: var(--muted); font-size: 13px; }
+        #fullscreenImg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
+        #fullscreenImg.open { display: flex; }
+        #fullscreenImg img { max-width: 95%; max-height: 95%; }
+    </style>
+</head>
+<body>
+    <div class="chat-wrap">
+        <div class="chat-top" style="position:relative;">
+            <a class="back" href="#" id="backBtn">←</a>
+            <div class="who">
+                <div class="name" id="peerName">Loading…</div>
+                <div class="status" id="peerStatus"></div>
+            </div>
+            <div class="job-tag" id="jobTag"></div>
+            <button class="menu-btn" id="menuBtn">⋮</button>
+            <div id="menuPanel">
+                <button id="searchToggleBtn">🔍 Search in chat</button>
+                <button id="muteBtn">🔕 Mute</button>
+                <button id="archiveBtn">📥 Archive</button>
+                <button id="wallpaperBtn">🖼️ Change Wallpaper</button>
+                <button id="blockBtn">🚫 Block</button>
+            </div>
+        </div>
+
+        <div id="pinnedBar"></div>
+        <div class="chat-search" id="chatSearchBar">
+            <input class="field-plain" id="searchInput" placeholder="Search messages...">
+        </div>
+
+        <div id="messageArea"></div>
+        <div id="typingIndicator"></div>
+
+        <div class="quick-replies hidden" id="quickReplies"></div>
+
+        <div id="replyPreviewBar">
+            <span id="replyPreviewText"></span>
+            <button class="icon-btn" id="cancelReplyBtn" style="font-size:14px;">✕</button>
+        </div>
+
+        <div class="blocked-note hidden" id="blockedNote">Messaging is unavailable in this conversation.</div>
+
+        <div class="chat-bottom" id="chatBottom" style="position:relative;">
+            <div id="attachMenu">
+                <button data-action="attach-image">📷<span>Photo</span></button>
+                <button data-action="attach-location">📍<span>Location</span></button>
+            </div>
+            <div class="input-row">
+                <button class="icon-btn" id="attachBtn">+</button>
+                <input type="text" id="messageInput" placeholder="Type a message...">
+                <button class="icon-btn" id="voiceBtn">🎤</button>
+                <button class="send-btn" id="sendBtn">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="imageFileInput" accept="image/*" class="hidden">
+
+    <div id="fullscreenImg"><img id="fullscreenImgTag" src=""></div>
+
+    <script src="vendor/leaflet.js"></script>
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="chat.js"></script>
+</body>
+</html>

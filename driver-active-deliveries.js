@@ -114,7 +114,8 @@ function renderJobCard(job) {
             '<div style="display:flex; gap:8px; flex-wrap:wrap;">' +
                 (navUrl ? '<a class="btn btn-outline-blue" style="width:auto;" href="' + navUrl + '" target="_blank" rel="noopener">Open Navigation</a>' : '') +
                 (pickupContactDigits ? '<a class="btn btn-outline-blue" style="width:auto;" href="tel:' + escapeHtml(job.pickup_contact_phone || job.customer_phone) + '">Call Pickup Contact</a>' : '') +
-                (custDigits ? '<a class="btn btn-outline-blue" style="width:auto;" target="_blank" rel="noopener" href="https://wa.me/' + custDigits + '?text=' + encodeURIComponent('Hi, this is your Ekoquick driver.') + '">Message Customer</a>' : '') +
+                '<a class="btn btn-blue" style="width:auto;" href="chat.html?job=' + job.id + '">💬 Chat</a>' +
+                (custDigits ? '<a class="btn btn-outline-blue" style="width:auto;" target="_blank" rel="noopener" href="https://wa.me/' + custDigits + '?text=' + encodeURIComponent('Hi, this is your Ekoquick driver.') + '">WhatsApp Customer</a>' : '') +
                 '<button class="btn btn-blue" style="width:auto;" data-job="' + job.id + '" data-action="arrived-pickup">I\'ve Arrived</button>' +
             '</div>';
     } else if (job.status === 'to_pickup' && arrivedPickup) {
@@ -130,7 +131,8 @@ function renderJobCard(job) {
             '<div style="display:flex; gap:8px; flex-wrap:wrap;">' +
                 (navUrl ? '<a class="btn btn-outline-blue" style="width:auto;" href="' + navUrl + '" target="_blank" rel="noopener">Open Navigation</a>' : '') +
                 (recipDigits ? '<a class="btn btn-outline-blue" style="width:auto;" href="tel:' + escapeHtml(job.receiver_phone) + '">Call Recipient</a>' : '') +
-                (recipDigits ? '<a class="btn btn-outline-blue" style="width:auto;" target="_blank" rel="noopener" href="https://wa.me/' + recipDigits + '?text=' + encodeURIComponent('Hi, this is your Ekoquick driver, on my way with your delivery.') + '">Message Recipient</a>' : '') +
+                '<a class="btn btn-blue" style="width:auto;" href="chat.html?job=' + job.id + '">💬 Chat</a>' +
+                (recipDigits ? '<a class="btn btn-outline-blue" style="width:auto;" target="_blank" rel="noopener" href="https://wa.me/' + recipDigits + '?text=' + encodeURIComponent('Hi, this is your Ekoquick driver, on my way with your delivery.') + '">WhatsApp Recipient</a>' : '') +
                 '<button class="btn btn-blue" style="width:auto;" data-job="' + job.id + '" data-action="arrived-dropoff">I\'ve Arrived</button>' +
             '</div>';
     } else if (job.status === 'to_dropoff' && arrivedDropoff) {

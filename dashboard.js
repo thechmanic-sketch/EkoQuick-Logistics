@@ -167,7 +167,8 @@ function renderActiveDeliveries() {
                 (job.status === 'to_pickup' || job.status === 'to_dropoff' ? ' <span class="meta">ETA ' + computeEta(job) + '</span>' : '') +
                 '<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">' +
                     (job.status === 'to_pickup' || job.status === 'to_dropoff' ? '<a class="btn btn-outline-blue" style="width:auto;" href="live-tracking.html?job=' + job.id + '">Live Track</a>' : '') +
-                    (driverWaLink ? '<a class="btn btn-outline-blue" style="width:auto;" target="_blank" href="' + driverWaLink + '">Contact Driver</a>' : '') +
+                    (driver ? '<a class="btn btn-blue" style="width:auto;" href="chat.html?job=' + job.id + '">💬 Chat</a>' : '') +
+                    (driverWaLink ? '<a class="btn btn-outline-blue" style="width:auto;" target="_blank" href="' + driverWaLink + '">WhatsApp Driver</a>' : '') +
                     '<a class="btn btn-outline-blue" style="width:auto;" target="_blank" href="https://wa.me/27676659966?text=' + encodeURIComponent('Hi Ekoquick, question about order ' + job.id.slice(0, 8) + '.') + '">Contact Support</a>' +
                 '</div>' +
             '</div>';
