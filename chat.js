@@ -393,13 +393,13 @@ function renderMessages() {
     wireMessageActions();
     renderPinnedBar();
 
-    messages.filter(function (m) { return m.message_type === 'location'; }).forEach(function (m) {
+    messages.filter(function (m) { return m.message_type === 'location'; }).forEach(async function (m) {
         const el = document.getElementById('locmap-' + m.id);
         if (el && !el._rendered && el.dataset.lat && el.dataset.lng) {
             el._rendered = true;
-            const map = L.map(el).setView([parseFloat(el.dataset.lat), parseFloat(el.dataset.lng)], 14);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-            L.marker([parseFloat(el.dataset.lat), parseFloat(el.dataset.lng)]).addTo(map);
+            const lat = parseFloat(el.dataset.lat), lng = parseFloat(el.dataset.lng);
+            const map = await GoogleMaps.createMap('locmap-' + m.id, [lat, lng], 14);
+            GoogleMaps.createMarker(map, [lat, lng], '📍');
         }
     });
 }
