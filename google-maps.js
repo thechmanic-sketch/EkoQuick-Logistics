@@ -82,24 +82,41 @@ const GoogleMaps = (function () {
         }
     }
 
-    // Binds Places Autocomplete to an existing <input>. onPlace receives
-    // { lat, lng, formattedAddress } when the user picks a suggestion.
+    // Binds Places Autocomplete to an existing <input>. Google retired the
+    // legacy Autocomplete widget for new Cloud projects (March 2025) — new
+    // projects must use PlaceAutocompleteElement, a separate custom element,
+    // not an attribute on a plain <input>. This hides the original input
+    // (kept in the DOM so the rest of the app can keep reading/writing
+    // .value unchanged) and inserts the new element right after it, syncing
+    // the original input's value whenever a suggestion is selected.
+    // onPlace receives { lat, lng, formattedAddress } on selection.
     async function attachAutocomplete(inputEl, onPlace) {
         await load();
-        const autocomplete = new google.maps.places.Autocomplete(inputEl, {
+        if (!google.maps.places.PlaceAutocompleteElement) {
+            throw new Error('PlaceAutocompleteElement unavailable — check Places API (New) is enabled for this key');
+        }
+        const autocompleteEl = new google.maps.places.PlaceAutocompleteElement({
             componentRestrictions: { country: 'za' },
-            fields: ['formatted_address', 'geometry'],
         });
-        autocomplete.addListener('place_changed', function () {
-            const place = autocomplete.getPlace();
-            if (!place || !place.geometry) return;
+        autocompleteEl.id = inputEl.id + 'Autocomplete';
+        autocompleteEl.style.width = '100%';
+        autocompleteEl.style.display = 'block';
+
+        inputEl.style.display = 'none';
+        inputEl.insertAdjacentElement('afterend', autocompleteEl);
+
+        autocompleteEl.addEventListener('gmp-select', async function (event) {
+            const place = event.placePrediction.toPlace();
+            await place.fetchFields({ fields: ['formattedAddress', 'location'] });
+            inputEl.value = place.formattedAddress || '';
             onPlace({
-                lat: place.geometry.location.lat(),
-                lng: place.geometry.location.lng(),
-                formattedAddress: place.formatted_address,
+                lat: place.location ? place.location.lat() : null,
+                lng: place.location ? place.location.lng() : null,
+                formattedAddress: place.formattedAddress,
             });
         });
-        return autocomplete;
+
+        return autocompleteEl;
     }
 
     return {
