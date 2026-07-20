@@ -5,6 +5,8 @@ let currentBreakdown = null;
 let currentDistance = 0;
 let currentDuration = '';
 let currentDurationSeconds = 0;
+let currentTrafficLevel = 'light';
+let currentRouteType = 'urban';
 let currentQuote = 0;
 let selectedPaymentMethod = 'cash';
 let selectedDeliveryType = 'standard';
@@ -336,6 +338,8 @@ async function calculateDistance() {
             currentDistance = route.distanceKm;
             currentDurationSeconds = route.durationSeconds;
             currentDuration = formatDuration(route.durationSeconds);
+            currentTrafficLevel = route.trafficLevel || 'light';
+            currentRouteType = route.routeType || 'urban';
             calculateQuote();
             btn.disabled = false;
             btn.textContent = 'Calculate Distance & Price';
@@ -348,6 +352,8 @@ async function calculateDistance() {
         currentDistance = fb;
         currentDurationSeconds = Math.round((fb / 30) * 3600);
         currentDuration = formatDuration(currentDurationSeconds);
+        currentTrafficLevel = 'light';
+        currentRouteType = 'urban';
         calculateQuote();
     } else {
         showMsg('msgArea4', 'error', 'Could not calculate distance. Try more specific addresses.');
@@ -361,9 +367,9 @@ function calculateQuote() {
     const parcelCategory = document.getElementById('packageType').value;
     const priority = selectedDeliveryType === 'express' ? 'express' : (selectedSchedule === 'later' ? 'scheduled' : 'normal');
 
-    // Traffic/route data isn't wired to a live provider yet (see Admin > Pricing
-    // Engine notes) — defaults to the lightest/most common multiplier so quotes
-    // aren't inflated until that's connected.
+    // Traffic/route type are derived from real Routes API data in
+    // calculateDistance() (see google-maps.js computeRoute) — falls back to
+    // 'light'/'urban' if Google's route data wasn't available for this route.
     currentBreakdown = PricingEngine.calculateQuote({
         vehicleId: selectedVehicle.vehicle_id,
         distanceKm: currentDistance,
@@ -373,8 +379,8 @@ function calculateQuote() {
         extraStops: 0,
         waitingMinutes: 0,
         priority: priority,
-        trafficLevel: 'light',
-        routeType: 'urban',
+        trafficLevel: currentTrafficLevel,
+        routeType: currentRouteType,
     });
     currentQuote = currentBreakdown.customerTotal;
 

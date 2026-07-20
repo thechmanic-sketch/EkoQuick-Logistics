@@ -55,13 +55,22 @@ const GoogleMaps = (function () {
 
     // Distance + duration via Routes API. Falls back to null on any failure
     // so callers can fall back to the KZN_DISTANCES table like before.
+    //
+    // Also derives trafficLevel and routeType for the Pricing Engine, since
+    // Routes API has no direct "highway vs urban vs residential" field:
+    //   - trafficLevel: ratio of traffic-aware duration to static (no-traffic)
+    //     duration — a big gap means real congestion on this route right now.
+    //   - routeType: inferred from average speed (distance / duration) —
+    //     highway-speed trips read as 'highway', stop-start trips read as
+    //     'residential'. Gravel/mountain have no reliable signal from this
+    //     API without deeper road data, so those stay admin-set only.
     async function computeRoute(originAddress, destinationAddress) {
         try {
             const res = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes?key=' + GOOGLE_MAPS_API_KEY, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters,routes.legs.steps.navigationInstruction',
+                    'X-Goog-FieldMask': 'routes.duration,routes.staticDuration,routes.distanceMeters',
                 },
                 body: JSON.stringify({
                     origin: { address: originAddress + ', KwaZulu-Natal, South Africa' },
@@ -73,9 +82,29 @@ const GoogleMaps = (function () {
             const data = await res.json();
             const route = data && data.routes && data.routes[0];
             if (!route) return null;
+
+            const distanceKm = route.distanceMeters / 1000;
+            const durationSeconds = parseInt(route.duration, 10) || 0;
+            const staticDurationSeconds = parseInt(route.staticDuration, 10) || durationSeconds;
+
+            const trafficRatio = staticDurationSeconds > 0 ? durationSeconds / staticDurationSeconds : 1;
+            let trafficLevel = 'light';
+            if (trafficRatio >= 1.5) trafficLevel = 'severe';
+            else if (trafficRatio >= 1.25) trafficLevel = 'heavy';
+            else if (trafficRatio >= 1.1) trafficLevel = 'moderate';
+
+            const avgSpeedKmh = durationSeconds > 0 ? (distanceKm / (durationSeconds / 3600)) : 0;
+            let routeType = 'urban';
+            if (avgSpeedKmh >= 80) routeType = 'highway';
+            else if (avgSpeedKmh >= 55) routeType = 'rural';
+            else if (avgSpeedKmh >= 35) routeType = 'urban';
+            else routeType = 'residential';
+
             return {
-                distanceKm: Math.round(route.distanceMeters / 1000),
-                durationSeconds: parseInt(route.duration, 10) || 0,
+                distanceKm: Math.round(distanceKm),
+                durationSeconds: durationSeconds,
+                trafficLevel: trafficLevel,
+                routeType: routeType,
             };
         } catch (err) {
             return null;

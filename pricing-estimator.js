@@ -51,9 +51,15 @@ async function getEstimate() {
     btn.textContent = 'Calculating...';
 
     let distanceKm = null;
+    let trafficLevel = 'light';
+    let routeType = 'urban';
     try {
         const route = await GoogleMaps.computeRoute(pickup, dropoff);
-        if (route) distanceKm = route.distanceKm;
+        if (route) {
+            distanceKm = route.distanceKm;
+            trafficLevel = route.trafficLevel || 'light';
+            routeType = route.routeType || 'urban';
+        }
     } catch (err) { /* fall through to fallback table */ }
 
     if (distanceKm === null) distanceKm = fallbackDistance(pickup, dropoff);
@@ -74,8 +80,8 @@ async function getEstimate() {
         extraStops: 0,
         waitingMinutes: 0,
         priority: 'normal',
-        trafficLevel: 'light',
-        routeType: 'urban',
+        trafficLevel: trafficLevel,
+        routeType: routeType,
     });
 
     document.getElementById('estAmount').textContent = 'R' + breakdown.customerTotal;
