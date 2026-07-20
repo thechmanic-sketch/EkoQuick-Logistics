@@ -148,11 +148,84 @@ const GoogleMaps = (function () {
         return autocompleteEl;
     }
 
+    // ---- Map rendering helpers ----
+    // Mirror Leaflet's API shape ([lat,lng] arrays, .setLatLng/.setLatLngs/
+    // .remove()) on purpose, so converting a Leaflet map to Google Maps in
+    // any given file is close to mechanical rather than a redesign.
+
+    async function createMap(elementId, center, zoom) {
+        await load();
+        return new google.maps.Map(document.getElementById(elementId), {
+            center: { lat: center[0], lng: center[1] },
+            zoom: zoom,
+            streetViewControl: false,
+            mapTypeControl: false,
+            fullscreenControl: false,
+            zoomControl: true,
+        });
+    }
+
+    // emoji: a short string (e.g. '🚚') rendered as the marker label, matching
+    // the emoji divIcon markers used throughout the app today.
+    function createMarker(map, position, emoji, opts) {
+        const marker = new google.maps.Marker({
+            position: { lat: position[0], lng: position[1] },
+            map: map,
+            label: emoji ? { text: emoji, fontSize: '22px' } : undefined,
+            title: (opts && opts.title) || '',
+        });
+        let infoWindow = null;
+        const wrapper = {
+            raw: marker,
+            setLatLng: function (pos) { marker.setPosition({ lat: pos[0], lng: pos[1] }); },
+            remove: function () { marker.setMap(null); },
+            bindPopup: function (html) {
+                infoWindow = new google.maps.InfoWindow({ content: html });
+                marker.addListener('click', function () { infoWindow.open(map, marker); });
+                return wrapper;
+            },
+            openPopup: function () { if (infoWindow) infoWindow.open(map, marker); },
+        };
+        return wrapper;
+    }
+
+    function createPolyline(map, latlngs, color, weight) {
+        const line = new google.maps.Polyline({
+            path: latlngs.map(function (p) { return { lat: p[0], lng: p[1] }; }),
+            map: map,
+            strokeColor: color || '#FF6A2B',
+            strokeWeight: weight || 4,
+        });
+        return {
+            raw: line,
+            setLatLngs: function (pts) { line.setPath(pts.map(function (p) { return { lat: p[0], lng: p[1] }; })); },
+            remove: function () { line.setMap(null); },
+        };
+    }
+
+    function fitBounds(map, points, paddingPx) {
+        if (!points.length) return;
+        if (points.length === 1) { map.setCenter({ lat: points[0][0], lng: points[0][1] }); map.setZoom(14); return; }
+        const bounds = new google.maps.LatLngBounds();
+        points.forEach(function (p) { bounds.extend({ lat: p[0], lng: p[1] }); });
+        map.fitBounds(bounds, paddingPx || 30);
+    }
+
+    function setView(map, center, zoom) {
+        map.setCenter({ lat: center[0], lng: center[1] });
+        map.setZoom(zoom);
+    }
+
     return {
         load: load,
         geocodeAddress: geocodeAddress,
         reverseGeocode: reverseGeocode,
         computeRoute: computeRoute,
         attachAutocomplete: attachAutocomplete,
+        createMap: createMap,
+        createMarker: createMarker,
+        createPolyline: createPolyline,
+        fitBounds: fitBounds,
+        setView: setView,
     };
 })();
