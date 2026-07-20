@@ -44,8 +44,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     populateVehicleFilters();
 
-    dispatchMap = L.map('dispatchMap').setView([-29.6, 30.9], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(dispatchMap);
+    dispatchMap = await GoogleMaps.createMap('dispatchMap', [-29.6, 30.9], 8);
 
     await loadDriverShare();
     await loadCommissionRules();
@@ -402,33 +401,29 @@ async function reassignDriver(jobId) {
 }
 
 function renderDispatchMap(job, withStats) {
-    dispatchMarkers.forEach(function (m) { dispatchMap.removeLayer(m); });
+    dispatchMarkers.forEach(function (m) { m.remove(); });
     dispatchMarkers = [];
 
     if (job.pickup_lat && job.pickup_lng) {
-        const pickupMarker = L.marker([job.pickup_lat, job.pickup_lng], {
-            icon: L.divIcon({ html: '📦', className: 'driver-marker', iconSize: [26, 26] }),
-        }).bindPopup('<b>Job ' + job.id.slice(0, 8) + '</b><br>Pickup: ' + escapeHtml(job.pickup) + '<br>Drop-off: ' + escapeHtml(job.dropoff)).addTo(dispatchMap);
+        const pickupMarker = GoogleMaps.createMarker(dispatchMap, [job.pickup_lat, job.pickup_lng], '📦')
+            .bindPopup('<b>Job ' + job.id.slice(0, 8) + '</b><br>Pickup: ' + escapeHtml(job.pickup) + '<br>Drop-off: ' + escapeHtml(job.dropoff));
         dispatchMarkers.push(pickupMarker);
-        dispatchMap.setView([job.pickup_lat, job.pickup_lng], 11);
+        GoogleMaps.setView(dispatchMap, [job.pickup_lat, job.pickup_lng], 11);
     }
     if (job.dropoff_lat && job.dropoff_lng) {
-        const dropoffMarker = L.marker([job.dropoff_lat, job.dropoff_lng], {
-            icon: L.divIcon({ html: '🏁', className: 'driver-marker', iconSize: [22, 22] }),
-        }).bindPopup('Drop-off: ' + escapeHtml(job.dropoff)).addTo(dispatchMap);
+        const dropoffMarker = GoogleMaps.createMarker(dispatchMap, [job.dropoff_lat, job.dropoff_lng], '🏁')
+            .bindPopup('Drop-off: ' + escapeHtml(job.dropoff));
         dispatchMarkers.push(dropoffMarker);
     }
 
     withStats.forEach(function (w) {
         if (!w.driver.last_lat || !w.driver.last_lng) return;
-        const m = L.marker([w.driver.last_lat, w.driver.last_lng], {
-            icon: L.divIcon({ html: '🟢', className: 'driver-marker', iconSize: [22, 22] }),
-        }).bindPopup(
+        const m = GoogleMaps.createMarker(dispatchMap, [w.driver.last_lat, w.driver.last_lng], '🟢').bindPopup(
             '<b>' + escapeHtml(w.driver.full_name) + '</b><br>' + vehicleLabel(w.driver.vehicle_class) +
             '<br>' + (w.dist !== null ? w.dist.toFixed(1) + ' km to pickup' : 'Distance unknown') +
             '<br>ETA: ' + (w.eta !== null ? w.eta + ' min' : '—') +
             '<br><button onclick="confirmAssign(allJobs.find(j=>j.id===\'' + job.id + '\'), \'' + w.driver.id + '\')">Assign Driver</button>'
-        ).addTo(dispatchMap);
+        );
         dispatchMarkers.push(m);
     });
 }
