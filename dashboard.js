@@ -158,11 +158,19 @@ function renderSummaryCards() {
 }
 
 function renderCodesBox(job) {
-    const activeIsPickup = job.status === 'to_pickup';
+    // pending/offered: neither leg has started yet — pickup is "next", not done.
+    // to_pickup: pickup is the active step.
+    // to_dropoff: pickup is done (struck through), delivery is the active step.
+    // delivered: both legs are done.
+    const pickupDone = job.status === 'to_dropoff' || job.status === 'delivered';
+    const deliveryDone = job.status === 'delivered';
+    const pickupActive = job.status === 'pending' || job.status === 'offered' || job.status === 'to_pickup';
+    const deliveryActive = job.status === 'to_dropoff';
+
     return '<div style="display:flex; gap:8px; margin-top:8px;">' +
-        (job.collection_code ? '<div data-copy="' + escapeHtml(job.collection_code) + '" style="cursor:pointer; flex:1; border:1px solid var(--line); border-radius:8px; padding:6px 10px; text-align:center; ' + (activeIsPickup ? 'border-color:var(--orange);' : 'opacity:0.5; text-decoration:line-through;') + '">' +
+        (job.collection_code ? '<div data-copy="' + escapeHtml(job.collection_code) + '" style="cursor:pointer; flex:1; border:1px solid var(--line); border-radius:8px; padding:6px 10px; text-align:center; ' + (pickupDone ? 'opacity:0.5; text-decoration:line-through;' : (pickupActive ? 'border-color:var(--orange);' : '')) + '">' +
             '<div class="meta">Pickup Code</div><div style="font-family:var(--font-mono); font-size:16px; font-weight:700;">' + escapeHtml(job.collection_code) + '</div></div>' : '') +
-        (job.delivery_code ? '<div data-copy="' + escapeHtml(job.delivery_code) + '" style="cursor:pointer; flex:1; border:1px solid var(--line); border-radius:8px; padding:6px 10px; text-align:center; ' + (!activeIsPickup ? 'border-color:var(--orange);' : 'opacity:0.5;') + '">' +
+        (job.delivery_code ? '<div data-copy="' + escapeHtml(job.delivery_code) + '" style="cursor:pointer; flex:1; border:1px solid var(--line); border-radius:8px; padding:6px 10px; text-align:center; ' + (deliveryDone ? 'opacity:0.5; text-decoration:line-through;' : (deliveryActive ? 'border-color:var(--orange);' : '')) + '">' +
             '<div class="meta">Delivery Code</div><div style="font-family:var(--font-mono); font-size:16px; font-weight:700;">' + escapeHtml(job.delivery_code) + '</div></div>' : '') +
     '</div>';
 }
