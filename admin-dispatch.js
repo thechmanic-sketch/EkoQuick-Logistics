@@ -143,6 +143,14 @@ async function loadAll() {
     else document.getElementById('nearbyDrivers').innerHTML = '<div class="empty">Select an order to see matching drivers.</div>';
     renderActiveDeliveries();
     renderDispatchLogTimeline();
+
+    // Don't rely solely on the 15s timer — browsers throttle setInterval in
+    // backgrounded/inactive tabs (sometimes to once a minute or less), which
+    // can make auto-assign look "stuck" until the tab is refocused. Since
+    // loadAll() already re-runs on every realtime job change, piggyback the
+    // auto-assign check onto that too, so a new pending job gets evaluated
+    // immediately instead of waiting on a possibly-throttled timer.
+    if (document.getElementById('autoAssignToggle').checked) runAutoAssign();
 }
 
 function avgDispatchTimeLabel() {
@@ -505,19 +513,32 @@ function setupAutoAssignTimer() {
 }
 
 let autoAssigning = false;
+let autoAssigningSince = 0;
 async function runAutoAssign() {
+    // Safety net: if a previous run somehow never reached its finally block
+    // (e.g. the tab was frozen mid-await), don't let the reentry guard stay
+    // stuck forever — self-heal after 60s instead of requiring the admin to
+    // manually toggle the switch off and on.
+    if (autoAssigning && Date.now() - autoAssigningSince > 60000) autoAssigning = false;
     if (autoAssigning) return;
     const unassigned = allJobs.filter(function (j) { return j.status === 'pending' && !j.driver_id && (!j.scheduled_at || new Date(j.scheduled_at) <= new Date()); });
     if (!unassigned.length) return;
 
     autoAssigning = true;
+    autoAssigningSince = Date.now();
     try {
         for (const job of unassigned) {
-            const candidates = candidatesForJob(job, '');
-            if (!candidates.length) continue;
-            const rec = pickRecommendation(candidates);
-            if (!rec) continue;
-            await assignDriverToJobSilently(job.id, rec.pick.driver.id);
+            try {
+                const candidates = candidatesForJob(job, '');
+                if (!candidates.length) continue;
+                const rec = pickRecommendation(candidates);
+                if (!rec) continue;
+                await assignDriverToJobSilently(job.id, rec.pick.driver.id);
+            } catch (err) {
+                // One bad job (stale data, a race with a manual assignment,
+                // a network blip) must not stop the rest of the batch.
+                console.error('Auto-assign failed for job', job.id, err);
+            }
         }
     } finally {
         autoAssigning = false;
