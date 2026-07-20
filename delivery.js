@@ -1,6 +1,7 @@
 let currentUser = null;
 let currentProfile = null;
-let selectedVehicle = VEHICLES[0];
+let selectedVehicle = null;
+let currentBreakdown = null;
 let currentDistance = 0;
 let currentDuration = '';
 let currentDurationSeconds = 0;
@@ -34,6 +35,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     await loadAppSettings();
+    await PricingEngine.load();
+    selectedVehicle = PricingEngine.getConfig().vehicles[0];
 
     if (pickupMode) {
         applyPickupModeLabels();
@@ -279,12 +282,13 @@ function renderPaymentOptions() {
 // ---- Vehicles / delivery type / schedule ----
 
 function renderVehicles() {
+    const vehicles = PricingEngine.getConfig().vehicles;
     const grid = document.getElementById('vehicleGrid');
-    grid.innerHTML = VEHICLES.map(function (v, i) {
+    grid.innerHTML = vehicles.map(function (v, i) {
         return (
-            '<div class="vopt' + (i === 0 ? ' selected' : '') + '" data-id="' + v.id + '">' +
+            '<div class="vopt' + (i === 0 ? ' selected' : '') + '" data-id="' + v.vehicle_id + '">' +
                 '<span class="icon">' + v.icon + '</span>' + v.label +
-                '<div style="font-size:10px; margin-top:4px; color:#9AA0A6;">R' + v.base + ' + R' + v.rate.toFixed(2) + '/km</div>' +
+                '<div style="font-size:10px; margin-top:4px; color:#9AA0A6;">R' + v.base_fare + ' + R' + parseFloat(v.price_per_km).toFixed(2) + '/km</div>' +
             '</div>'
         );
     }).join('');
@@ -292,7 +296,7 @@ function renderVehicles() {
         el.addEventListener('click', function () {
             grid.querySelectorAll('.vopt').forEach(function (o) { o.classList.remove('selected'); });
             el.classList.add('selected');
-            selectedVehicle = VEHICLES.find(function (v) { return v.id === el.dataset.id; });
+            selectedVehicle = vehicles.find(function (v) { return v.vehicle_id === el.dataset.id; });
             if (currentDistance > 0) calculateQuote();
         });
     });
@@ -361,10 +365,26 @@ async function calculateDistance() {
 }
 
 function calculateQuote() {
-    const minFee = parseFloat(appSetting('min_delivery_fee', '0')) || 0;
-    let base = Math.round(selectedVehicle.base + currentDistance * selectedVehicle.rate);
-    if (selectedDeliveryType === 'express') base = Math.round(base * 1.5);
-    currentQuote = Math.max(base, minFee);
+    const weightKg = parseFloat(document.getElementById('packageWeight').value) || 0;
+    const parcelCategory = document.getElementById('packageType').value;
+    const priority = selectedDeliveryType === 'express' ? 'express' : (selectedSchedule === 'later' ? 'scheduled' : 'normal');
+
+    // Traffic/route data isn't wired to a live provider yet (see Admin > Pricing
+    // Engine notes) — defaults to the lightest/most common multiplier so quotes
+    // aren't inflated until that's connected.
+    currentBreakdown = PricingEngine.calculateQuote({
+        vehicleId: selectedVehicle.vehicle_id,
+        distanceKm: currentDistance,
+        durationLabel: currentDuration,
+        weightKg: weightKg,
+        parcelCategory: parcelCategory,
+        extraStops: 0,
+        waitingMinutes: 0,
+        priority: priority,
+        trafficLevel: 'light',
+        routeType: 'urban',
+    });
+    currentQuote = currentBreakdown.customerTotal;
 
     document.getElementById('quoteAmount').textContent = 'R' + currentQuote;
     document.getElementById('quoteDetail').textContent = selectedVehicle.label + ' • ' + currentDistance + ' km' +
@@ -471,10 +491,11 @@ async function bookNow() {
         dropoff: dropoff,
         dropoff_lat: dropoffCoords ? dropoffCoords.lat : null,
         dropoff_lng: dropoffCoords ? dropoffCoords.lng : null,
-        vehicle: selectedVehicle.id,
+        vehicle: selectedVehicle.vehicle_id,
         distance: currentDistance,
         duration: currentDuration,
         quote: currentQuote,
+        pricing_breakdown: currentBreakdown,
         customer_phone: senderPhone,
         sender_name: document.getElementById('senderName').value.trim(),
         sender_email: document.getElementById('senderEmail').value.trim() || null,

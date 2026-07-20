@@ -1,24 +1,27 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
+    await PricingEngine.load();
+    const vehicles = PricingEngine.getConfig().vehicles;
+
     const vehicleSelect = document.getElementById('estVehicle');
-    vehicleSelect.innerHTML = VEHICLES.map(function (v) {
-        return '<option value="' + v.id + '">' + v.icon + ' ' + v.label + '</option>';
+    vehicleSelect.innerHTML = vehicles.map(function (v) {
+        return '<option value="' + v.vehicle_id + '">' + v.icon + ' ' + v.label + '</option>';
     }).join('');
 
-    renderVehicleCards();
+    renderVehicleCards(vehicles);
 
     document.getElementById('estimateBtn').addEventListener('click', getEstimate);
 });
 
-function renderVehicleCards() {
+function renderVehicleCards(vehicles) {
     const el = document.getElementById('vehicleCards');
-    el.innerHTML = VEHICLES.map(function (v) {
+    el.innerHTML = vehicles.map(function (v) {
         return (
             '<div class="vehicle-card">' +
                 '<div class="v-icon">' + v.icon + '</div>' +
                 '<h4>' + v.label + '</h4>' +
-                '<div class="v-row"><span>Base Fare</span><span>R' + v.base + '</span></div>' +
-                '<div class="v-row"><span>Price per KM</span><span>R' + v.rate.toFixed(2) + '</span></div>' +
-                '<div class="v-row"><span>Waiting Fee</span><span>R2.00/min</span></div>' +
+                '<div class="v-row"><span>Base Fare</span><span>R' + v.base_fare + '</span></div>' +
+                '<div class="v-row"><span>Price per KM</span><span>R' + parseFloat(v.price_per_km).toFixed(2) + '</span></div>' +
+                '<div class="v-row"><span>Waiting Fee</span><span>R' + parseFloat(PricingEngine.getConfig().settings.pricing_waiting_charge_per_min || 2).toFixed(2) + '/min</span></div>' +
             '</div>'
         );
     }).join('');
@@ -41,7 +44,8 @@ async function getEstimate() {
         return;
     }
 
-    const vehicle = VEHICLES.find(function (v) { return v.id === vehicleId; }) || VEHICLES[0];
+    const vehicles = PricingEngine.getConfig().vehicles;
+    const vehicle = vehicles.find(function (v) { return v.vehicle_id === vehicleId; }) || vehicles[0];
 
     btn.disabled = true;
     btn.textContent = 'Calculating...';
@@ -68,8 +72,19 @@ async function getEstimate() {
         return;
     }
 
-    const quote = Math.round(vehicle.base + distanceKm * vehicle.rate);
-    document.getElementById('estAmount').textContent = 'R' + quote;
-    document.getElementById('estDetail').textContent = vehicle.label + ' • ' + distanceKm + ' km • ' + parcelType.charAt(0).toUpperCase() + parcelType.slice(1) + ' • R' + vehicle.base + ' base + R' + vehicle.rate.toFixed(2) + '/km';
+    const breakdown = PricingEngine.calculateQuote({
+        vehicleId: vehicle.vehicle_id,
+        distanceKm: distanceKm,
+        weightKg: 0,
+        parcelCategory: parcelType,
+        extraStops: 0,
+        waitingMinutes: 0,
+        priority: 'normal',
+        trafficLevel: 'light',
+        routeType: 'urban',
+    });
+
+    document.getElementById('estAmount').textContent = 'R' + breakdown.customerTotal;
+    document.getElementById('estDetail').textContent = vehicle.label + ' • ' + distanceKm + ' km • ' + parcelType.charAt(0).toUpperCase() + parcelType.slice(1) + ' • R' + vehicle.base_fare + ' base + R' + parseFloat(vehicle.price_per_km).toFixed(2) + '/km';
     resultEl.classList.add('show');
 }
