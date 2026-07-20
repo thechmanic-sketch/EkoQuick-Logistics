@@ -39,7 +39,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     populateVehicleFilter();
 
-    fleetMap = await GoogleMaps.createMap('fleetMap', [-29.6, 30.9], 8);
+    // Runs alongside (not before) the critical data loads below, so a
+    // slow/blocked Google Maps script never delays the fleet list/data.
+    GoogleMaps.createMap('fleetMap', [-29.6, 30.9], 8).then(function (m) { fleetMap = m; renderMap(); });
 
     await loadDriverShare();
     await loadCommissionRules();

@@ -44,7 +44,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     populateVehicleFilters();
 
-    dispatchMap = await GoogleMaps.createMap('dispatchMap', [-29.6, 30.9], 8);
+    // Map creation runs alongside (not before) the critical data loads below,
+    // so a slow/blocked Google Maps script never delays dispatch/auto-assign.
+    GoogleMaps.createMap('dispatchMap', [-29.6, 30.9], 8).then(function (m) { dispatchMap = m; });
 
     await loadDriverShare();
     await loadCommissionRules();

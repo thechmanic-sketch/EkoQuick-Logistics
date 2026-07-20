@@ -13,25 +13,36 @@ const GoogleMaps = (function () {
     let geocoder = null;
     const addressRevealers = {}; // fieldId -> function(addr)
 
+    // Never hang forever: if Google's script is slow, blocked (ad-blocker,
+    // network), or errors, load() rejects after 10s instead of leaving every
+    // caller's `await` stuck — which previously froze whole page init
+    // sequences (auto-assign never running, bookings never completing) with
+    // no error shown anywhere.
     function load() {
         if (loadPromise) return loadPromise;
         loadPromise = new Promise(function (resolve, reject) {
             if (window.google && window.google.maps) { resolve(window.google.maps); return; }
+            const timeoutId = setTimeout(function () {
+                reject(new Error('Google Maps script load timed out'));
+            }, 10000);
             window.__gmapsCallback = function () {
+                clearTimeout(timeoutId);
                 geocoder = new google.maps.Geocoder();
                 resolve(window.google.maps);
             };
             const script = document.createElement('script');
             script.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_MAPS_API_KEY + '&libraries=places,geometry&callback=__gmapsCallback&loading=async';
             script.async = true;
-            script.onerror = function () { reject(new Error('Failed to load Google Maps JavaScript API')); };
+            script.onerror = function () { clearTimeout(timeoutId); reject(new Error('Failed to load Google Maps JavaScript API')); };
             document.head.appendChild(script);
         });
+        // Don't cache a failed load forever — let the next call retry.
+        loadPromise.catch(function () { loadPromise = null; });
         return loadPromise;
     }
 
     async function geocodeAddress(address) {
-        await load();
+        try { await load(); } catch (err) { return null; }
         return new Promise(function (resolve) {
             geocoder.geocode({ address: address + ', KwaZulu-Natal, South Africa' }, function (results, status) {
                 if (status === 'OK' && results && results[0]) {
@@ -45,7 +56,7 @@ const GoogleMaps = (function () {
     }
 
     async function reverseGeocode(lat, lng) {
-        await load();
+        try { await load(); } catch (err) { return null; }
         return new Promise(function (resolve) {
             geocoder.geocode({ location: { lat: lat, lng: lng } }, function (results, status) {
                 if (status === 'OK' && results && results[0]) resolve(results[0].formatted_address);
@@ -117,8 +128,8 @@ const GoogleMaps = (function () {
     // [lat, lng] pairs (same shape the old OSRM-based helper returned), or
     // null on failure.
     async function computeRoutePolyline(originLat, originLng, destLat, destLng) {
-        await load();
         try {
+            await load();
             const res = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes?key=' + GOOGLE_MAPS_API_KEY, {
                 method: 'POST',
                 headers: {
@@ -223,9 +234,29 @@ const GoogleMaps = (function () {
     // .remove()) on purpose, so converting a Leaflet map to Google Maps in
     // any given file is close to mechanical rather than a redesign.
 
+    // Never throws — most callers do `await GoogleMaps.createMap(...)` inline
+    // in their page-init sequence with no .catch(), and a rejection there
+    // used to abort everything after it (auto-assign, data loading, etc.).
+    // If Google's script fails to load, this returns a harmless no-op stub
+    // instead: the map just won't render, but the rest of the page keeps
+    // working.
+    function noopMap() {
+        return {
+            addListener: function () {}, setCenter: function () {}, setZoom: function () {},
+            fitBounds: function () {}, __failed: true,
+        };
+    }
+
     async function createMap(elementId, center, zoom) {
-        await load();
-        return new google.maps.Map(document.getElementById(elementId), {
+        try {
+            await load();
+        } catch (err) {
+            console.error('Google Maps failed to load — map will not render:', err);
+            return noopMap();
+        }
+        const container = document.getElementById(elementId);
+        if (!container) return noopMap();
+        return new google.maps.Map(container, {
             center: { lat: center[0], lng: center[1] },
             zoom: zoom,
             streetViewControl: false,
@@ -237,7 +268,13 @@ const GoogleMaps = (function () {
 
     // emoji: a short string (e.g. '🚚') rendered as the marker label, matching
     // the emoji divIcon markers used throughout the app today.
+    function noopMarker() {
+        const w = { setLatLng: function () {}, setIcon: function () {}, remove: function () {}, on: function () { return w; }, bindPopup: function () { return w; }, openPopup: function () {} };
+        return w;
+    }
+
     function createMarker(map, position, emoji, opts) {
+        if (!map || map.__failed || typeof google === 'undefined') return noopMarker();
         const marker = new google.maps.Marker({
             position: { lat: position[0], lng: position[1] },
             map: map,
@@ -265,6 +302,7 @@ const GoogleMaps = (function () {
     }
 
     function createPolyline(map, latlngs, color, weight) {
+        if (!map || map.__failed || typeof google === 'undefined') return { setLatLngs: function () {}, setStyle: function () {}, remove: function () {} };
         const line = new google.maps.Polyline({
             path: latlngs.map(function (p) { return { lat: p[0], lng: p[1] }; }),
             map: map,
@@ -280,6 +318,7 @@ const GoogleMaps = (function () {
     }
 
     function fitBounds(map, points, paddingPx) {
+        if (!map || map.__failed || typeof google === 'undefined') return;
         if (!points.length) return;
         if (points.length === 1) { map.setCenter({ lat: points[0][0], lng: points[0][1] }); map.setZoom(14); return; }
         const bounds = new google.maps.LatLngBounds();
@@ -288,6 +327,7 @@ const GoogleMaps = (function () {
     }
 
     function setView(map, center, zoom) {
+        if (!map || map.__failed) return;
         map.setCenter({ lat: center[0], lng: center[1] });
         map.setZoom(zoom);
     }
