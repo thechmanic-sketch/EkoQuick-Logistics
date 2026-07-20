@@ -123,33 +123,45 @@ const GoogleMaps = (function () {
         }
     }
 
-    // Turn-by-turn route polyline between two coordinates, for drawing the
-    // live route line on the driver's in-app map. Returns an array of
-    // [lat, lng] pairs (same shape the old OSRM-based helper returned), or
-    // null on failure.
-    async function computeRoutePolyline(originLat, originLng, destLat, destLng) {
+    // Turn-by-turn route polyline + live ETA between two coordinates, for the
+    // driver's live route line and for real (not straight-line/haversine) ETA
+    // shown to customer/admin. Returns { path: [[lat,lng],...], durationSeconds,
+    // distanceKm } or null on failure.
+    async function computeRouteDetails(originLat, originLng, destLat, destLng) {
         try {
             await load();
             const res = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes?key=' + GOOGLE_MAPS_API_KEY, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Goog-FieldMask': 'routes.polyline.encodedPolyline',
+                    'X-Goog-FieldMask': 'routes.polyline.encodedPolyline,routes.duration,routes.distanceMeters',
                 },
                 body: JSON.stringify({
                     origin: { location: { latLng: { latitude: originLat, longitude: originLng } } },
                     destination: { location: { latLng: { latitude: destLat, longitude: destLng } } },
                     travelMode: 'DRIVE',
+                    routingPreference: 'TRAFFIC_AWARE',
                 }),
             });
             const data = await res.json();
-            const encoded = data && data.routes && data.routes[0] && data.routes[0].polyline && data.routes[0].polyline.encodedPolyline;
+            const route = data && data.routes && data.routes[0];
+            const encoded = route && route.polyline && route.polyline.encodedPolyline;
             if (!encoded) return null;
             const path = google.maps.geometry.encoding.decodePath(encoded);
-            return path.map(function (p) { return [p.lat(), p.lng()]; });
+            return {
+                path: path.map(function (p) { return [p.lat(), p.lng()]; }),
+                durationSeconds: parseInt(route.duration, 10) || 0,
+                distanceKm: route.distanceMeters ? Math.round(route.distanceMeters / 1000) : null,
+            };
         } catch (err) {
             return null;
         }
+    }
+
+    // Back-compat shim — just the polyline path, same shape callers already use.
+    async function computeRoutePolyline(originLat, originLng, destLat, destLng) {
+        const details = await computeRouteDetails(originLat, originLng, destLat, destLng);
+        return details ? details.path : null;
     }
 
     // Binds Places Autocomplete to an existing <input>. Google retired the
@@ -338,6 +350,7 @@ const GoogleMaps = (function () {
         reverseGeocode: reverseGeocode,
         computeRoute: computeRoute,
         computeRoutePolyline: computeRoutePolyline,
+        computeRouteDetails: computeRouteDetails,
         attachAutocomplete: attachAutocomplete,
         showAddressInInput: showAddressInInput,
         createMap: createMap,

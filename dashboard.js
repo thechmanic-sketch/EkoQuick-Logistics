@@ -195,7 +195,7 @@ function renderActiveDeliveries() {
                     '<div><div class="route">' + (driver ? escapeHtml(driver.full_name) : 'Waiting for driver') + '</div>' +
                     (driver ? '<div class="meta">' + vehicleLabel(driver.vehicle_class) + '</div>' : '') + '</div>' +
                 '</div>' +
-                '<div class="meta">Order ' + job.id.slice(0, 8) + ' · ' + escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff) + '</div>' +
+                '<div class="meta">Tracking No. <b style="color:var(--paper); font-family:var(--font-mono);">' + escapeHtml(job.tracking_number || '—') + '</b> · ' + escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff) + '</div>' +
                 '<span class="badge ' + BADGE_CLASS[job.status] + '">' + (STATUS_LABELS[job.status] || job.status) + '</span>' +
                 (job.status === 'to_pickup' || job.status === 'to_dropoff' ? ' <span class="meta">ETA ' + computeEta(job) + '</span>' : '') +
                 (job.collection_code || job.delivery_code ? renderCodesBox(job) : '') +

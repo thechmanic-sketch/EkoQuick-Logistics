@@ -5,6 +5,24 @@ let dropoffMarker = null;
 let routeLine = null;
 let currentJob = null;
 let currentUser = null;
+let lastRouteAt = 0;
+
+// Real route from the driver's live position to whichever leg is active —
+// replaces the old straight pickup-to-dropoff line, refreshed every ~20s
+// like the driver's own navigation map.
+function refreshRoute(job) {
+    const destLat = job.status === 'to_pickup' ? job.pickup_lat : job.dropoff_lat;
+    const destLng = job.status === 'to_pickup' ? job.pickup_lng : job.dropoff_lng;
+    if (!destLat || !destLng) return;
+    const now = Date.now();
+    if (now - lastRouteAt < 20000) return;
+    lastRouteAt = now;
+    GoogleMaps.computeRouteDetails(job.driver_lat, job.driver_lng, destLat, destLng).then(function (details) {
+        if (!details) return;
+        if (routeLine) routeLine.remove();
+        routeLine = GoogleMaps.createPolyline(map, details.path, '#3E8BFF', 4);
+    });
+}
 
 const STATUS_LABELS = {
     pending: 'Pending',
@@ -37,6 +55,9 @@ function haversineKm(lat1, lng1, lat2, lng2) {
 
 function computeEta(job) {
     if (job.status !== 'to_pickup' && job.status !== 'to_dropoff') return '—';
+    // Prefer the driver's real driving ETA (job.eta_seconds, from Google Routes,
+    // refreshed every ~20s) over a straight-line guess.
+    if (job.eta_seconds) return Math.round(job.eta_seconds / 60) + ' min';
     const destLat = job.status === 'to_pickup' ? job.pickup_lat : job.dropoff_lat;
     const destLng = job.status === 'to_pickup' ? job.pickup_lng : job.dropoff_lng;
     if (!job.driver_lat || !job.driver_lng || !destLat || !destLng) return '—';
@@ -126,18 +147,21 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (!dropoffMarker) dropoffMarker = GoogleMaps.createMarker(map, pos, '🏁', { title: 'Drop-off' }).bindPopup('Drop-off');
             else dropoffMarker.setLatLng(pos);
         }
-        if (job.pickup_lat && job.dropoff_lat) {
-            const line = [[job.pickup_lat, job.pickup_lng], [job.dropoff_lat, job.dropoff_lng]];
-            if (!routeLine) routeLine = GoogleMaps.createPolyline(map, line, '#3E8BFF', 3);
-            else routeLine.setLatLngs(line);
-        }
         if (job.driver_lat && job.driver_lng) {
             document.getElementById('trackNote').classList.add('hidden');
             const pos = [job.driver_lat, job.driver_lng];
             if (!driverMarker) driverMarker = GoogleMaps.createMarker(map, pos, '🚚', { title: 'Driver' });
             else driverMarker.setLatLng(pos);
+            refreshRoute(job);
         } else {
             document.getElementById('trackNote').classList.remove('hidden');
+            // No live driver position yet — show the plain pickup→dropoff line
+            // as a placeholder only, not a substitute for the real route.
+            if (job.pickup_lat && job.dropoff_lat) {
+                const line = [[job.pickup_lat, job.pickup_lng], [job.dropoff_lat, job.dropoff_lng]];
+                if (!routeLine) routeLine = GoogleMaps.createPolyline(map, line, '#3E8BFF', 3);
+                else routeLine.setLatLngs(line);
+            }
         }
         recenterMap();
 

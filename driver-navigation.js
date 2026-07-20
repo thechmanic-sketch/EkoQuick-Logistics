@@ -90,7 +90,10 @@ function destCoords() {
 async function render() {
     const dest = destCoords();
     const remainingKm = (lastPos && dest.lat && dest.lng) ? haversineKm(lastPos.lat, lastPos.lng, dest.lat, dest.lng) : null;
-    const etaMin = remainingKm !== null ? Math.round((remainingKm / 30) * 60) : null;
+    // Prefer the real driving ETA from Google Routes (job.eta_seconds, refreshed
+    // every ~20s); fall back to the straight-line estimate until the first
+    // route calculation lands.
+    const etaMin = job.eta_seconds ? Math.round(job.eta_seconds / 60) : (remainingKm !== null ? Math.round((remainingKm / 30) * 60) : null);
 
     document.getElementById('jobRoute').textContent = 'Job ' + job.id.slice(0, 8) + ' — ' + job.pickup + ' → ' + job.dropoff;
     document.getElementById('statusText').textContent = job.status === 'to_pickup' ? (job.arrived_at_pickup_at ? 'Arrived at Pickup' : 'Heading to Pickup') : (job.arrived_at_dropoff_at ? 'Arrived at Destination' : 'Heading to Destination');
@@ -168,10 +171,11 @@ function focusRoute() {
     const dest = destCoords();
     if (lastPos && dest.lat && dest.lng) {
         lastRouteAt = 0; // force the route line to refresh again right away
-        GoogleMaps.computeRoutePolyline(lastPos.lat, lastPos.lng, dest.lat, dest.lng).then(function (latlngs) {
-            if (!latlngs) return;
+        GoogleMaps.computeRouteDetails(lastPos.lat, lastPos.lng, dest.lat, dest.lng).then(function (details) {
+            if (!details) return;
             if (routeLine) routeLine.remove();
-            routeLine = GoogleMaps.createPolyline(map, latlngs, '#FF6A2B', 4);
+            routeLine = GoogleMaps.createPolyline(map, details.path, '#FF6A2B', 4);
+            if (job) supabase.from('jobs').update({ eta_seconds: details.durationSeconds }).eq('id', job.id);
         });
     }
 }
@@ -316,10 +320,14 @@ function beginTracking() {
                 const now = Date.now();
                 if (dest.lat && dest.lng && now - lastRouteAt > 20000) {
                     lastRouteAt = now;
-                    GoogleMaps.computeRoutePolyline(lastPos.lat, lastPos.lng, dest.lat, dest.lng).then(function (latlngs) {
-                        if (!latlngs) return;
+                    GoogleMaps.computeRouteDetails(lastPos.lat, lastPos.lng, dest.lat, dest.lng).then(function (details) {
+                        if (!details) return;
                         if (routeLine) routeLine.remove();
-                        routeLine = GoogleMaps.createPolyline(map, latlngs, '#FF6A2B', 4);
+                        routeLine = GoogleMaps.createPolyline(map, details.path, '#FF6A2B', 4);
+                        // Real driving ETA (not the straight-line haversine estimate) —
+                        // powers the customer/admin live ETA display and the
+                        // "arriving in ~3 minutes" notification (see notify_on_eta_soon).
+                        supabase.from('jobs').update({ eta_seconds: details.durationSeconds }).eq('id', job.id);
                     });
                 }
             }
