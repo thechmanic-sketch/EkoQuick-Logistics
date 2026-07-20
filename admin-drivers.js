@@ -386,13 +386,12 @@ function openDrawer(driverId) {
     drawer.classList.add('open');
     document.getElementById('drawerBackdrop').classList.add('open');
 
-    if (d.last_lat && d.last_lng && typeof L !== 'undefined') {
-        setTimeout(function () {
+    if (d.last_lat && d.last_lng && typeof GoogleMaps !== 'undefined') {
+        setTimeout(async function () {
             const mapEl = document.getElementById('driverMiniMap');
             if (!mapEl) return;
-            miniMap = L.map('driverMiniMap').setView([d.last_lat, d.last_lng], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(miniMap);
-            L.marker([d.last_lat, d.last_lng]).addTo(miniMap);
+            miniMap = await GoogleMaps.createMap('driverMiniMap', [d.last_lat, d.last_lng], 13);
+            GoogleMaps.createMarker(miniMap, [d.last_lat, d.last_lng], '🚚', { title: d.full_name || '' });
         }, 50);
     }
 }
