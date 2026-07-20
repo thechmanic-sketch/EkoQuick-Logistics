@@ -187,6 +187,35 @@ function wireNav() {
 
 // ---- Map pickers (Google Maps) ----
 
+// GoogleMaps.attachAutocomplete() hides the real <input> and shows its own
+// PlaceAutocompleteElement widget on top (Google's element has no public API
+// to set its displayed text). So when the address comes from a map click
+// instead of a typed search, swap back to the plain input — pre-filled with
+// the resolved address — so the picked address is actually visible.
+function showResolvedAddress(fieldId, addr) {
+    const inputEl = document.getElementById(fieldId);
+    const autocompleteEl = document.getElementById(fieldId + 'Autocomplete');
+    inputEl.value = addr;
+    if (autocompleteEl) autocompleteEl.style.display = 'none';
+    inputEl.style.display = 'block';
+
+    let searchAgainLink = document.getElementById(fieldId + 'SearchAgain');
+    if (!searchAgainLink && autocompleteEl) {
+        searchAgainLink = document.createElement('a');
+        searchAgainLink.id = fieldId + 'SearchAgain';
+        searchAgainLink.href = '#';
+        searchAgainLink.textContent = '🔍 Search address instead';
+        searchAgainLink.style.cssText = 'display:block; font-size:11px; margin-top:4px; color: var(--orange);';
+        searchAgainLink.addEventListener('click', function (e) {
+            e.preventDefault();
+            inputEl.style.display = 'none';
+            autocompleteEl.style.display = 'block';
+        });
+        inputEl.insertAdjacentElement('afterend', searchAgainLink);
+    }
+    if (searchAgainLink) searchAgainLink.style.display = 'block';
+}
+
 function wireMapPickers() {
     document.getElementById('pickMapBtn1').addEventListener('click', async function () {
         const mapEl = document.getElementById('pickupMap');
@@ -198,7 +227,7 @@ function wireMapPickers() {
                 pickupCoords = { lat: lat, lng: lng };
                 if (pickupMarker) pickupMarker.setLatLng([lat, lng]); else pickupMarker = GoogleMaps.createMarker(pickupMap, [lat, lng], '📍');
                 const addr = await reverseGeocode(lat, lng);
-                if (addr) document.getElementById('pickup').value = addr;
+                if (addr) showResolvedAddress('pickup', addr);
             });
         }
     });
@@ -213,7 +242,7 @@ function wireMapPickers() {
                 dropoffCoords = { lat: lat, lng: lng };
                 if (dropoffMarker) dropoffMarker.setLatLng([lat, lng]); else dropoffMarker = GoogleMaps.createMarker(dropoffMap, [lat, lng], '📍');
                 const addr = await reverseGeocode(lat, lng);
-                if (addr) document.getElementById('dropoff').value = addr;
+                if (addr) showResolvedAddress('dropoff', addr);
             });
         }
     });
