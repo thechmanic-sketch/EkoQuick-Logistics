@@ -11,6 +11,7 @@
 const GoogleMaps = (function () {
     let loadPromise = null;
     let geocoder = null;
+    const addressRevealers = {}; // fieldId -> function(addr)
 
     function load() {
         if (loadPromise) return loadPromise;
@@ -155,6 +156,10 @@ const GoogleMaps = (function () {
         }
         const autocompleteEl = new google.maps.places.PlaceAutocompleteElement({
             componentRestrictions: { country: 'za' },
+            // Bias toward specific addresses (street/premise level), not just
+            // cities/suburbs/landmarks, which is all the element suggests by
+            // default with no type filter set.
+            includedPrimaryTypes: ['street_address', 'route', 'premise', 'subpremise'],
         });
         autocompleteEl.id = inputEl.id + 'Autocomplete';
         autocompleteEl.style.width = '100%';
@@ -163,10 +168,35 @@ const GoogleMaps = (function () {
         inputEl.style.display = 'none';
         inputEl.insertAdjacentElement('afterend', autocompleteEl);
 
+        // The widget's own displayed text does not reliably persist after a
+        // selection, so — same as the map-click flow — swap back to the
+        // plain input, pre-filled with the selected address, as the visible
+        // confirmation of what was picked.
+        let searchAgainLink = null;
+        function showInInput(addr) {
+            inputEl.value = addr || '';
+            autocompleteEl.style.display = 'none';
+            inputEl.style.display = 'block';
+            if (!searchAgainLink) {
+                searchAgainLink = document.createElement('a');
+                searchAgainLink.href = '#';
+                searchAgainLink.textContent = '🔍 Search address instead';
+                searchAgainLink.style.cssText = 'display:block; font-size:11px; margin-top:4px; color: var(--orange);';
+                searchAgainLink.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    inputEl.style.display = 'none';
+                    autocompleteEl.style.display = 'block';
+                });
+                inputEl.insertAdjacentElement('afterend', searchAgainLink);
+            }
+            searchAgainLink.style.display = 'block';
+        }
+        addressRevealers[inputEl.id] = showInInput;
+
         autocompleteEl.addEventListener('gmp-select', async function (event) {
             const place = event.placePrediction.toPlace();
             await place.fetchFields({ fields: ['formattedAddress', 'location'] });
-            inputEl.value = place.formattedAddress || '';
+            showInInput(place.formattedAddress);
             onPlace({
                 lat: place.location ? place.location.lat() : null,
                 lng: place.location ? place.location.lng() : null,
@@ -175,6 +205,17 @@ const GoogleMaps = (function () {
         });
 
         return autocompleteEl;
+    }
+
+    // Shows an address (e.g. from a reverse-geocoded map click) in the plain
+    // input for a field that has attachAutocomplete() wired to it, swapping
+    // away from the autocomplete widget the same way selecting a suggestion
+    // does — one code path for both ways of picking an address.
+    function showAddressInInput(fieldId, addr) {
+        const reveal = addressRevealers[fieldId];
+        if (reveal) { reveal(addr); return; }
+        const inputEl = document.getElementById(fieldId);
+        if (inputEl) inputEl.value = addr || '';
     }
 
     // ---- Map rendering helpers ----
@@ -258,6 +299,7 @@ const GoogleMaps = (function () {
         computeRoute: computeRoute,
         computeRoutePolyline: computeRoutePolyline,
         attachAutocomplete: attachAutocomplete,
+        showAddressInInput: showAddressInInput,
         createMap: createMap,
         createMarker: createMarker,
         createPolyline: createPolyline,
