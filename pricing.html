@@ -4,10 +4,56 @@
     <meta charset="UTF-8">
     <style>html{background:#0B0F16}</style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tariff Sheet — Ekoquick</title>
+    <title>Pricing — Ekoquick</title>
     <link rel="stylesheet" href="homepage.css">
     <link rel="stylesheet" href="support-widget.css">
     <script src="transitions.js"></script>
+    <style>
+        .estimator { border: 1px solid var(--line); background: var(--ink-2); padding: var(--sp-4); }
+        .estimator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+        @media (max-width: 640px) { .estimator-grid { grid-template-columns: 1fr; } }
+        .estimator label { display: block; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-dim); margin-bottom: 4px; }
+        .estimator input, .estimator select {
+            width: 100%; background: var(--ink); border: 1px solid var(--line); color: var(--paper);
+            padding: 10px; font-family: var(--font-mono); font-size: 13px; margin-bottom: var(--sp-3);
+        }
+        .estimator input:focus, .estimator select:focus { outline: none; border-color: var(--orange); }
+        .estimator-btn {
+            width: 100%; background: var(--orange); color: var(--ink); border: none; padding: 12px;
+            font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+            cursor: pointer; font-size: 13px;
+        }
+        .estimator-btn:disabled { opacity: 0.6; cursor: wait; }
+        .estimate-result { margin-top: var(--sp-3); border: 1px solid var(--orange); padding: var(--sp-3); display: none; }
+        .estimate-result.show { display: block; }
+        .estimate-result .amt { font-family: var(--font-stencil); font-size: 40px; color: var(--orange); line-height: 1; }
+        .estimate-result .detail { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-top: 6px; }
+        .estimate-msg { font-family: var(--font-mono); font-size: 12px; color: var(--red); margin-top: 8px; }
+
+        .vehicle-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-3); }
+        @media (max-width: 900px) { .vehicle-cards { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 560px) { .vehicle-cards { grid-template-columns: 1fr; } }
+        .vehicle-card { border: 1px solid var(--line); padding: var(--sp-3); }
+        .vehicle-card .v-icon { font-size: 36px; }
+        .vehicle-card h4 { font-family: var(--font-stencil); font-size: 18px; margin: 8px 0 12px 0; }
+        .vehicle-card .v-row { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 12px; padding: 5px 0; border-top: 1px solid var(--line-soft); }
+        .vehicle-card .v-row span:last-child { color: var(--amber); font-weight: 600; }
+
+        .factor-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--sp-3); margin-top: var(--sp-3); }
+        @media (max-width: 900px) { .factor-grid { grid-template-columns: 1fr 1fr; } }
+        .factor-item { border: 1px solid var(--line); padding: var(--sp-3); text-align: center; }
+        .factor-item .f-icon { font-size: 26px; margin-bottom: 6px; }
+        .factor-item h4 { margin: 0 0 4px 0; font-size: 13px; }
+        .factor-item p { margin: 0; font-size: 12px; color: var(--muted-dim); }
+
+        .faq-item { border-top: 1px solid var(--line); padding: var(--sp-3) 0; }
+        .faq-item:last-child { border-bottom: 1px solid var(--line); }
+        .faq-item summary { cursor: pointer; font-weight: 600; font-size: 14px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+        .faq-item summary::-webkit-details-marker { display: none; }
+        .faq-item summary::after { content: '+'; font-family: var(--font-mono); color: var(--orange); font-size: 18px; }
+        .faq-item[open] summary::after { content: '–'; }
+        .faq-item p { color: var(--muted); font-size: 13px; margin: 8px 0 0 0; }
+    </style>
 </head>
 <body>
     <div class="ticker-bar">
@@ -25,6 +71,7 @@
             </div>
             <ul class="nav-links">
                 <li><a href="how-it-works.html">Manifest</a></li>
+                <li><a href="services.html">Services</a></li>
                 <li><a href="pricing.html">Tariff</a></li>
                 <li><a href="coverage.html">Coverage</a></li>
                 <li><a href="for-business.html">Business</a></li>
@@ -39,89 +86,113 @@
 
     <header class="page-hero">
         <div class="wrap">
-            <p class="breadcrumb"><a href="index.html">Home</a> / Tariff sheet</p>
-            <p class="sec-tag">Tariff sheet</p>
+            <p class="breadcrumb"><a href="index.html">Home</a> / Pricing</p>
+            <p class="sec-tag">Transparent pricing</p>
             <h1>Priced by the kilometre</h1>
-            <p class="page-lede">Every fare is base fee plus distance, worked out from the real road distance between your two addresses. No surge pricing, no surprise add-ons at the door.</p>
+            <p class="page-lede">Every fare is a base fee plus the real driving distance between your two addresses. No surge pricing, no surprise add-ons at the door. Get a live estimate below before you even sign up.</p>
         </div>
     </header>
 
-    <section class="content-block">
-        <div class="wrap">
-            <h2>The formula</h2>
-            <p>Every job is priced the same way, regardless of vehicle class:</p>
-            <div class="example-box">
-                <p class="ex-tag">Fare formula</p>
-                <p class="ex-sum">Total fare = Base fare + (Rate per km × Distance in km)</p>
+    <section class="content-block" style="max-width:none;">
+        <div class="wrap" style="max-width: 700px;">
+            <h2>Price Estimator</h2>
+            <div class="estimator">
+                <div class="estimator-grid">
+                    <div>
+                        <label>Pickup</label>
+                        <input id="estPickup" placeholder="e.g. Durban CBD">
+                    </div>
+                    <div>
+                        <label>Destination</label>
+                        <input id="estDropoff" placeholder="e.g. Pietermaritzburg">
+                    </div>
+                    <div>
+                        <label>Vehicle</label>
+                        <select id="estVehicle"></select>
+                    </div>
+                    <div>
+                        <label>Parcel Type</label>
+                        <select id="estParcelType">
+                            <option value="parcel">Parcel</option>
+                            <option value="documents">Documents</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="food">Food</option>
+                            <option value="clothing">Clothing</option>
+                            <option value="furniture">Furniture</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="estimator-btn" id="estimateBtn">Get Estimate</button>
+                <div class="estimate-msg" id="estimateMsg"></div>
+                <div class="estimate-result" id="estimateResult">
+                    <div class="amt" id="estAmount">R0</div>
+                    <div class="detail" id="estDetail"></div>
+                </div>
             </div>
-            <p>The base fare covers collection and handling. The per-kilometre rate covers the trip itself. Both are fixed per vehicle class — see the full sheet below.</p>
         </div>
     </section>
 
     <section class="content-block">
         <div class="wrap">
-            <h2>Vehicle classes</h2>
-            <table class="tariff">
-                <thead>
-                    <tr>
-                        <th>Vehicle</th>
-                        <th>Base fare</th>
-                        <th>Rate / km</th>
-                        <th>Suited for</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="veh">🏍️ Bike</td>
-                        <td class="num">R25</td>
-                        <td class="num">R5.00</td>
-                        <td class="fit">Documents, small parcels, food and lightweight deliveries</td>
-                    </tr>
-                    <tr>
-                        <td class="veh">🚗 Small Car</td>
-                        <td class="num">R35</td>
-                        <td class="num">R7.00</td>
-                        <td class="fit">Groceries, retail purchases, medium-sized parcels</td>
-                    </tr>
-                    <tr>
-                        <td class="veh">🛻 Bakkie</td>
-                        <td class="num">R80</td>
-                        <td class="num">R12.00</td>
-                        <td class="fit">Furniture, appliances, construction materials</td>
-                    </tr>
-                    <tr>
-                        <td class="veh">🚚 1–2 Ton Truck</td>
-                        <td class="num">R150</td>
-                        <td class="num">R18.00</td>
-                        <td class="fit">Office relocations, business deliveries, bulk transport</td>
-                    </tr>
-                    <tr>
-                        <td class="veh">🚛 7 Ton Truck</td>
-                        <td class="num">R250</td>
-                        <td class="num">R25.00</td>
-                        <td class="fit">Industrial transport, warehouse stock, large-scale logistics</td>
-                    </tr>
-                </tbody>
-            </table>
+            <h2>Vehicle Pricing</h2>
+            <div class="vehicle-cards" id="vehicleCards"></div>
+            <p style="font-size:12px; color: var(--muted-dim); margin-top: var(--sp-3);">Waiting fee applies once your driver has arrived and is waiting beyond the free window — settled directly with your driver, same as the delivery fare.</p>
         </div>
     </section>
 
     <section class="content-block">
         <div class="wrap">
-            <h2>Worked examples</h2>
-            <div class="example-box">
-                <p class="ex-tag">Durban → Pinetown · 22km · Bike</p>
-                <p>R25 + (22 × R5.00) = <b>R135.00</b></p>
+            <h2>Price Factors</h2>
+            <div class="factor-grid">
+                <div class="factor-item">
+                    <div class="f-icon">📏</div>
+                    <h4>Distance</h4>
+                    <p>Real driving distance between pickup and destination.</p>
+                </div>
+                <div class="factor-item">
+                    <div class="f-icon">🚚</div>
+                    <h4>Vehicle</h4>
+                    <p>Bigger vehicle, higher base fare and per-km rate.</p>
+                </div>
+                <div class="factor-item">
+                    <div class="f-icon">⏱️</div>
+                    <h4>Waiting Time</h4>
+                    <p>First 10 minutes free, then a small per-minute fee.</p>
+                </div>
+                <div class="factor-item">
+                    <div class="f-icon">🕐</div>
+                    <h4>Peak Hours</h4>
+                    <p>Express jobs during busy periods may take priority queueing.</p>
+                </div>
+                <div class="factor-item">
+                    <div class="f-icon">📦</div>
+                    <h4>Parcel Size</h4>
+                    <p>Larger or heavier items need a larger vehicle class.</p>
+                </div>
             </div>
-            <div class="example-box">
-                <p class="ex-tag">Durban → Pietermaritzburg · 78km · Bakkie</p>
-                <p>R80 + (78 × R12.00) = <b>R1,016.00</b></p>
-            </div>
-            <div class="example-box">
-                <p class="ex-tag">Durban → Richards Bay · 180km · 7 Ton Truck</p>
-                <p>R250 + (180 × R25.00) = <b>R4,750.00</b></p>
-            </div>
-            <p>See exact fares for your route on the <a href="coverage.html" style="color: var(--orange);">coverage page</a>, or get a live quote by creating a delivery in your dashboard.</p>
+        </div>
+    </section>
+
+    <section class="content-block">
+        <div class="wrap">
+            <h2>FAQ</h2>
+            <details class="faq-item">
+                <summary>Is the estimate above the exact price I'll pay?</summary>
+                <p>It's very close — it uses the same formula and real road distance as the actual booking flow. The final quote is confirmed in your dashboard once you enter both addresses at booking time.</p>
+            </details>
+            <details class="faq-item">
+                <summary>Are there any hidden fees?</summary>
+                <p>No. Base fare plus distance is the whole formula. Express adds a fixed 50% for priority dispatch, and waiting time only applies if your driver is kept waiting beyond the free window — both shown clearly before you confirm.</p>
+            </details>
+            <details class="faq-item">
+                <summary>How do I pay?</summary>
+                <p>Cash on delivery is available now. Card payments are coming soon once our payment gateway is connected; EFT is available for approved business accounts with manual proof-of-payment verification.</p>
+            </details>
+            <details class="faq-item">
+                <summary>Does the price change during peak hours?</summary>
+                <p>The base formula doesn't change. What changes is driver availability — booking Express during busy periods gets your job dispatched ahead of standard jobs in the queue.</p>
+            </details>
         </div>
     </section>
 
@@ -164,6 +235,9 @@
         </div>
     </footer>
 
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="pricing-estimator.js"></script>
     <script src="support-widget.js"></script>
 </body>
 </html>
