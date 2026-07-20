@@ -127,9 +127,11 @@ function renderActionPanel() {
 
     if (job.status === 'to_pickup' && !job.arrived_at_pickup_at) {
         panel.innerHTML =
-            '<button class="btn btn-blue" id="startNavBtn">Start Navigation</button>' +
-            '<button class="btn btn-blue" id="arrivedBtn">I\'ve Arrived</button>';
-        document.getElementById('startNavBtn').addEventListener('click', openExternalNav);
+            '<button class="btn btn-blue" id="startNavBtn">Focus Route on Map</button>' +
+            '<button class="btn btn-blue" id="arrivedBtn">I\'ve Arrived</button>' +
+            '<a class="btn btn-outline-blue" id="externalNavLink" href="#" style="width:auto;">Open in Google Maps ↗</a>';
+        document.getElementById('startNavBtn').addEventListener('click', focusRoute);
+        document.getElementById('externalNavLink').addEventListener('click', openExternalNav);
         document.getElementById('arrivedBtn').addEventListener('click', function () { setArrived('arrived_at_pickup_at'); });
     } else if (job.status === 'to_pickup' && job.arrived_at_pickup_at) {
         panel.innerHTML =
@@ -141,10 +143,12 @@ function renderActionPanel() {
         document.getElementById('pickedUpBtn').addEventListener('click', confirmPickup);
     } else if (job.status === 'to_dropoff' && !job.arrived_at_dropoff_at) {
         panel.innerHTML =
-            '<button class="btn btn-blue" id="startNavBtn">Open Destination Route</button>' +
+            '<button class="btn btn-blue" id="startNavBtn">Focus Route on Map</button>' +
             (recipDigits ? '<a class="btn btn-outline-blue" href="tel:' + escapeHtml(job.receiver_phone) + '">Call Recipient</a>' : '') +
-            '<button class="btn btn-blue" id="arrivedBtn">I\'ve Arrived</button>';
-        document.getElementById('startNavBtn').addEventListener('click', openExternalNav);
+            '<button class="btn btn-blue" id="arrivedBtn">I\'ve Arrived</button>' +
+            '<a class="btn btn-outline-blue" id="externalNavLink" href="#" style="width:auto;">Open in Google Maps ↗</a>';
+        document.getElementById('startNavBtn').addEventListener('click', focusRoute);
+        document.getElementById('externalNavLink').addEventListener('click', openExternalNav);
         document.getElementById('arrivedBtn').addEventListener('click', function () { setArrived('arrived_at_dropoff_at'); });
     } else if (job.status === 'to_dropoff' && job.arrived_at_dropoff_at) {
         panel.innerHTML =
@@ -157,9 +161,32 @@ function renderActionPanel() {
     }
 }
 
-function openExternalNav() {
+// Keeps the driver in-app: re-centers the map on the live route immediately
+// instead of waiting for the next periodic refresh.
+function focusRoute() {
+    recenter();
+    const dest = destCoords();
+    if (lastPos && dest.lat && dest.lng) {
+        lastRouteAt = 0; // force fetchRoute() to run again right away
+        fetchRoute(lastPos.lat, lastPos.lng, dest.lat, dest.lng).then(function (latlngs) {
+            if (!latlngs) return;
+            if (routeLine) map.removeLayer(routeLine);
+            routeLine = L.polyline(latlngs, { color: '#FF6A2B', weight: 4 }).addTo(map);
+        });
+    }
+}
+
+// Opens turn-by-turn navigation in the Google Maps app — leaving Ekoquick
+// open in the background usually pauses this page's live location updates
+// (mobile browsers throttle background tabs), so the customer/admin live
+// map will stop moving until the driver returns to this tab. Offered as an
+// explicit opt-in for drivers who want voice-guided turn-by-turn, not the
+// default action.
+function openExternalNav(e) {
+    if (e) e.preventDefault();
     const dest = destCoords();
     if (!dest.lat || !dest.lng) { alert('No coordinates available for this destination yet.'); return; }
+    if (!confirm('This opens Google Maps outside Ekoquick. Your live location may stop updating for the customer until you return to this tab. Continue?')) return;
     window.open(mapsDirectionsUrl(dest.lat, dest.lng), '_blank', 'noopener');
 }
 
