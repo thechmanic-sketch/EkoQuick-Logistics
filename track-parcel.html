@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Parcel — Ekoquick</title>
+    <link rel="stylesheet" href="vendor/leaflet.css">
+    <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        .track-form { border: 1px solid var(--line); background: var(--ink-2); padding: var(--sp-4); }
+        .track-form-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: var(--sp-3); align-items: end; }
+        @media (max-width: 700px) { .track-form-grid { grid-template-columns: 1fr; } }
+        .track-form label { display: block; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-dim); margin-bottom: 4px; }
+        .track-form input {
+            width: 100%; background: var(--ink); border: 1px solid var(--line); color: var(--paper);
+            padding: 10px; font-family: var(--font-mono); font-size: 13px;
+        }
+        .track-form input:focus { outline: none; border-color: var(--orange); }
+        .track-btn {
+            background: var(--orange); color: var(--ink); border: none; padding: 11px 20px;
+            font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+            cursor: pointer; font-size: 13px; white-space: nowrap;
+        }
+        .track-btn:disabled { opacity: 0.6; cursor: wait; }
+        .track-msg { font-family: var(--font-mono); font-size: 12px; color: var(--red); margin-top: 10px; }
+
+        .track-result { display: none; margin-top: var(--sp-4); }
+        .track-result.show { display: block; }
+        .track-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-3); border: 1px solid var(--line); padding: var(--sp-3); margin-bottom: var(--sp-3); }
+        @media (max-width: 700px) { .track-summary { grid-template-columns: 1fr 1fr; } }
+        .track-summary div { font-family: var(--font-mono); }
+        .track-summary .t-label { font-size: 10px; color: var(--muted-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+        .track-summary .t-value { font-size: 14px; color: var(--paper); margin-top: 2px; }
+
+        .track-map { height: 320px; border: 1px solid var(--line); margin-bottom: var(--sp-3); }
+
+        .timeline { list-style: none; margin: 0; padding: 0; }
+        .timeline li {
+            position: relative; padding: 0 0 var(--sp-4) 30px; font-family: var(--font-mono); font-size: 13px; color: var(--muted-dim);
+        }
+        .timeline li::before {
+            content: ''; position: absolute; left: 0; top: 2px; width: 14px; height: 14px; border-radius: 50%;
+            border: 2px solid var(--line); background: var(--ink);
+        }
+        .timeline li::after {
+            content: ''; position: absolute; left: 6px; top: 16px; bottom: -8px; width: 2px; background: var(--line);
+        }
+        .timeline li:last-child::after { display: none; }
+        .timeline li.done { color: var(--paper); }
+        .timeline li.done::before { border-color: var(--green); background: var(--green); }
+        .timeline li.current { color: var(--orange); font-weight: 700; }
+        .timeline li.current::before { border-color: var(--orange); background: var(--orange); box-shadow: 0 0 6px var(--orange); }
+        .timeline li .t-time { display: block; font-size: 11px; color: var(--muted-dim); font-weight: 400; margin-top: 2px; }
+
+        .otp-box { display: flex; gap: var(--sp-3); margin-bottom: var(--sp-3); flex-wrap: wrap; }
+        .otp-chip { border: 1px solid var(--line); padding: 10px 16px; font-family: var(--font-mono); }
+        .otp-chip .oc-label { font-size: 10px; color: var(--muted-dim); text-transform: uppercase; }
+        .otp-chip .oc-code { font-size: 20px; color: var(--orange); font-weight: 700; letter-spacing: 0.1em; }
+        .otp-note { font-size: 11px; color: var(--muted-dim); }
+    </style>
+</head>
+<body>
+    <div class="ticker-bar">
+        <div class="ticker-track">
+            <span>DBN → PMB → HWK → BAL → RBY → NCT → LDS → PSP → PIN → WVL</span>
+            <span>DBN → PMB → HWK → BAL → RBY → NCT → LDS → PSP → PIN → WVL</span>
+        </div>
+    </div>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="logo-block">
+                <a class="logo" href="index.html">Eko<span>quick</span></a>
+                <span class="logo-meta">WAYBILL NO. EQ-2026-00417 · KZN</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="how-it-works.html">Manifest</a></li>
+                <li><a href="services.html">Services</a></li>
+                <li><a href="pricing.html">Tariff</a></li>
+                <li><a href="track-parcel.html">Track</a></li>
+                <li><a href="coverage.html">Coverage</a></li>
+                <li><a href="for-business.html">Business</a></li>
+                <li><a href="become-a-driver.html">Drive</a></li>
+            </ul>
+            <div class="nav-cta-group">
+                <a class="btn btn-ghost btn-sm" href="login.html">Login</a>
+                <a class="btn btn-primary btn-sm" href="signup.html">Book now</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="page-hero">
+        <div class="wrap">
+            <p class="breadcrumb"><a href="index.html">Home</a> / Track Parcel</p>
+            <p class="sec-tag">Track parcel</p>
+            <h1>Where's my delivery?</h1>
+            <p class="page-lede">Enter your tracking number (given to you after booking) and the phone number on the job to see live status — no login needed.</p>
+        </div>
+    </header>
+
+    <section class="content-block" style="max-width:none;">
+        <div class="wrap" style="max-width: 900px;">
+            <div class="track-form">
+                <div class="track-form-grid">
+                    <div>
+                        <label>Tracking Number</label>
+                        <input id="trackNumber" placeholder="e.g. EQ4F2A9C">
+                    </div>
+                    <div>
+                        <label>Phone Number On The Job</label>
+                        <input id="trackPhone" placeholder="0676659966">
+                    </div>
+                    <button class="track-btn" id="trackBtn">Track</button>
+                </div>
+                <div class="track-msg" id="trackMsg"></div>
+            </div>
+
+            <div class="track-result" id="trackResult">
+                <div class="track-summary">
+                    <div><div class="t-label">Order Status</div><div class="t-value" id="rStatus">—</div></div>
+                    <div><div class="t-label">Driver</div><div class="t-value" id="rDriver">—</div></div>
+                    <div><div class="t-label">Vehicle</div><div class="t-value" id="rVehicle">—</div></div>
+                    <div><div class="t-label">ETA</div><div class="t-value" id="rEta">—</div></div>
+                    <div><div class="t-label">Pickup</div><div class="t-value" id="rPickup">—</div></div>
+                    <div><div class="t-label">Destination</div><div class="t-value" id="rDropoff">—</div></div>
+                </div>
+
+                <div class="track-map" id="trackMap"></div>
+
+                <h3 style="margin-top:0;">Delivery Timeline</h3>
+                <ul class="timeline" id="rTimeline"></ul>
+
+                <div id="otpSection">
+                    <h3>Proof of Delivery — OTP Verification</h3>
+                    <div class="otp-box">
+                        <div class="otp-chip">
+                            <div class="oc-label">Pickup Code</div>
+                            <div class="oc-code" id="rCollectionCode">—</div>
+                        </div>
+                        <div class="otp-chip">
+                            <div class="oc-label">Delivery Code</div>
+                            <div class="oc-code" id="rDeliveryCode">—</div>
+                        </div>
+                    </div>
+                    <p class="otp-note">Your driver must be given the pickup code before collecting, and the delivery code before the job is marked complete — this confirms the right parcel changed hands at each end.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-block">
+        <div class="wrap" style="text-align:center;">
+            <h2>Need Help?</h2>
+            <p>Can't find your tracking number, or something looks wrong?</p>
+            <a class="btn btn-primary" href="https://wa.me/27676659966" target="_blank" rel="noopener">Contact Support →</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a class="logo" href="index.html">Eko<span>quick</span></a>
+                    <p>Fast, reliable delivery across KwaZulu-Natal — for customers, drivers and businesses alike.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Account</h4>
+                    <a href="login.html">Login</a>
+                    <a href="signup.html">Sign up</a>
+                    <a href="become-a-driver.html">Become a driver</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <a href="https://wa.me/27676659966" target="_blank" rel="noopener">WhatsApp us</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Made by</h4>
+                    <span style="display:block; color: var(--muted); font-size: 13px;">Techmanic Software and Digital Solutions</span>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 EKOQUICK — WAYBILL EQ-2026-00417</span>
+                <span>BUILT FOR THE ROAD</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="vendor/leaflet.js"></script>
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="track-parcel.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>
