@@ -157,6 +157,29 @@ function renderSummaryCards() {
         '<div class="summary-card"><div class="num">R' + lifetimeSpend.toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</div><div class="lbl">Lifetime Spend</div><div class="meta" style="margin-top:2px;">R' + monthSpend.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' this month</div></div>';
 }
 
+function renderCodesBox(job) {
+    const activeIsPickup = job.status === 'to_pickup';
+    return '<div style="display:flex; gap:8px; margin-top:8px;">' +
+        (job.collection_code ? '<div data-copy="' + escapeHtml(job.collection_code) + '" style="cursor:pointer; flex:1; border:1px solid var(--line); border-radius:8px; padding:6px 10px; text-align:center; ' + (activeIsPickup ? 'border-color:var(--orange);' : 'opacity:0.5; text-decoration:line-through;') + '">' +
+            '<div class="meta">Pickup Code</div><div style="font-family:var(--font-mono); font-size:16px; font-weight:700;">' + escapeHtml(job.collection_code) + '</div></div>' : '') +
+        (job.delivery_code ? '<div data-copy="' + escapeHtml(job.delivery_code) + '" style="cursor:pointer; flex:1; border:1px solid var(--line); border-radius:8px; padding:6px 10px; text-align:center; ' + (!activeIsPickup ? 'border-color:var(--orange);' : 'opacity:0.5;') + '">' +
+            '<div class="meta">Delivery Code</div><div style="font-family:var(--font-mono); font-size:16px; font-weight:700;">' + escapeHtml(job.delivery_code) + '</div></div>' : '') +
+    '</div>';
+}
+
+function wireCodeCopy(wrap) {
+    wrap.querySelectorAll('[data-copy]').forEach(function (el) {
+        el.addEventListener('click', function () {
+            if (navigator.clipboard) navigator.clipboard.writeText(el.dataset.copy);
+            const label = el.querySelector('.meta');
+            if (!label) return;
+            const original = label.textContent;
+            label.textContent = 'Copied!';
+            setTimeout(function () { label.textContent = original; }, 900);
+        });
+    });
+}
+
 function renderActiveDeliveries() {
     const wrap = document.getElementById('activeDeliveriesWrap');
     const active = activeJobs();
@@ -175,6 +198,7 @@ function renderActiveDeliveries() {
                 '<div class="meta">Order ' + job.id.slice(0, 8) + ' · ' + escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff) + '</div>' +
                 '<span class="badge ' + BADGE_CLASS[job.status] + '">' + (STATUS_LABELS[job.status] || job.status) + '</span>' +
                 (job.status === 'to_pickup' || job.status === 'to_dropoff' ? ' <span class="meta">ETA ' + computeEta(job) + '</span>' : '') +
+                (job.collection_code || job.delivery_code ? renderCodesBox(job) : '') +
                 '<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">' +
                     (job.status === 'to_pickup' || job.status === 'to_dropoff' ? '<a class="btn btn-outline-blue" style="width:auto;" href="live-tracking.html?job=' + job.id + '">Live Track</a>' : '') +
                     (driver ? '<a class="btn btn-blue" style="width:auto;" href="chat.html?job=' + job.id + '">💬 Chat</a>' : '') +
@@ -184,6 +208,7 @@ function renderActiveDeliveries() {
             '</div>';
         }).join('') +
     '</div>';
+    wireCodeCopy(wrap);
 }
 
 function updateQuickActions() {

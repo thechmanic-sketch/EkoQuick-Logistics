@@ -202,6 +202,29 @@ function computeEta(job) {
     return Math.round((km / 30) * 60) + ' min';
 }
 
+function codesCell(job) {
+    if (job.status === 'cancelled' || (!job.collection_code && !job.delivery_code)) return '—';
+    const pickupDone = job.status === 'to_dropoff' || job.status === 'delivered';
+    const deliveryDone = job.status === 'delivered';
+    return '<div style="font-family:var(--font-mono); font-size:11px; line-height:1.5; white-space:nowrap;">' +
+        '<span data-copy="' + escapeHtml(job.collection_code || '') + '" title="Click to copy pickup code" style="cursor:pointer; ' + (pickupDone ? 'text-decoration:line-through; opacity:0.5;' : '') + '">P: ' + escapeHtml(job.collection_code || '—') + '</span><br>' +
+        '<span data-copy="' + escapeHtml(job.delivery_code || '') + '" title="Click to copy delivery code" style="cursor:pointer; ' + (deliveryDone ? 'text-decoration:line-through; opacity:0.5;' : '') + '">D: ' + escapeHtml(job.delivery_code || '—') + '</span>' +
+    '</div>';
+}
+
+function wireCodeCopy(wrap) {
+    wrap.querySelectorAll('[data-copy]').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (!el.dataset.copy) return;
+            if (navigator.clipboard) navigator.clipboard.writeText(el.dataset.copy);
+            const original = el.textContent;
+            el.textContent = 'Copied!';
+            setTimeout(function () { el.textContent = original; }, 900);
+        });
+    });
+}
+
 function renderTable() {
     const wrap = document.getElementById('jobsTableWrap');
     if (!allJobs.length) { wrap.innerHTML = '<div class="empty">No jobs found.</div>'; document.getElementById('pagination').innerHTML = ''; return; }
@@ -216,7 +239,7 @@ function renderTable() {
         '<table class="simple-table"><thead><tr>' +
         '<th><input type="checkbox" id="selectAllBox"></th>' +
         '<th>Job ID</th><th>Customer</th><th>Phone</th><th>Pickup</th><th>Drop-off</th><th>Driver</th><th>Vehicle</th>' +
-        '<th>Status</th><th>Progress</th><th>Distance</th><th>Fee</th><th>Created</th><th>ETA</th><th>Rating</th><th>Actions</th>' +
+        '<th>Status</th><th>Codes</th><th>Progress</th><th>Distance</th><th>Fee</th><th>Created</th><th>ETA</th><th>Rating</th><th>Actions</th>' +
         '</tr></thead><tbody>' +
         pageItems.map(function (job) {
             const customer = profilesById[job.customer_id];
@@ -232,6 +255,7 @@ function renderTable() {
                 '<td>' + escapeHtml(driver ? driver.full_name : '—') + '</td>' +
                 '<td>' + vehicleLabel(job.vehicle) + '</td>' +
                 '<td><span class="badge ' + statusBadge + '">' + STATUS_LABELS[job.status] + '</span></td>' +
+                '<td>' + codesCell(job) + '</td>' +
                 '<td>' + progressDots(job.status) + '</td>' +
                 '<td>' + (job.distance || '—') + (job.distance ? ' km' : '') + '</td>' +
                 '<td>R' + (Number(job.quote) || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }) + '</td>' +
@@ -243,6 +267,7 @@ function renderTable() {
         }).join('') +
         '</tbody></table>';
 
+    wireCodeCopy(wrap);
     wrap.querySelectorAll('tr[data-job]').forEach(function (row) {
         row.addEventListener('click', function (e) {
             if (e.target.closest('.actions-menu') || e.target.type === 'checkbox') return;
