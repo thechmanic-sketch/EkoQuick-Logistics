@@ -185,34 +185,34 @@ function wireNav() {
     document.getElementById('back5').addEventListener('click', function () { goToStep(4); });
 }
 
-// ---- Map pickers (Leaflet + Nominatim, no Google Maps key connected) ----
+// ---- Map pickers (Google Maps) ----
 
 function wireMapPickers() {
-    document.getElementById('pickMapBtn1').addEventListener('click', function () {
+    document.getElementById('pickMapBtn1').addEventListener('click', async function () {
         const mapEl = document.getElementById('pickupMap');
         mapEl.classList.toggle('hidden');
         if (!mapEl.classList.contains('hidden') && !pickupMap) {
-            pickupMap = L.map('pickupMap').setView([-29.6, 30.9], 8);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(pickupMap);
-            pickupMap.on('click', async function (e) {
-                pickupCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
-                if (pickupMarker) pickupMarker.setLatLng(e.latlng); else pickupMarker = L.marker(e.latlng).addTo(pickupMap);
-                const addr = await reverseGeocode(e.latlng.lat, e.latlng.lng);
+            pickupMap = await GoogleMaps.createMap('pickupMap', [-29.6, 30.9], 8);
+            pickupMap.addListener('click', async function (e) {
+                const lat = e.latLng.lat(), lng = e.latLng.lng();
+                pickupCoords = { lat: lat, lng: lng };
+                if (pickupMarker) pickupMarker.setLatLng([lat, lng]); else pickupMarker = GoogleMaps.createMarker(pickupMap, [lat, lng], '📍');
+                const addr = await reverseGeocode(lat, lng);
                 if (addr) document.getElementById('pickup').value = addr;
             });
         }
     });
 
-    document.getElementById('pickMapBtn2').addEventListener('click', function () {
+    document.getElementById('pickMapBtn2').addEventListener('click', async function () {
         const mapEl = document.getElementById('dropoffMap');
         mapEl.classList.toggle('hidden');
         if (!mapEl.classList.contains('hidden') && !dropoffMap) {
-            dropoffMap = L.map('dropoffMap').setView([-29.6, 30.9], 8);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(dropoffMap);
-            dropoffMap.on('click', async function (e) {
-                dropoffCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
-                if (dropoffMarker) dropoffMarker.setLatLng(e.latlng); else dropoffMarker = L.marker(e.latlng).addTo(dropoffMap);
-                const addr = await reverseGeocode(e.latlng.lat, e.latlng.lng);
+            dropoffMap = await GoogleMaps.createMap('dropoffMap', [-29.6, 30.9], 8);
+            dropoffMap.addListener('click', async function (e) {
+                const lat = e.latLng.lat(), lng = e.latLng.lng();
+                dropoffCoords = { lat: lat, lng: lng };
+                if (dropoffMarker) dropoffMarker.setLatLng([lat, lng]); else dropoffMarker = GoogleMaps.createMarker(dropoffMap, [lat, lng], '📍');
+                const addr = await reverseGeocode(lat, lng);
                 if (addr) document.getElementById('dropoff').value = addr;
             });
         }
