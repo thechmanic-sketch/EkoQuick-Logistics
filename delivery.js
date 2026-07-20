@@ -11,6 +11,7 @@ let selectedSchedule = 'now';
 let currentStep = 1;
 let pickupCoords = null;
 let dropoffCoords = null;
+let pickupMode = new URLSearchParams(window.location.search).get('mode') === 'pickup';
 let pickupMap = null, dropoffMap = null, pickupMarker = null, dropoffMarker = null;
 
 const TOTAL_STEPS = 5;
@@ -34,7 +35,20 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     await loadAppSettings();
 
-    if (currentProfile) {
+    if (pickupMode) {
+        applyPickupModeLabels();
+        if (currentProfile) {
+            document.getElementById('receiverName').value = currentProfile.full_name || '';
+            document.getElementById('receiverPhone').value = currentProfile.phone || '';
+            document.getElementById('receiverEmail').value = currentProfile.email || '';
+        }
+        const { data: defaultAddr } = await supabase.from('saved_addresses').select('*').eq('customer_id', currentUser.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
+        if (defaultAddr) {
+            document.getElementById('dropoff').value = defaultAddr.street || '';
+            if (defaultAddr.lat && defaultAddr.lng) dropoffCoords = { lat: defaultAddr.lat, lng: defaultAddr.lng };
+        }
+        document.getElementById('packageType').value = 'store_pickup';
+    } else if (currentProfile) {
         document.getElementById('senderName').value = currentProfile.full_name || '';
         document.getElementById('senderPhone').value = currentProfile.phone || '';
         document.getElementById('senderEmail').value = currentProfile.email || '';
@@ -51,6 +65,28 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('calcBtn').addEventListener('click', calculateDistance);
     document.getElementById('bookBtn').addEventListener('click', bookNow);
 });
+
+function applyPickupModeLabels() {
+    document.title = 'Ekoquick — Request a Pickup';
+    document.getElementById('wizardTitle').textContent = 'Request a Pickup';
+    document.getElementById('step1Title').textContent = '1. Where do we collect it?';
+    document.getElementById('senderNameLabel').textContent = 'Store / Business Name';
+    document.getElementById('senderPhoneLabel').textContent = 'Store Phone Number (if known)';
+    document.getElementById('pickupLabel').textContent = 'Store / Collection Address';
+    document.getElementById('pickup').placeholder = 'e.g. Game Pavilion, Musgrave Road, Durban';
+
+    document.getElementById('step2Title').textContent = '2. Your Details';
+    document.getElementById('receiverNameLabel').textContent = 'Your Full Name';
+    document.getElementById('receiverPhoneLabel').textContent = 'Your Phone Number';
+    document.getElementById('receiverEmailLabel').textContent = 'Your Email (optional)';
+    document.getElementById('dropoffLabel').textContent = 'Your Address';
+    document.getElementById('dropoff').placeholder = 'e.g. 12 Main Road, Pietermaritzburg';
+    document.getElementById('codeNote').textContent = "We'll generate a collection code so the driver can confirm your order at the store, and a delivery code for you to give the driver when it arrives.";
+
+    document.getElementById('step3Title').textContent = '3. What are we collecting?';
+    document.getElementById('packageDescLabel').textContent = 'Order / item description';
+    document.getElementById('packageDescription').placeholder = 'e.g. Order #4021 at the counter, ready for collection';
+}
 
 function escapeHtml(s) {
     const d = document.createElement('div');
@@ -74,7 +110,7 @@ function phoneLooksValid(p) {
 let maxStepReached = 1;
 
 function renderStepIndicator() {
-    const labels = ['Pickup', 'Recipient', 'Parcel', 'Vehicle', 'Payment'];
+    const labels = pickupMode ? ['Store', 'You', 'Item', 'Vehicle', 'Payment'] : ['Pickup', 'Recipient', 'Parcel', 'Vehicle', 'Payment'];
     const el = document.getElementById('stepIndicator');
     el.innerHTML = labels.map(function (label, i) {
         const n = i + 1;
@@ -106,9 +142,10 @@ function wireNav() {
         const name = document.getElementById('senderName').value.trim();
         const phone = document.getElementById('senderPhone').value.trim();
         const pickup = document.getElementById('pickup').value.trim();
-        if (!name) { showMsg('msgArea1', 'error', 'Your full name is required.'); return; }
-        if (!phone || !phoneLooksValid(phone)) { showMsg('msgArea1', 'error', 'A valid phone number is required.'); return; }
-        if (!pickup) { showMsg('msgArea1', 'error', 'Pickup address missing.'); return; }
+        if (!name) { showMsg('msgArea1', 'error', pickupMode ? 'Store / business name is required.' : 'Your full name is required.'); return; }
+        if (!pickupMode && (!phone || !phoneLooksValid(phone))) { showMsg('msgArea1', 'error', 'A valid phone number is required.'); return; }
+        if (phone && !phoneLooksValid(phone)) { showMsg('msgArea1', 'error', 'Phone number looks invalid.'); return; }
+        if (!pickup) { showMsg('msgArea1', 'error', pickupMode ? 'Store / collection address missing.' : 'Pickup address missing.'); return; }
         advanceToStep(2);
     });
 
@@ -348,8 +385,8 @@ function renderOrderSummary() {
         ? ('Scheduled: ' + (document.getElementById('scheduleDate').value || '—') + ' ' + (document.getElementById('scheduleTime').value || ''))
         : 'Deliver now';
     const lines = [
-        ['Pickup Address', document.getElementById('pickup').value.trim()],
-        ['Delivery Address', document.getElementById('dropoff').value.trim()],
+        [pickupMode ? 'Collecting from' : 'Pickup Address', document.getElementById('pickup').value.trim()],
+        [pickupMode ? 'Delivering to' : 'Delivery Address', document.getElementById('dropoff').value.trim()],
         ['Vehicle Class', selectedVehicle.label],
         ['Distance', currentDistance + ' km'],
         ['Delivery Fee', 'R' + currentQuote],
@@ -374,7 +411,7 @@ async function bookNow() {
     const receiverName = document.getElementById('receiverName').value.trim();
     const receiverPhone = document.getElementById('receiverPhone').value.trim();
 
-    if (!pickup || !dropoff || !senderPhone || !receiverName || !receiverPhone || currentQuote <= 0 || !selectedVehicle) {
+    if (!pickup || !dropoff || (!pickupMode && !senderPhone) || !receiverName || !receiverPhone || currentQuote <= 0 || !selectedVehicle) {
         showMsg('msgArea5', 'error', 'Please complete all required fields and calculate a price first.');
         return;
     }

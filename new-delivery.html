@@ -40,20 +40,20 @@
 
     <div class="page-wrap">
         <div class="card">
-            <h2>Book Delivery</h2>
+            <h2 id="wizardTitle">Book Delivery</h2>
             <div class="step-indicator" id="stepIndicator"></div>
 
             <!-- STEP 1: PICKUP -->
             <div class="step-panel active" data-step="1">
-                <h3 style="margin-top:0;">1. Pickup Information</h3>
-                <label>Your Full Name</label>
+                <h3 style="margin-top:0;" id="step1Title">1. Pickup Information</h3>
+                <label id="senderNameLabel">Your Full Name</label>
                 <input class="field-plain" id="senderName">
-                <label>Your Phone Number</label>
+                <label id="senderPhoneLabel">Your Phone Number</label>
                 <input class="field-plain" id="senderPhone" placeholder="0676659966">
                 <label>Your Email (optional)</label>
                 <input class="field-plain" id="senderEmail" type="email">
 
-                <label style="margin-top:10px;">Pickup Address</label>
+                <label style="margin-top:10px;" id="pickupLabel">Pickup Address</label>
                 <input class="field-plain" id="pickup" placeholder="e.g. 45 West Street, Durban CBD">
                 <div style="display:flex; gap:8px; margin:6px 0;">
                     <button class="btn btn-outline-blue" id="pickMapBtn1" style="width:auto;">📍 Select on Map</button>
@@ -75,15 +75,15 @@
 
             <!-- STEP 2: RECIPIENT -->
             <div class="step-panel" data-step="2">
-                <h3 style="margin-top:0;">2. Recipient Information</h3>
-                <label>Recipient's Full Name</label>
+                <h3 style="margin-top:0;" id="step2Title">2. Recipient Information</h3>
+                <label id="receiverNameLabel">Recipient's Full Name</label>
                 <input class="field-plain" id="receiverName">
-                <label>Recipient's Phone Number</label>
+                <label id="receiverPhoneLabel">Recipient's Phone Number</label>
                 <input class="field-plain" id="receiverPhone" placeholder="0676659966">
-                <label>Recipient's Email (optional)</label>
+                <label id="receiverEmailLabel">Recipient's Email (optional)</label>
                 <input class="field-plain" id="receiverEmail" type="email">
 
-                <label style="margin-top:10px;">Delivery Address</label>
+                <label style="margin-top:10px;" id="dropoffLabel">Delivery Address</label>
                 <input class="field-plain" id="dropoff" placeholder="e.g. 12 Main Road, Pietermaritzburg">
                 <div style="display:flex; gap:8px; margin:6px 0;">
                     <button class="btn btn-outline-blue" id="pickMapBtn2" style="width:auto;">📍 Select on Map</button>
@@ -93,7 +93,7 @@
                 <label>Recipient Notes</label>
                 <input class="field-plain" id="dropoffNotes" placeholder="e.g. Deliver to reception">
 
-                <div style="font-size: 11px; color: var(--muted-dim); font-family: var(--font-mono); margin-top: 8px;">
+                <div style="font-size: 11px; color: var(--muted-dim); font-family: var(--font-mono); margin-top: 8px;" id="codeNote">
                     We'll generate a pickup code (for you) and a delivery code (for the receiver) — the driver must be given both before the job can be started and completed.
                 </div>
 
@@ -106,9 +106,10 @@
 
             <!-- STEP 3: PARCEL -->
             <div class="step-panel" data-step="3">
-                <h3 style="margin-top:0;">3. Parcel Information</h3>
+                <h3 style="margin-top:0;" id="step3Title">3. Parcel Information</h3>
                 <label>Package Type</label>
                 <select class="field-plain" id="packageType">
+                    <option value="store_pickup">Store / Online Order Collection</option>
                     <option value="parcel">Parcel</option>
                     <option value="documents">Documents</option>
                     <option value="electronics">Electronics</option>
@@ -117,7 +118,7 @@
                     <option value="furniture">Furniture</option>
                     <option value="other">Other</option>
                 </select>
-                <label>Description</label>
+                <label id="packageDescLabel">Description</label>
                 <input class="field-plain" id="packageDescription" placeholder="What are you sending?">
                 <label>Quantity</label>
                 <input class="field-plain" type="number" id="packageQuantity" min="1" value="1">
