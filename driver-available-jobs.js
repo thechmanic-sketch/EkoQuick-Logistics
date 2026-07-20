@@ -196,7 +196,7 @@ async function acceptOffered(jobId) {
     if (hasActiveDelivery) { alert('You already have an active delivery. Complete it before accepting another job.'); return; }
     const { error } = await supabase.from('jobs').update({ status: 'to_pickup', to_pickup_at: new Date().toISOString() }).eq('id', jobId);
     if (error) { alert('Failed to accept job: ' + error.message); return; }
-    window.location.href = 'driver-dashboard.html';
+    window.location.href = 'driver-navigation.html?job=' + jobId;
 }
 
 async function declineOffered(jobId) {
@@ -218,5 +218,5 @@ async function claimJob(jobId) {
     if (error) { alert('Failed to accept job: ' + error.message); return; }
     if (!data || !data.length) { alert('This job was just claimed by another driver.'); loadAll(); return; }
 
-    window.location.href = 'driver-dashboard.html';
+    window.location.href = 'driver-navigation.html?job=' + jobId;
 }

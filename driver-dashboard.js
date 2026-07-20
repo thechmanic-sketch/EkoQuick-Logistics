@@ -251,6 +251,7 @@ function renderActiveDelivery() {
             (navUrl ? '<a class="btn btn-outline-blue" style="width:auto;" href="' + navUrl + '" target="_blank" rel="noopener">Open Navigation</a>' : '') +
             (custDigits ? '<a class="btn btn-outline-blue" style="width:auto;" href="tel:' + escapeHtml(active.customer_phone) + '">Call Customer</a>' : '') +
             '<a class="btn btn-blue" style="width:auto;" href="chat.html?job=' + active.id + '">💬 Chat</a>' +
+            '<a class="btn btn-outline-blue" style="width:auto;" href="driver-admin-chat.html?delivery=' + active.id + '">Need Help</a>' +
             (custDigits ? '<a class="btn btn-outline-blue" style="width:auto;" target="_blank" rel="noopener" href="https://wa.me/' + custDigits + '?text=' + encodeURIComponent('Hi, this is your Ekoquick driver regarding order ' + active.id.slice(0, 8) + '.') + '">WhatsApp Customer</a>' : '') +
         '</div>' +
         '<div style="margin-top:10px;">' + actionArea + '</div>';
@@ -401,8 +402,7 @@ async function acceptJob(jobId) {
     }
     const { error } = await supabase.from('jobs').update({ status: 'to_pickup', to_pickup_at: new Date().toISOString() }).eq('id', jobId);
     if (error) { alert('Failed to accept job: ' + error.message); return; }
-    beginTracking(jobId);
-    loadJobs();
+    window.location.href = 'driver-navigation.html?job=' + jobId;
 }
 
 async function claimJob(jobId) {
@@ -420,8 +420,7 @@ async function claimJob(jobId) {
     if (error) { alert('Failed to accept job: ' + error.message); return; }
     if (!data || !data.length) { alert('This job was just claimed by another driver.'); loadJobs(); return; }
 
-    beginTracking(jobId);
-    loadJobs();
+    window.location.href = 'driver-navigation.html?job=' + jobId;
 }
 
 async function declineJob(jobId) {

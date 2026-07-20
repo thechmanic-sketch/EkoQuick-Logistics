@@ -87,15 +87,31 @@ async function loadAll() {
         (profiles || []).forEach(function (p) { profilesById[p.id] = p; });
     }
 
-    for (const room of allRooms) {
-        const { data: last } = await supabase.from('chat_messages').select('*').eq('room_id', room.id).order('created_at', { ascending: false }).limit(1);
-        room._last = last && last[0];
-        const { count } = await supabase.from('chat_messages').select('id', { count: 'exact', head: true }).eq('room_id', room.id).is('read_at', null).neq('sender_type', 'admin');
-        unreadByRoom[room.id] = count || 0;
+    const roomIds = allRooms.map(function (r) { return r.id; });
+    const chatIds = allDriverChats.map(function (c) { return c.id; });
+
+    // Batched instead of one query per room/chat (was N+1 — see qa/ops review):
+    // one recent-messages query per table, reduced client-side to "last per room",
+    // plus one lightweight count-only query for unread.
+    unreadByRoom = {};
+    if (roomIds.length) {
+        const { data: recentMsgs } = await supabase.from('chat_messages').select('room_id, message, message_type, created_at')
+            .in('room_id', roomIds).order('created_at', { ascending: false }).limit(1000);
+        const lastByRoom = {};
+        (recentMsgs || []).forEach(function (m) { if (!lastByRoom[m.room_id]) lastByRoom[m.room_id] = m; });
+        allRooms.forEach(function (room) { room._last = lastByRoom[room.id] || null; });
+
+        const { data: unreadMsgs } = await supabase.from('chat_messages').select('room_id')
+            .in('room_id', roomIds).is('read_at', null).neq('sender_type', 'admin');
+        (unreadMsgs || []).forEach(function (m) { unreadByRoom[m.room_id] = (unreadByRoom[m.room_id] || 0) + 1; });
     }
-    for (const chat of allDriverChats) {
-        const { data: last } = await supabase.from('driver_admin_messages').select('*').eq('chat_id', chat.id).order('created_at', { ascending: false }).limit(1);
-        chat._last = last && last[0];
+
+    if (chatIds.length) {
+        const { data: recentDriverMsgs } = await supabase.from('driver_admin_messages').select('chat_id, message, created_at')
+            .in('chat_id', chatIds).order('created_at', { ascending: false }).limit(1000);
+        const lastByChat = {};
+        (recentDriverMsgs || []).forEach(function (m) { if (!lastByChat[m.chat_id]) lastByChat[m.chat_id] = m; });
+        allDriverChats.forEach(function (chat) { chat._last = lastByChat[chat.id] || null; });
     }
 
     renderSummary();
