@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ — Ekoquick</title>
+    <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        .faq-search {
+            width: 100%; background: var(--ink-2); border: 1px solid var(--line); color: var(--paper);
+            padding: 12px 14px; font-family: var(--font-mono); font-size: 14px; margin-bottom: var(--sp-3);
+        }
+        .faq-search:focus { outline: none; border-color: var(--orange); }
+        .faq-cats { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--sp-4); }
+        .faq-cat-btn {
+            font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+            color: var(--muted); border: 1px solid var(--line); background: transparent; padding: 7px 12px; cursor: pointer;
+        }
+        .faq-cat-btn.active { color: var(--orange); border-color: var(--orange); }
+        .faq-category { margin-bottom: var(--sp-5); }
+        .faq-category h2 { font-size: 20px; }
+        .faq-item { border-top: 1px solid var(--line); padding: var(--sp-3) 0; }
+        .faq-item:last-child { border-bottom: 1px solid var(--line); }
+        .faq-item summary { cursor: pointer; font-weight: 600; font-size: 14px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+        .faq-item summary::-webkit-details-marker { display: none; }
+        .faq-item summary::after { content: '+'; font-family: var(--font-mono); color: var(--orange); font-size: 18px; }
+        .faq-item[open] summary::after { content: '–'; }
+        .faq-item p { color: var(--muted); font-size: 13px; margin: 8px 0 0 0; }
+        .faq-item.hide { display: none; }
+        .faq-category.hide { display: none; }
+        .faq-empty { display: none; color: var(--muted-dim); font-family: var(--font-mono); font-size: 13px; text-align: center; padding: var(--sp-5) 0; }
+        .faq-empty.show { display: block; }
+    </style>
+</head>
+<body>
+    <div class="ticker-bar">
+        <div class="ticker-track">
+            <span>DBN → PMB → HWK → BAL → RBY → NCT → LDS → PSP → PIN → WVL</span>
+            <span>DBN → PMB → HWK → BAL → RBY → NCT → LDS → PSP → PIN → WVL</span>
+        </div>
+    </div>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="logo-block">
+                <a class="logo" href="index.html">Eko<span>quick</span></a>
+                <span class="logo-meta">WAYBILL NO. EQ-2026-00417 · KZN</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="how-it-works.html">Manifest</a></li>
+                <li><a href="services.html">Services</a></li>
+                <li><a href="pricing.html">Tariff</a></li>
+                <li><a href="track-parcel.html">Track</a></li>
+                <li><a href="coverage.html">Coverage</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="for-business.html">Business</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="become-a-driver.html">Drive</a></li>
+            </ul>
+            <div class="nav-cta-group">
+                <a class="btn btn-ghost btn-sm" href="login.html">Login</a>
+                <a class="btn btn-primary btn-sm" href="signup.html">Book now</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="page-hero">
+        <div class="wrap">
+            <p class="breadcrumb"><a href="index.html">Home</a> / FAQ</p>
+            <p class="sec-tag">FAQ</p>
+            <h1>Questions, answered</h1>
+            <p class="page-lede">Search or filter by category below. Can't find what you need? Contact support at the bottom of the page.</p>
+        </div>
+    </header>
+
+    <section class="content-block" style="max-width:none;">
+        <div class="wrap" style="max-width: 800px;">
+            <input class="faq-search" id="faqSearch" placeholder="Search FAQs — e.g. cancel, refund, payment...">
+            <div class="faq-cats" id="faqCats">
+                <button class="faq-cat-btn active" data-cat="all">All</button>
+                <button class="faq-cat-btn" data-cat="booking">Booking</button>
+                <button class="faq-cat-btn" data-cat="pricing">Pricing</button>
+                <button class="faq-cat-btn" data-cat="tracking">Tracking</button>
+                <button class="faq-cat-btn" data-cat="drivers">Drivers</button>
+                <button class="faq-cat-btn" data-cat="payments">Payments</button>
+                <button class="faq-cat-btn" data-cat="cancellations">Cancellations</button>
+                <button class="faq-cat-btn" data-cat="refunds">Refunds</button>
+                <button class="faq-cat-btn" data-cat="support">Support</button>
+                <button class="faq-cat-btn" data-cat="business">Business Deliveries</button>
+            </div>
+
+            <div class="faq-empty" id="faqEmpty">No FAQs match your search.</div>
+
+            <div class="faq-category" data-cat="booking">
+                <h2>Booking</h2>
+                <details class="faq-item"><summary>How do I book a delivery?</summary><p>Sign up, enter your pickup and delivery details, choose a vehicle class, get a quote, and confirm — the whole flow takes under a minute.</p></details>
+                <details class="faq-item"><summary>Can I book for someone else to receive it?</summary><p>Yes — enter the recipient's name, phone, and address in the booking wizard; they don't need an Ekoquick account.</p></details>
+                <details class="faq-item"><summary>Can I schedule a delivery for later?</summary><p>Yes — choose "Schedule for Later" at the vehicle step and pick a date and time.</p></details>
+                <details class="faq-item"><summary>What is "Request a Pickup"?</summary><p>A separate flow for when you've already bought something in-store and just need a driver to collect it and bring it to you — no warehouse in between.</p></details>
+            </div>
+
+            <div class="faq-category" data-cat="pricing">
+                <h2>Pricing</h2>
+                <details class="faq-item"><summary>How is my delivery price calculated?</summary><p>Base fare for your chosen vehicle class, plus a rate per kilometre for the real driving distance. See our <a href="pricing.html" style="color: var(--orange);">pricing page</a> for the full breakdown and a live estimator.</p></details>
+                <details class="faq-item"><summary>Are there hidden fees?</summary><p>No. Express adds a fixed 50%, and waiting time only applies if your driver is kept waiting beyond the free window — both shown before you confirm.</p></details>
+            </div>
+
+            <div class="faq-category" data-cat="tracking">
+                <h2>Tracking</h2>
+                <details class="faq-item"><summary>How do I track my delivery?</summary><p>While logged in, your dashboard shows live status and map tracking. You can also use our public <a href="track-parcel.html" style="color: var(--orange);">Track Parcel</a> page with your tracking number and phone number, no login required.</p></details>
+                <details class="faq-item"><summary>What is the pickup/delivery code?</summary><p>Two short codes generated at booking — your driver must be given the pickup code before collecting, and the delivery code before the job is marked complete, confirming the right parcel changed hands.</p></details>
+            </div>
+
+            <div class="faq-category" data-cat="drivers">
+                <h2>Drivers</h2>
+                <details class="faq-item"><summary>Are Ekoquick drivers vetted?</summary><p>Yes — every driver's ID, licence, and vehicle documents are reviewed and approved by our team before they can take a job.</p></details>
+                <details class="faq-item"><summary>How do I become a driver?</summary><p>See our <a href="become-a-driver.html" style="color: var(--orange);">driver requirements page</a> and sign up — set your own hours and get paid per job.</p></details>
+            </div>
+
+            <div class="faq-category" data-cat="payments">
+                <h2>Payments</h2>
+                <details class="faq-item"><summary>How do I pay for a delivery?</summary><p>Cash on delivery is available now. Card payments are coming soon; EFT is available for approved business accounts with manual proof-of-payment verification.</p></details>
+                <details class="faq-item"><summary>Who do I pay — Ekoquick or the driver directly?</summary><p>Cash payments go directly to your driver at collection or delivery, as agreed at booking.</p></details>
+            </div>
+
+            <div class="faq-category" data-cat="cancellations">
+                <h2>Cancellations</h2>
+                <details class="faq-item"><summary>Can I cancel a booking?</summary><p>Yes, from your dashboard while the job hasn't yet been picked up. Once a driver has collected your parcel, contact support instead.</p></details>
+                <details class="faq-item"><summary>Does cancelling cost anything?</summary><p>Cancelling before a driver is dispatched is free. If a driver has already been assigned and is en route, a partial fee may apply — shown before you confirm the cancellation.</p></details>
+            </div>
+
+            <div class="faq-category" data-cat="refunds">
+                <h2>Refunds</h2>
+                <details class="faq-item"><summary>How do refunds work?</summary><p>If a job is cancelled or something goes wrong on our end, refunds are reviewed and processed by our admin team — contact support with your job details to start one.</p></details>
+                <details class="faq-item"><summary>How long do refunds take?</summary><p>Once approved, refunds are processed as quickly as your original payment method allows — cash refunds are typically resolved directly with support.</p></details>
+            </div>
+
+            <div class="faq-category" data-cat="support">
+                <h2>Support</h2>
+                <details class="faq-item"><summary>How do I contact support?</summary><p>WhatsApp us directly, or use the in-app support ticket system from your dashboard once logged in. See our <a href="contact.html" style="color: var(--orange);">contact page</a> for all options.</p></details>
+                <details class="faq-item"><summary>What if my driver isn't responding?</summary><p>Use the in-app chat to reach your driver first; if there's no response, contact support and we'll step in directly.</p></details>
+            </div>
+
+            <div class="faq-category" data-cat="business">
+                <h2>Business Deliveries</h2>
+                <details class="faq-item"><summary>Do you offer business accounts?</summary><p>Yes — volume-based rates, priority dispatch, and EFT payment options. See our <a href="for-business.html" style="color: var(--orange);">business page</a> to get started.</p></details>
+                <details class="faq-item"><summary>Can I set up recurring deliveries?</summary><p>Yes — tell us your regular routes and schedule and we'll quote a business rate based on volume and frequency.</p></details>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-block">
+        <div class="wrap" style="text-align:center;">
+            <h2>Still Need Help?</h2>
+            <p>Can't find the answer you're looking for?</p>
+            <a class="btn btn-primary" href="contact.html">Contact Support →</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a class="logo" href="index.html">Eko<span>quick</span></a>
+                    <p>Fast, reliable delivery across KwaZulu-Natal — for customers, drivers and businesses alike.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Account</h4>
+                    <a href="login.html">Login</a>
+                    <a href="signup.html">Sign up</a>
+                    <a href="become-a-driver.html">Become a driver</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <a href="https://wa.me/27676659966" target="_blank" rel="noopener">WhatsApp us</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Made by</h4>
+                    <span style="display:block; color: var(--muted); font-size: 13px;">Techmanic Software and Digital Solutions</span>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 EKOQUICK — WAYBILL EQ-2026-00417</span>
+                <span>BUILT FOR THE ROAD</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="faq.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>

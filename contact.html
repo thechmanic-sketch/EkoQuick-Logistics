@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact — Ekoquick</title>
+    <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
+        @media (max-width: 780px) { .contact-grid { grid-template-columns: 1fr; } }
+
+        .contact-details-list { list-style: none; margin: 0; padding: 0; }
+        .contact-details-list li { display: flex; gap: 12px; padding: var(--sp-3) 0; border-bottom: 1px solid var(--line-soft); }
+        .contact-details-list .cd-icon { font-size: 20px; flex-shrink: 0; }
+        .contact-details-list .cd-label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-dim); }
+        .contact-details-list .cd-value { font-size: 14px; margin-top: 2px; }
+        .contact-details-list .cd-value.placeholder { color: var(--muted-dim); font-style: italic; }
+
+        .contact-form label { display: block; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-dim); margin-bottom: 4px; margin-top: var(--sp-3); }
+        .contact-form label:first-child { margin-top: 0; }
+        .contact-form input, .contact-form select, .contact-form textarea {
+            width: 100%; background: var(--ink); border: 1px solid var(--line); color: var(--paper);
+            padding: 10px; font-family: var(--font-mono); font-size: 13px;
+        }
+        .contact-form textarea { resize: vertical; min-height: 100px; }
+        .contact-form input:focus, .contact-form select:focus, .contact-form textarea:focus { outline: none; border-color: var(--orange); }
+        .contact-submit {
+            width: 100%; background: var(--orange); color: var(--ink); border: none; padding: 12px; margin-top: var(--sp-3);
+            font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; font-size: 13px;
+        }
+        .contact-msg { font-family: var(--font-mono); font-size: 12px; margin-top: 8px; }
+        .contact-msg.error { color: var(--red); }
+        .contact-msg.success { color: var(--green); }
+
+        .map-placeholder {
+            height: 260px; border: 1px solid var(--line); background: var(--ink-2);
+            display: flex; align-items: center; justify-content: center; color: var(--muted-dim);
+            font-family: var(--font-mono); font-size: 12px; text-align: center; padding: var(--sp-3);
+        }
+
+        .social-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: var(--sp-3); }
+        .social-row a {
+            border: 1px solid var(--line); padding: 8px 14px; font-family: var(--font-mono); font-size: 12px;
+            color: var(--muted); text-decoration: none;
+        }
+        .social-row a:hover { color: var(--orange); border-color: var(--orange); }
+
+        .support-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-3); margin-top: var(--sp-3); }
+        @media (max-width: 780px) { .support-options { grid-template-columns: 1fr; } }
+        .support-opt { border: 1px solid var(--line); padding: var(--sp-3); text-align: center; }
+        .support-opt .so-icon { font-size: 26px; margin-bottom: 6px; }
+        .support-opt h4 { margin: 0 0 4px 0; font-size: 13px; }
+        .support-opt p { margin: 0 0 10px 0; font-size: 12px; color: var(--muted-dim); }
+    </style>
+</head>
+<body>
+    <div class="ticker-bar">
+        <div class="ticker-track">
+            <span>DBN → PMB → HWK → BAL → RBY → NCT → LDS → PSP → PIN → WVL</span>
+            <span>DBN → PMB → HWK → BAL → RBY → NCT → LDS → PSP → PIN → WVL</span>
+        </div>
+    </div>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="logo-block">
+                <a class="logo" href="index.html">Eko<span>quick</span></a>
+                <span class="logo-meta">WAYBILL NO. EQ-2026-00417 · KZN</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="how-it-works.html">Manifest</a></li>
+                <li><a href="services.html">Services</a></li>
+                <li><a href="pricing.html">Tariff</a></li>
+                <li><a href="track-parcel.html">Track</a></li>
+                <li><a href="coverage.html">Coverage</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="for-business.html">Business</a></li>
+                <li><a href="faq.html">FAQ</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="become-a-driver.html">Drive</a></li>
+            </ul>
+            <div class="nav-cta-group">
+                <a class="btn btn-ghost btn-sm" href="login.html">Login</a>
+                <a class="btn btn-primary btn-sm" href="signup.html">Book now</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="page-hero">
+        <div class="wrap">
+            <p class="breadcrumb"><a href="index.html">Home</a> / Contact</p>
+            <p class="sec-tag">Contact</p>
+            <h1>Get in touch</h1>
+            <p class="page-lede">Questions, feedback, or a business enquiry — reach us however's easiest.</p>
+        </div>
+    </header>
+
+    <section class="content-block" style="max-width:none;">
+        <div class="wrap" style="max-width: 1100px;">
+            <div class="contact-grid">
+                <div>
+                    <h2>Contact Details</h2>
+                    <ul class="contact-details-list">
+                        <li>
+                            <span class="cd-icon">📞</span>
+                            <div><div class="cd-label">Phone</div><div class="cd-value placeholder">[Your phone number]</div></div>
+                        </li>
+                        <li>
+                            <span class="cd-icon">✉️</span>
+                            <div><div class="cd-label">Email</div><div class="cd-value placeholder">[Your email address]</div></div>
+                        </li>
+                        <li>
+                            <span class="cd-icon">📍</span>
+                            <div><div class="cd-label">Office Address</div><div class="cd-value placeholder">[Your office address]</div></div>
+                        </li>
+                        <li>
+                            <span class="cd-icon">🕐</span>
+                            <div><div class="cd-label">Business Hours</div><div class="cd-value placeholder">[e.g. Mon–Fri 08:00–17:00, Sat 08:00–13:00]</div></div>
+                        </li>
+                        <li>
+                            <span class="cd-icon">🚨</span>
+                            <div><div class="cd-label">Emergency Contact</div><div class="cd-value placeholder">[Emergency contact number]</div></div>
+                        </li>
+                        <li>
+                            <span class="cd-icon">💬</span>
+                            <div><div class="cd-label">WhatsApp</div><div class="cd-value"><a href="https://wa.me/27676659966" target="_blank" rel="noopener" style="color: var(--orange);">+27 67 665 9966</a></div></div>
+                        </li>
+                    </ul>
+
+                    <h2 style="margin-top: var(--sp-4);">Social Media</h2>
+                    <div class="social-row">
+                        <a href="#" title="Add your Facebook page URL">Facebook</a>
+                        <a href="#" title="Add your Instagram URL">Instagram</a>
+                        <a href="#" title="Add your LinkedIn URL">LinkedIn</a>
+                        <a href="#" title="Add your TikTok URL">TikTok</a>
+                        <a href="https://wa.me/27676659966" target="_blank" rel="noopener">WhatsApp</a>
+                    </div>
+
+                    <h2 style="margin-top: var(--sp-4);">Office Location</h2>
+                    <div class="map-placeholder">Map placeholder — add your office's Google Maps embed or coordinates here once you have a physical address to display.</div>
+                </div>
+
+                <div>
+                    <h2>Send a Message</h2>
+                    <form class="contact-form" id="contactForm">
+                        <label>Name</label>
+                        <input id="cName" required>
+                        <label>Email</label>
+                        <input id="cEmail" type="email" required>
+                        <label>Phone</label>
+                        <input id="cPhone">
+                        <label>Subject</label>
+                        <input id="cSubject" required>
+                        <label>Message</label>
+                        <textarea id="cMessage" required></textarea>
+                        <button class="contact-submit" type="submit">Send</button>
+                        <div class="contact-msg" id="contactMsg"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-block">
+        <div class="wrap">
+            <h2>Support Options</h2>
+            <div class="support-options">
+                <div class="support-opt">
+                    <div class="so-icon">🧑‍💼</div>
+                    <h4>Customer Support</h4>
+                    <p>Booking issues, tracking, and general questions.</p>
+                    <a class="btn btn-primary btn-sm" href="https://wa.me/27676659966" target="_blank" rel="noopener">WhatsApp us</a>
+                </div>
+                <div class="support-opt">
+                    <div class="so-icon">🚚</div>
+                    <h4>Driver Support</h4>
+                    <p>Approvals, payouts, and in-app driver issues.</p>
+                    <a class="btn btn-primary btn-sm" href="https://wa.me/27676659966" target="_blank" rel="noopener">WhatsApp us</a>
+                </div>
+                <div class="support-opt">
+                    <div class="so-icon">🏢</div>
+                    <h4>Business Sales</h4>
+                    <p>Business accounts, volume rates, and partnerships.</p>
+                    <a class="btn btn-primary btn-sm" href="for-business.html">Learn more</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a class="logo" href="index.html">Eko<span>quick</span></a>
+                    <p>Fast, reliable delivery across KwaZulu-Natal — for customers, drivers and businesses alike.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Account</h4>
+                    <a href="login.html">Login</a>
+                    <a href="signup.html">Sign up</a>
+                    <a href="become-a-driver.html">Become a driver</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <a href="https://wa.me/27676659966" target="_blank" rel="noopener">WhatsApp us</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Made by</h4>
+                    <span style="display:block; color: var(--muted); font-size: 13px;">Techmanic Software and Digital Solutions</span>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 EKOQUICK — WAYBILL EQ-2026-00417</span>
+                <span>BUILT FOR THE ROAD</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="contact.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>
