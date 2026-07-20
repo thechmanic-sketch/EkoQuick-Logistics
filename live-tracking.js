@@ -87,10 +87,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         render(job);
     }
 
+    let mapReadyPromise = null;
     function initMap() {
-        if (map) return;
-        map = L.map('trackMap', { zoomControl: true }).setView([-29.6, 30.9], 8);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+        if (!mapReadyPromise) {
+            mapReadyPromise = GoogleMaps.createMap('trackMap', [-29.6, 30.9], 8).then(function (m) { map = m; return m; });
+        }
+        return mapReadyPromise;
     }
 
     function recenterMap() {
@@ -98,11 +100,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (currentJob.pickup_lat && currentJob.pickup_lng) pts.push([currentJob.pickup_lat, currentJob.pickup_lng]);
         if (currentJob.dropoff_lat && currentJob.dropoff_lng) pts.push([currentJob.dropoff_lat, currentJob.dropoff_lng]);
         if (currentJob.driver_lat && currentJob.driver_lng) pts.push([currentJob.driver_lat, currentJob.driver_lng]);
-        if (pts.length === 1) map.setView(pts[0], 13);
-        else if (pts.length > 1) map.fitBounds(pts, { padding: [30, 30] });
+        GoogleMaps.fitBounds(map, pts);
     }
 
-    function render(job) {
+    async function render(job) {
         document.getElementById('orderIdLine').textContent = 'Order ' + job.id.slice(0, 8) + ' · ' + (STATUS_LABELS[job.status] || job.status);
         document.getElementById('statusTitle').textContent = STATUS_LABELS[job.status] || job.status;
         document.getElementById('progressFill').style.width = (STATUS_PROGRESS[job.status] || 0) + '%';
@@ -114,26 +115,26 @@ document.addEventListener('DOMContentLoaded', async function () {
         document.getElementById('distanceText').textContent = job.distance ? Number(job.distance).toFixed(1) + ' km' : '—';
         document.getElementById('feeText').textContent = job.quote ? 'R' + Number(job.quote).toFixed(2) : '—';
 
-        initMap();
+        await initMap();
         if (job.pickup_lat && job.pickup_lng) {
             const pos = [job.pickup_lat, job.pickup_lng];
-            if (!pickupMarker) pickupMarker = L.marker(pos, { icon: L.divIcon({ html: '📦', className: 'driver-marker', iconSize: [26, 26] }) }).addTo(map).bindPopup('Pickup');
+            if (!pickupMarker) pickupMarker = GoogleMaps.createMarker(map, pos, '📦', { title: 'Pickup' }).bindPopup('Pickup');
             else pickupMarker.setLatLng(pos);
         }
         if (job.dropoff_lat && job.dropoff_lng) {
             const pos = [job.dropoff_lat, job.dropoff_lng];
-            if (!dropoffMarker) dropoffMarker = L.marker(pos, { icon: L.divIcon({ html: '🏁', className: 'driver-marker', iconSize: [26, 26] }) }).addTo(map).bindPopup('Drop-off');
+            if (!dropoffMarker) dropoffMarker = GoogleMaps.createMarker(map, pos, '🏁', { title: 'Drop-off' }).bindPopup('Drop-off');
             else dropoffMarker.setLatLng(pos);
         }
         if (job.pickup_lat && job.dropoff_lat) {
             const line = [[job.pickup_lat, job.pickup_lng], [job.dropoff_lat, job.dropoff_lng]];
-            if (!routeLine) routeLine = L.polyline(line, { color: '#3E8BFF', weight: 3, dashArray: '6 6' }).addTo(map);
+            if (!routeLine) routeLine = GoogleMaps.createPolyline(map, line, '#3E8BFF', 3);
             else routeLine.setLatLngs(line);
         }
         if (job.driver_lat && job.driver_lng) {
             document.getElementById('trackNote').classList.add('hidden');
             const pos = [job.driver_lat, job.driver_lng];
-            if (!driverMarker) driverMarker = L.marker(pos, { icon: L.divIcon({ html: '🚚', className: 'driver-marker', iconSize: [28, 28] }) }).addTo(map);
+            if (!driverMarker) driverMarker = GoogleMaps.createMarker(map, pos, '🚚', { title: 'Driver' });
             else driverMarker.setLatLng(pos);
         } else {
             document.getElementById('trackNote').classList.remove('hidden');
