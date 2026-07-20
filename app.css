@@ -210,8 +210,8 @@ body {
 .badge.pending { background: rgba(255, 106, 43, 0.1); border-color: var(--orange); color: var(--orange); }
 .badge.assigned { background: rgba(232, 163, 61, 0.1); border-color: var(--amber); color: var(--amber); }
 .badge.in_progress { background: rgba(232, 163, 61, 0.15); border-color: var(--amber); color: var(--amber); }
-.badge.delivered { background: rgba(30, 142, 62, 0.12); border-color: #1E8E3E; color: #7FE39B; }
-.badge.cancelled { background: rgba(217, 48, 37, 0.1); border-color: #D93025; color: #FF8A80; }
+.badge.delivered { background: rgba(30, 142, 62, 0.12); border-color: var(--green); color: #7FE39B; }
+.badge.cancelled { background: rgba(217, 48, 37, 0.1); border-color: var(--red); color: #FF8A80; }
 
 .empty {
     text-align: center;
