@@ -494,17 +494,14 @@ async function markDelivered(jobId) {
     loadJobs();
 }
 
-// ---- In-app route map (Leaflet + free OSRM routing, no API key) ----
+// ---- In-app route map (Google Maps + Routes API) ----
 
-function ensureJobMap(jobId, destLat, destLng) {
+async function ensureJobMap(jobId, destLat, destLng) {
     const container = document.getElementById('jobMap-' + jobId);
     if (!container) return;
 
-    const map = L.map(container).setView([destLat, destLng], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-    const destMarker = L.marker([destLat, destLng], {
-        icon: L.divIcon({ html: '📍', className: 'driver-marker', iconSize: [24, 24] }),
-    }).addTo(map);
+    const map = await GoogleMaps.createMap('jobMap-' + jobId, [destLat, destLng], 13);
+    const destMarker = GoogleMaps.createMarker(map, [destLat, destLng], '📍', { title: 'Destination' });
     jobMaps[jobId] = { map: map, destMarker: destMarker, driverMarker: null, routeLine: null, destLat: destLat, destLng: destLng, lastRouteAt: 0 };
 
     if (lastPos) updateJobMapDriverPos(jobId, lastPos.lat, lastPos.lng);
@@ -515,42 +512,26 @@ function updateJobMapDriverPos(jobId, lat, lng) {
     if (!entry) return;
 
     if (!entry.driverMarker) {
-        entry.driverMarker = L.marker([lat, lng], {
-            icon: L.divIcon({ html: '🚚', className: 'driver-marker', iconSize: [28, 28] }),
-        }).addTo(entry.map);
+        entry.driverMarker = GoogleMaps.createMarker(entry.map, [lat, lng], '🚚', { title: 'You' });
     } else {
         entry.driverMarker.setLatLng([lat, lng]);
     }
 
-    entry.map.fitBounds([[lat, lng], [entry.destLat, entry.destLng]], { padding: [24, 24] });
+    GoogleMaps.fitBounds(entry.map, [[lat, lng], [entry.destLat, entry.destLng]]);
 
     const now = Date.now();
     if (now - entry.lastRouteAt > 20000) {
         entry.lastRouteAt = now;
-        fetchRoute(lat, lng, entry.destLat, entry.destLng).then(function (latlngs) {
+        GoogleMaps.computeRoutePolyline(lat, lng, entry.destLat, entry.destLng).then(function (latlngs) {
             if (!latlngs || !jobMaps[jobId]) return;
-            if (entry.routeLine) entry.map.removeLayer(entry.routeLine);
-            entry.routeLine = L.polyline(latlngs, { color: '#FF6A2B', weight: 4 }).addTo(entry.map);
+            if (entry.routeLine) entry.routeLine.remove();
+            entry.routeLine = GoogleMaps.createPolyline(entry.map, latlngs, '#FF6A2B', 4);
         });
-    }
-}
-
-async function fetchRoute(lat1, lng1, lat2, lng2) {
-    try {
-        const url = 'https://router.project-osrm.org/route/v1/driving/' + lng1 + ',' + lat1 + ';' + lng2 + ',' + lat2 + '?overview=full&geometries=geojson';
-        const res = await fetch(url);
-        const data = await res.json();
-        const coords = data && data.routes && data.routes[0] && data.routes[0].geometry && data.routes[0].geometry.coordinates;
-        if (!coords) return null;
-        return coords.map(function (c) { return [c[1], c[0]]; });
-    } catch (err) {
-        return null;
     }
 }
 
 function destroyAllJobMaps() {
     Object.keys(jobMaps).forEach(function (id) {
-        jobMaps[id].map.remove();
         delete jobMaps[id];
     });
 }
