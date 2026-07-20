@@ -91,14 +91,14 @@ function renderTimeline(job) {
     }).join('');
 }
 
-function renderMap(job) {
+async function renderMap(job) {
     const mapEl = document.getElementById('trackMap');
     if (!job.driver_lat && !job.driver_lng) {
+        trackMap = null;
         mapEl.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color: var(--muted-dim); font-family: var(--font-mono); font-size:12px;">Live position not available yet.</div>';
         return;
     }
-    if (trackMap) { trackMap.remove(); trackMap = null; }
-    trackMap = L.map('trackMap').setView([job.driver_lat, job.driver_lng], 11);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(trackMap);
-    L.marker([job.driver_lat, job.driver_lng]).addTo(trackMap).bindPopup('Driver').openPopup();
+    mapEl.innerHTML = '';
+    trackMap = await GoogleMaps.createMap('trackMap', [job.driver_lat, job.driver_lng], 11);
+    GoogleMaps.createMarker(trackMap, [job.driver_lat, job.driver_lng], '🚚', { title: 'Driver' }).bindPopup('Driver').openPopup();
 }
