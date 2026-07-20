@@ -36,7 +36,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('driverSortBy').addEventListener('change', function () { if (selectedJobId) renderNearbyDrivers(selectedJobId); });
 
     const autoToggle = document.getElementById('autoAssignToggle');
-    autoToggle.checked = localStorage.getItem(AUTO_ASSIGN_KEY) === '1';
+    // Defaults ON for any admin/browser that's never touched this toggle
+    // before — only an explicit "off" (stored as '0') keeps it off.
+    autoToggle.checked = localStorage.getItem(AUTO_ASSIGN_KEY) !== '0';
     autoToggle.addEventListener('change', function () {
         localStorage.setItem(AUTO_ASSIGN_KEY, autoToggle.checked ? '1' : '0');
         setupAutoAssignTimer();
