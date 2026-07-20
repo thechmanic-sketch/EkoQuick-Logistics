@@ -39,8 +39,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     populateVehicleFilter();
 
-    fleetMap = L.map('fleetMap').setView([-29.6, 30.9], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(fleetMap);
+    fleetMap = await GoogleMaps.createMap('fleetMap', [-29.6, 30.9], 8);
 
     await loadDriverShare();
     await loadCommissionRules();
@@ -257,18 +256,15 @@ function renderMap() {
         const pos = [d.last_lat, d.last_lng];
         if (driverMarkers[d.id]) {
             driverMarkers[d.id].setLatLng(pos);
-            driverMarkers[d.id].setIcon(L.divIcon({ html: dotEmoji[status], className: 'driver-marker', iconSize: [22, 22] }));
+            driverMarkers[d.id].setIcon(dotEmoji[status]);
         } else {
-            driverMarkers[d.id] = L.marker(pos, {
-                icon: L.divIcon({ html: dotEmoji[status], className: 'driver-marker', iconSize: [22, 22] }),
-            }).addTo(fleetMap);
+            driverMarkers[d.id] = GoogleMaps.createMarker(fleetMap, pos, dotEmoji[status]);
             driverMarkers[d.id].on('click', function () { selectDriver(d.id); });
         }
-        driverMarkers[d.id].setPopupContent(popupForDriver(d, status));
         driverMarkers[d.id].bindPopup(popupForDriver(d, status));
     });
     Object.keys(driverMarkers).forEach(function (id) {
-        if (!seenDrivers[id]) { fleetMap.removeLayer(driverMarkers[id]); delete driverMarkers[id]; }
+        if (!seenDrivers[id]) { driverMarkers[id].remove(); delete driverMarkers[id]; }
     });
 
     const seenJobs = {};
@@ -278,7 +274,7 @@ function renderMap() {
             const key = j.id + '-pickup';
             seenJobs[key] = true;
             if (!jobMarkers[key]) {
-                jobMarkers[key] = L.marker([j.pickup_lat, j.pickup_lng], { icon: L.divIcon({ html: '📦', className: 'driver-marker', iconSize: [20, 20] }) }).addTo(fleetMap);
+                jobMarkers[key] = GoogleMaps.createMarker(fleetMap, [j.pickup_lat, j.pickup_lng], '📦');
                 jobMarkers[key].on('click', function () { selectJob(j.id); });
             }
             jobMarkers[key].bindPopup(popupForJob(j));
@@ -287,7 +283,7 @@ function renderMap() {
             const key = j.id + '-dropoff';
             seenJobs[key] = true;
             if (!jobMarkers[key]) {
-                jobMarkers[key] = L.marker([j.dropoff_lat, j.dropoff_lng], { icon: L.divIcon({ html: '🏁', className: 'driver-marker', iconSize: [20, 20] }) }).addTo(fleetMap);
+                jobMarkers[key] = GoogleMaps.createMarker(fleetMap, [j.dropoff_lat, j.dropoff_lng], '🏁');
                 jobMarkers[key].on('click', function () { selectJob(j.id); });
             }
             jobMarkers[key].bindPopup(popupForJob(j));
@@ -302,15 +298,15 @@ function renderMap() {
                 seenJobs['line-' + lineKey] = true;
                 const points = [[j.driver_lat, j.driver_lng], dest];
                 if (routeLines[lineKey]) { routeLines[lineKey].setLatLngs(points); routeLines[lineKey].setStyle({ color: color }); }
-                else { routeLines[lineKey] = L.polyline(points, { color: color, weight: 3, dashArray: '6,6' }).addTo(fleetMap); }
+                else { routeLines[lineKey] = GoogleMaps.createPolyline(fleetMap, points, color, 3); }
             }
         }
     });
     Object.keys(jobMarkers).forEach(function (key) {
-        if (!seenJobs[key]) { fleetMap.removeLayer(jobMarkers[key]); delete jobMarkers[key]; }
+        if (!seenJobs[key]) { jobMarkers[key].remove(); delete jobMarkers[key]; }
     });
     Object.keys(routeLines).forEach(function (key) {
-        if (!seenJobs['line-' + key]) { fleetMap.removeLayer(routeLines[key]); delete routeLines[key]; }
+        if (!seenJobs['line-' + key]) { routeLines[key].remove(); delete routeLines[key]; }
     });
 }
 
@@ -341,7 +337,7 @@ function selectDriver(driverId) {
     selectedDriverId = driverId;
     selectedJobId = null;
     const d = allDrivers.find(function (x) { return x.id === driverId; });
-    if (d && d.last_lat && d.last_lng) fleetMap.setView([d.last_lat, d.last_lng], 13);
+    if (d && d.last_lat && d.last_lng) GoogleMaps.setView(fleetMap, [d.last_lat, d.last_lng], 13);
     if (driverMarkers[driverId]) driverMarkers[driverId].openPopup();
     renderDriverList();
     renderDriverDetails(driverId);
@@ -351,7 +347,7 @@ function selectJob(jobId) {
     selectedJobId = jobId;
     selectedDriverId = null;
     const j = allJobs.find(function (x) { return x.id === jobId; });
-    if (j && j.pickup_lat && j.pickup_lng) fleetMap.setView([j.pickup_lat, j.pickup_lng], 13);
+    if (j && j.pickup_lat && j.pickup_lng) GoogleMaps.setView(fleetMap, [j.pickup_lat, j.pickup_lng], 13);
     renderJobDetails(jobId);
 }
 

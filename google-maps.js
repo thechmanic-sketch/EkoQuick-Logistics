@@ -207,10 +207,15 @@ const GoogleMaps = (function () {
         const wrapper = {
             raw: marker,
             setLatLng: function (pos) { marker.setPosition({ lat: pos[0], lng: pos[1] }); },
+            setIcon: function (newEmoji) { marker.setLabel({ text: newEmoji, fontSize: '22px' }); },
             remove: function () { marker.setMap(null); },
+            on: function (eventName, handler) { marker.addListener(eventName, handler); return wrapper; },
             bindPopup: function (html) {
-                infoWindow = new google.maps.InfoWindow({ content: html });
-                marker.addListener('click', function () { infoWindow.open(map, marker); });
+                if (infoWindow) infoWindow.setContent(html);
+                else {
+                    infoWindow = new google.maps.InfoWindow({ content: html });
+                    marker.addListener('click', function () { infoWindow.open(map, marker); });
+                }
                 return wrapper;
             },
             openPopup: function () { if (infoWindow) infoWindow.open(map, marker); },
@@ -228,6 +233,7 @@ const GoogleMaps = (function () {
         return {
             raw: line,
             setLatLngs: function (pts) { line.setPath(pts.map(function (p) { return { lat: p[0], lng: p[1] }; })); },
+            setStyle: function (opts) { if (opts && opts.color) line.setOptions({ strokeColor: opts.color }); },
             remove: function () { line.setMap(null); },
         };
     }
