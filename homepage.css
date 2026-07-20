@@ -208,8 +208,55 @@ a { color: inherit; }
 
 .btn-sm { padding: 9px 14px; font-size: 11px; }
 
+.nav-dropdown { position: relative; }
+.nav-dropdown-trigger {
+    background: none; border: none; cursor: pointer; padding: 0; font: inherit;
+    text-decoration: none; font-size: 12px; font-weight: 500; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--muted); display: inline-flex; align-items: center; gap: 4px;
+}
+.nav-dropdown-trigger:hover, .nav-dropdown.open .nav-dropdown-trigger { color: var(--paper); }
+.nav-dropdown-trigger .caret { font-size: 9px; transition: transform 0.15s ease; }
+.nav-dropdown.open .nav-dropdown-trigger .caret { transform: rotate(180deg); }
+.nav-dropdown-panel {
+    display: none; position: absolute; top: calc(100% + 14px); left: 50%; transform: translateX(-50%);
+    background: var(--ink-2); border: 1px solid var(--line); min-width: 170px; padding: 6px; z-index: 20;
+}
+.nav-dropdown.open .nav-dropdown-panel { display: block; }
+.nav-dropdown-panel a {
+    display: block; padding: 9px 12px; font-size: 12px; font-weight: 500; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--muted); text-decoration: none; white-space: nowrap;
+}
+.nav-dropdown-panel a:hover { color: var(--orange); background: var(--ink); }
+
+.nav-hamburger {
+    display: none; width: 36px; height: 36px; flex-shrink: 0; border: 1px solid var(--line);
+    background: transparent; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+}
+.nav-hamburger:hover { border-color: var(--orange); }
+.nav-hamburger-lines { position: relative; width: 16px; height: 12px; }
+.nav-hamburger-lines span, .nav-hamburger-lines span::before, .nav-hamburger-lines span::after {
+    content: ''; position: absolute; left: 0; width: 16px; height: 1.5px; background: var(--paper);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.nav-hamburger-lines span { top: 5px; }
+.nav-hamburger-lines span::before { top: -5px; }
+.nav-hamburger-lines span::after { top: 5px; }
+.nav-hamburger.open .nav-hamburger-lines span { background: transparent; }
+.nav-hamburger.open .nav-hamburger-lines span::before { top: 0; transform: rotate(45deg); background: var(--orange); }
+.nav-hamburger.open .nav-hamburger-lines span::after { top: 0; transform: rotate(-45deg); background: var(--orange); }
+
+.nav-mobile-menu { display: none; flex-direction: column; padding: 0 var(--sp-4) 16px; border-bottom: 1px solid var(--line); }
+.nav-mobile-menu.open { display: flex; }
+.nav-mobile-menu a {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none; padding: 12px 0; border-bottom: 1px solid var(--line-soft);
+}
+.nav-mobile-menu a:hover { color: var(--orange); }
+.nav-mobile-menu .nav-mobile-ctas { display: flex; gap: 8px; padding-top: 14px; }
+
 @media (max-width: 860px) {
-    .nav-links { display: none; }
+    .nav-links, .nav-cta-group { display: none; }
+    .nav-hamburger { display: flex; }
 }
 
 /* ---------- HERO ---------- */

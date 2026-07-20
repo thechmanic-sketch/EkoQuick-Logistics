@@ -70,20 +70,44 @@
                 <span class="logo-meta">WAYBILL NO. EQ-2026-00417 · KZN</span>
             </div>
             <ul class="nav-links">
-                <li><a href="how-it-works.html">Manifest</a></li>
                 <li><a href="services.html">Services</a></li>
                 <li><a href="pricing.html">Tariff</a></li>
                 <li><a href="track-parcel.html">Track</a></li>
                 <li><a href="coverage.html">Coverage</a></li>
-                <li><a href="about.html">About</a></li>
-                <li><a href="for-business.html">Business</a></li>
-                <li><a href="faq.html">FAQ</a></li>
-                <li><a href="contact.html">Contact</a></li>
-                <li><a href="become-a-driver.html">Drive</a></li>
+                <li class="nav-dropdown" id="companyDropdown">
+                    <button class="nav-dropdown-trigger" id="companyDropdownBtn" type="button">Company <span class="caret">▾</span></button>
+                    <div class="nav-dropdown-panel">
+                        <a href="how-it-works.html">Manifest</a>
+                        <a href="about.html">About</a>
+                        <a href="faq.html">FAQ</a>
+                        <a href="contact.html">Contact</a>
+                        <a href="for-business.html">Business</a>
+                        <a href="become-a-driver.html">Drive</a>
+                    </div>
+                </li>
             </ul>
             <div class="nav-cta-group">
                 <a class="btn btn-ghost btn-sm" href="login.html">Login</a>
                 <a class="btn btn-primary btn-sm" href="signup.html">Book now</a>
+            </div>
+            <button class="nav-hamburger" id="navHamburger" type="button" aria-label="Menu">
+                <span class="nav-hamburger-lines"><span></span></span>
+            </button>
+        </div>
+        <div class="nav-mobile-menu" id="navMobileMenu">
+            <a href="services.html">Services</a>
+            <a href="pricing.html">Tariff</a>
+            <a href="track-parcel.html">Track</a>
+            <a href="coverage.html">Coverage</a>
+            <a href="how-it-works.html">Manifest</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <a href="contact.html">Contact</a>
+            <a href="for-business.html">Business</a>
+            <a href="become-a-driver.html">Drive</a>
+            <div class="nav-mobile-ctas">
+                <a class="btn btn-ghost btn-sm" href="login.html" style="flex:1;">Login</a>
+                <a class="btn btn-primary btn-sm" href="signup.html" style="flex:1;">Book now</a>
             </div>
         </div>
     </nav>
@@ -247,6 +271,7 @@
     <script src="vendor/supabase.js"></script>
     <script src="config.js"></script>
     <script src="pricing-estimator.js"></script>
+    <script src="nav.js"></script>
     <script src="support-widget.js"></script>
 </body>
 </html>
