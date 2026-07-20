@@ -14,11 +14,7 @@ function escapeHtml(s) {
 }
 
 async function reverseGeocode(lat, lng) {
-    try {
-        const res = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng);
-        const data = await res.json();
-        return data && data.display_name ? data.display_name : null;
-    } catch (err) { return null; }
+    return (await GoogleMaps.reverseGeocode(lat, lng)) || null;
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
@@ -108,28 +104,27 @@ function openModal(addr) {
 
     document.getElementById('addrModal').classList.add('open');
 
-    setTimeout(function () {
+    setTimeout(async function () {
         if (!miniMap) {
-            miniMap = L.map('miniMap').setView([-29.6, 30.9], 8);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(miniMap);
-            miniMap.on('click', async function (e) {
-                pendingLat = e.latlng.lat;
-                pendingLng = e.latlng.lng;
-                if (!miniMarker) miniMarker = L.marker(e.latlng).addTo(miniMap);
-                else miniMarker.setLatLng(e.latlng);
+            miniMap = await GoogleMaps.createMap('miniMap', [-29.6, 30.9], 8);
+            miniMap.addListener('click', async function (e) {
+                pendingLat = e.latLng.lat();
+                pendingLng = e.latLng.lng();
+                if (!miniMarker) miniMarker = GoogleMaps.createMarker(miniMap, [pendingLat, pendingLng], '📍');
+                else miniMarker.setLatLng([pendingLat, pendingLng]);
                 const addrText = await reverseGeocode(pendingLat, pendingLng);
                 if (addrText) document.getElementById('fStreet').value = addrText;
             });
         }
-        miniMap.invalidateSize();
+        google.maps.event.trigger(miniMap, 'resize');
         if (pendingLat && pendingLng) {
             const pos = [pendingLat, pendingLng];
-            if (!miniMarker) miniMarker = L.marker(pos).addTo(miniMap);
+            if (!miniMarker) miniMarker = GoogleMaps.createMarker(miniMap, pos, '📍');
             else miniMarker.setLatLng(pos);
-            miniMap.setView(pos, 14);
+            GoogleMaps.setView(miniMap, pos, 14);
         } else {
-            miniMap.setView([-29.6, 30.9], 8);
-            if (miniMarker) { miniMap.removeLayer(miniMarker); miniMarker = null; }
+            GoogleMaps.setView(miniMap, [-29.6, 30.9], 8);
+            if (miniMarker) { miniMarker.remove(); miniMarker = null; }
         }
     }, 50);
 }
