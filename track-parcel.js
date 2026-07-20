@@ -56,7 +56,7 @@ function renderResult(job) {
     document.getElementById('rStatus').textContent = STATUS_LABELS[job.status] || job.status;
     document.getElementById('rDriver').textContent = job.driver_name || 'Not yet assigned';
     document.getElementById('rVehicle').textContent = [job.driver_vehicle_make, job.driver_vehicle_model].filter(Boolean).join(' ') || job.vehicle || '—';
-    document.getElementById('rEta').textContent = job.duration ? formatDuration(job.duration) : '—';
+    document.getElementById('rEta').textContent = job.duration || '—';
     document.getElementById('rPickup').textContent = job.pickup || '—';
     document.getElementById('rDropoff').textContent = job.dropoff || '—';
     document.getElementById('rCollectionCode').textContent = job.collection_code || '—';

@@ -1536,7 +1536,7 @@ returns table (
   pickup text,
   dropoff text,
   distance numeric,
-  duration numeric,
+  duration text,
   quote numeric,
   delivery_type text,
   driver_name text,
