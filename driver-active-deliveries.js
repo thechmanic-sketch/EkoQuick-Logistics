@@ -352,22 +352,21 @@ function stopTracking() {
     if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
 }
 
-function ensureJobMap(jobId, destLat, destLng) {
+async function ensureJobMap(jobId, destLat, destLng) {
     const container = document.getElementById('jobMap-' + jobId);
     if (!container) return;
-    const map = L.map(container).setView([destLat, destLng], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-    const destMarker = L.marker([destLat, destLng], { icon: L.divIcon({ html: '📍', className: 'driver-marker', iconSize: [24, 24] }) }).addTo(map);
+    const map = await GoogleMaps.createMap('jobMap-' + jobId, [destLat, destLng], 13);
+    const destMarker = GoogleMaps.createMarker(map, [destLat, destLng], '📍', { title: 'Destination' });
     jobMaps[jobId] = { map: map, destMarker: destMarker, driverMarker: null, destLat: destLat, destLng: destLng };
     if (lastPos) updateJobMapDriverPos(jobId, lastPos.lat, lastPos.lng);
 }
 function updateJobMapDriverPos(jobId, lat, lng) {
     const entry = jobMaps[jobId];
     if (!entry) return;
-    if (!entry.driverMarker) entry.driverMarker = L.marker([lat, lng], { icon: L.divIcon({ html: '🚚', className: 'driver-marker', iconSize: [28, 28] }) }).addTo(entry.map);
+    if (!entry.driverMarker) entry.driverMarker = GoogleMaps.createMarker(entry.map, [lat, lng], '🚚', { title: 'You' });
     else entry.driverMarker.setLatLng([lat, lng]);
-    entry.map.fitBounds([[lat, lng], [entry.destLat, entry.destLng]], { padding: [24, 24] });
+    GoogleMaps.fitBounds(entry.map, [[lat, lng], [entry.destLat, entry.destLng]]);
 }
 function destroyAllJobMaps() {
-    Object.keys(jobMaps).forEach(function (id) { jobMaps[id].map.remove(); delete jobMaps[id]; });
+    Object.keys(jobMaps).forEach(function (id) { delete jobMaps[id]; });
 }
