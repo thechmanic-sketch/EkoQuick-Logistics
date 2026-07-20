@@ -21,7 +21,7 @@ const GoogleMaps = (function () {
                 resolve(window.google.maps);
             };
             const script = document.createElement('script');
-            script.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_MAPS_API_KEY + '&libraries=places&callback=__gmapsCallback&loading=async';
+            script.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_MAPS_API_KEY + '&libraries=places,geometry&callback=__gmapsCallback&loading=async';
             script.async = true;
             script.onerror = function () { reject(new Error('Failed to load Google Maps JavaScript API')); };
             document.head.appendChild(script);
@@ -106,6 +106,35 @@ const GoogleMaps = (function () {
                 trafficLevel: trafficLevel,
                 routeType: routeType,
             };
+        } catch (err) {
+            return null;
+        }
+    }
+
+    // Turn-by-turn route polyline between two coordinates, for drawing the
+    // live route line on the driver's in-app map. Returns an array of
+    // [lat, lng] pairs (same shape the old OSRM-based helper returned), or
+    // null on failure.
+    async function computeRoutePolyline(originLat, originLng, destLat, destLng) {
+        await load();
+        try {
+            const res = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes?key=' + GOOGLE_MAPS_API_KEY, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Goog-FieldMask': 'routes.polyline.encodedPolyline',
+                },
+                body: JSON.stringify({
+                    origin: { location: { latLng: { latitude: originLat, longitude: originLng } } },
+                    destination: { location: { latLng: { latitude: destLat, longitude: destLng } } },
+                    travelMode: 'DRIVE',
+                }),
+            });
+            const data = await res.json();
+            const encoded = data && data.routes && data.routes[0] && data.routes[0].polyline && data.routes[0].polyline.encodedPolyline;
+            if (!encoded) return null;
+            const path = google.maps.geometry.encoding.decodePath(encoded);
+            return path.map(function (p) { return [p.lat(), p.lng()]; });
         } catch (err) {
             return null;
         }
@@ -221,6 +250,7 @@ const GoogleMaps = (function () {
         geocodeAddress: geocodeAddress,
         reverseGeocode: reverseGeocode,
         computeRoute: computeRoute,
+        computeRoutePolyline: computeRoutePolyline,
         attachAutocomplete: attachAutocomplete,
         createMap: createMap,
         createMarker: createMarker,

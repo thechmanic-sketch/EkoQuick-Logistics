@@ -87,7 +87,7 @@ function destCoords() {
         : { lat: job.dropoff_lat, lng: job.dropoff_lng, label: 'Destination' };
 }
 
-function render() {
+async function render() {
     const dest = destCoords();
     const remainingKm = (lastPos && dest.lat && dest.lng) ? haversineKm(lastPos.lat, lastPos.lng, dest.lat, dest.lng) : null;
     const etaMin = remainingKm !== null ? Math.round((remainingKm / 30) * 60) : null;
@@ -97,10 +97,10 @@ function render() {
     document.getElementById('etaText').textContent = 'ETA: ' + (etaMin !== null ? etaMin + ' min' : '—');
     document.getElementById('distanceText').textContent = 'Distance: ' + (remainingKm !== null ? remainingKm.toFixed(1) + ' km' : '—');
 
-    initMap();
+    await initMap();
     if (dest.lat && dest.lng) {
         const pos = [dest.lat, dest.lng];
-        if (!destMarker) destMarker = L.marker(pos, { icon: L.divIcon({ html: '📍', className: 'driver-marker', iconSize: [26, 26] }) }).addTo(map);
+        if (!destMarker) destMarker = GoogleMaps.createMarker(map, pos, '📍', { title: 'Destination' });
         else destMarker.setLatLng(pos);
     }
 
@@ -167,11 +167,11 @@ function focusRoute() {
     recenter();
     const dest = destCoords();
     if (lastPos && dest.lat && dest.lng) {
-        lastRouteAt = 0; // force fetchRoute() to run again right away
-        fetchRoute(lastPos.lat, lastPos.lng, dest.lat, dest.lng).then(function (latlngs) {
+        lastRouteAt = 0; // force the route line to refresh again right away
+        GoogleMaps.computeRoutePolyline(lastPos.lat, lastPos.lng, dest.lat, dest.lng).then(function (latlngs) {
             if (!latlngs) return;
-            if (routeLine) map.removeLayer(routeLine);
-            routeLine = L.polyline(latlngs, { color: '#FF6A2B', weight: 4 }).addTo(map);
+            if (routeLine) routeLine.remove();
+            routeLine = GoogleMaps.createPolyline(map, latlngs, '#FF6A2B', 4);
         });
     }
 }
@@ -278,10 +278,12 @@ function wireSignaturePad(canvas) {
     canvas.addEventListener('touchend', end);
 }
 
+let mapReadyPromise = null;
 function initMap() {
-    if (map) return;
-    map = L.map('navMap', { zoomControl: true }).setView([-29.6, 30.9], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+    if (!mapReadyPromise) {
+        mapReadyPromise = GoogleMaps.createMap('navMap', [-29.6, 30.9], 8).then(function (m) { map = m; return m; });
+    }
+    return mapReadyPromise;
 }
 
 function recenter() {
@@ -290,8 +292,7 @@ function recenter() {
     const pts = [];
     if (lastPos) pts.push([lastPos.lat, lastPos.lng]);
     if (dest.lat && dest.lng) pts.push([dest.lat, dest.lng]);
-    if (pts.length === 1) map.setView(pts[0], 14);
-    else if (pts.length > 1) map.fitBounds(pts, { padding: [30, 30] });
+    GoogleMaps.fitBounds(map, pts);
 }
 
 function beginTracking() {
@@ -304,9 +305,10 @@ function beginTracking() {
 
             if (job) {
                 await supabase.from('jobs').update({ driver_lat: lastPos.lat, driver_lng: lastPos.lng }).eq('id', job.id);
+                await initMap();
                 render();
 
-                if (!driverMarker) driverMarker = L.marker([lastPos.lat, lastPos.lng], { icon: L.divIcon({ html: '🚚', className: 'driver-marker', iconSize: [30, 30] }) }).addTo(map);
+                if (!driverMarker) driverMarker = GoogleMaps.createMarker(map, [lastPos.lat, lastPos.lng], '🚚', { title: 'You' });
                 else driverMarker.setLatLng([lastPos.lat, lastPos.lng]);
                 recenter();
 
@@ -314,10 +316,10 @@ function beginTracking() {
                 const now = Date.now();
                 if (dest.lat && dest.lng && now - lastRouteAt > 20000) {
                     lastRouteAt = now;
-                    fetchRoute(lastPos.lat, lastPos.lng, dest.lat, dest.lng).then(function (latlngs) {
+                    GoogleMaps.computeRoutePolyline(lastPos.lat, lastPos.lng, dest.lat, dest.lng).then(function (latlngs) {
                         if (!latlngs) return;
-                        if (routeLine) map.removeLayer(routeLine);
-                        routeLine = L.polyline(latlngs, { color: '#FF6A2B', weight: 4 }).addTo(map);
+                        if (routeLine) routeLine.remove();
+                        routeLine = GoogleMaps.createPolyline(map, latlngs, '#FF6A2B', 4);
                     });
                 }
             }
@@ -328,15 +330,4 @@ function beginTracking() {
 }
 function stopTracking() {
     if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-}
-
-async function fetchRoute(lat1, lng1, lat2, lng2) {
-    try {
-        const url = 'https://router.project-osrm.org/route/v1/driving/' + lng1 + ',' + lat1 + ';' + lng2 + ',' + lat2 + '?overview=full&geometries=geojson';
-        const res = await fetch(url);
-        const data = await res.json();
-        const coords = data && data.routes && data.routes[0] && data.routes[0].geometry && data.routes[0].geometry.coordinates;
-        if (!coords) return null;
-        return coords.map(function (c) { return [c[1], c[0]]; });
-    } catch (err) { return null; }
 }
