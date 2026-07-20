@@ -13,6 +13,11 @@ const VEHICLES = [
 
 const DISTANCE_MATRIX_API_KEY = 'BE2w7PoMQ4xmiDE0VXaN2zHdTqiOpy8ECtEStW9QCdW7O68yH33SOwZ31ASLDZ67';
 
+// Google Maps Platform. Restricted to Maps JavaScript API, Places API (New),
+// Routes API, and Geocoding API, and to this site's HTTP referrers — safe to
+// ship in client-side code under those restrictions. See google-maps.js.
+const GOOGLE_MAPS_API_KEY = 'AIzaSyBzYC3vBgCuE8ZlPVYdXn_LhjH1_5Axsiw';
+
 // Driver keeps this share of the quoted fare; Ekoquick's commission is the
 // rest. Defaults to 85% but is overridden by the `settings` table (editable
 // from the admin Commissions page) as soon as it loads.

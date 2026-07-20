@@ -67,6 +67,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('savedAddrBtn1').addEventListener('click', showSavedAddresses);
     document.getElementById('calcBtn').addEventListener('click', calculateDistance);
     document.getElementById('bookBtn').addEventListener('click', bookNow);
+
+    GoogleMaps.attachAutocomplete(document.getElementById('pickup'), function (place) {
+        pickupCoords = { lat: place.lat, lng: place.lng };
+    }).catch(function () { /* Autocomplete is a progressive enhancement — typing still works without it */ });
+    GoogleMaps.attachAutocomplete(document.getElementById('dropoff'), function (place) {
+        dropoffCoords = { lat: place.lat, lng: place.lng };
+    }).catch(function () { /* Autocomplete is a progressive enhancement — typing still works without it */ });
 });
 
 function applyPickupModeLabels() {
@@ -236,23 +243,12 @@ async function showSavedAddresses() {
 }
 
 async function reverseGeocode(lat, lng) {
-    try {
-        const res = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng);
-        const data = await res.json();
-        return data && data.display_name ? data.display_name : null;
-    } catch (err) { return null; }
+    return (await GoogleMaps.reverseGeocode(lat, lng)) || null;
 }
 
 async function geocodeAddress(address) {
-    try {
-        const q = encodeURIComponent(address + ', KwaZulu-Natal, South Africa');
-        const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + q);
-        const results = await res.json();
-        if (results && results[0]) {
-            return { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
-        }
-    } catch (err) { /* best effort — falls back gracefully with no coordinates */ }
-    return null;
+    const result = await GoogleMaps.geocodeAddress(address);
+    return result ? { lat: result.lat, lng: result.lng } : null;
 }
 
 // ---- Payment options ----
@@ -335,15 +331,11 @@ async function calculateDistance() {
     btn.textContent = 'Calculating...';
 
     try {
-        const origins = encodeURIComponent(pickup + ', KwaZulu-Natal, South Africa');
-        const destinations = encodeURIComponent(dropoff + ', KwaZulu-Natal, South Africa');
-        const res = await fetch('https://api.distancematrix.ai/maps/api/distancematrix/json?key=' + DISTANCE_MATRIX_API_KEY + '&origins=' + origins + '&destinations=' + destinations + '&mode=driving');
-        const data = await res.json();
-        const el = data && data.rows && data.rows[0] && data.rows[0].elements && data.rows[0].elements[0];
-        if (data.status === 'OK' && el && el.status === 'OK') {
-            currentDistance = Math.round(el.distance.value / 1000);
-            currentDurationSeconds = el.duration.value;
-            currentDuration = formatDuration(el.duration.value);
+        const route = await GoogleMaps.computeRoute(pickup, dropoff);
+        if (route) {
+            currentDistance = route.distanceKm;
+            currentDurationSeconds = route.durationSeconds;
+            currentDuration = formatDuration(route.durationSeconds);
             calculateQuote();
             btn.disabled = false;
             btn.textContent = 'Calculate Distance & Price';

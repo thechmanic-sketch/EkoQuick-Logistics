@@ -52,14 +52,8 @@ async function getEstimate() {
 
     let distanceKm = null;
     try {
-        const origins = encodeURIComponent(pickup + ', KwaZulu-Natal, South Africa');
-        const destinations = encodeURIComponent(dropoff + ', KwaZulu-Natal, South Africa');
-        const res = await fetch('https://api.distancematrix.ai/maps/api/distancematrix/json?key=' + DISTANCE_MATRIX_API_KEY + '&origins=' + origins + '&destinations=' + destinations + '&mode=driving');
-        const data = await res.json();
-        const el = data && data.rows && data.rows[0] && data.rows[0].elements && data.rows[0].elements[0];
-        if (data.status === 'OK' && el && el.status === 'OK') {
-            distanceKm = Math.round(el.distance.value / 1000);
-        }
+        const route = await GoogleMaps.computeRoute(pickup, dropoff);
+        if (route) distanceKm = route.distanceKm;
     } catch (err) { /* fall through to fallback table */ }
 
     if (distanceKm === null) distanceKm = fallbackDistance(pickup, dropoff);
