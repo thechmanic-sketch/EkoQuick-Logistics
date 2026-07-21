@@ -1,4 +1,3 @@
-const ONLINE_WINDOW_MS = 5 * 60 * 1000;
 let revenueChart = null, ordersChart = null, successChart = null;
 let realtimeStatus = 'connecting';
 
@@ -64,7 +63,9 @@ function startClock() {
 }
 
 function isOnline(driver) {
-    return !!(driver.last_seen_at && (Date.now() - new Date(driver.last_seen_at).getTime()) < ONLINE_WINDOW_MS);
+    // Trust the driver's own Online toggle, not just GPS heartbeat recency
+    // — see admin-drivers.js isOnline() for why.
+    return driver.is_online === true;
 }
 
 function startOfToday() {

@@ -75,7 +75,11 @@ function whatsappLink(phone, message) {
 }
 
 function isOnline(driver) {
-    return !!(driver.last_seen_at && (Date.now() - new Date(driver.last_seen_at).getTime()) < ONLINE_WINDOW_MS);
+    // Trust the driver's own Online toggle, not just GPS heartbeat recency
+    // — see admin-drivers.js isOnline() for why. last_seen_at staleness is
+    // still used separately below (driverStatus) to flag "attention" when
+    // an online driver's GPS has stopped updating during an active job.
+    return driver.is_online === true;
 }
 
 function activeJobForDriver(driverId) {

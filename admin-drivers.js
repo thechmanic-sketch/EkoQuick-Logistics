@@ -1,4 +1,3 @@
-const ONLINE_WINDOW_MS = 5 * 60 * 1000;
 const PAGE_SIZE = 25;
 
 let allDrivers = [];
@@ -55,7 +54,12 @@ function escapeHtml(s) {
 }
 
 function isOnline(driver) {
-    return !!(driver.last_seen_at && (Date.now() - new Date(driver.last_seen_at).getTime()) < ONLINE_WINDOW_MS);
+    // The driver's own Online toggle (profiles.is_online) is the source of
+    // truth — GPS heartbeat (last_seen_at) alone previously decided this,
+    // so a backgrounded tab or a slow geolocation update made an actually-
+    // online driver show as offline to admin even though their own
+    // dashboard said Online.
+    return driver.is_online === true;
 }
 
 function vehicleLabel(id) {

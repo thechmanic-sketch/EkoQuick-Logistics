@@ -1,4 +1,3 @@
-const ONLINE_WINDOW_MS = 5 * 60 * 1000;
 const HIGH_PRIORITY_MS = 30 * 60 * 1000;
 const NORMAL_PRIORITY_MS = 10 * 60 * 1000;
 const AUTO_ASSIGN_KEY = 'ekoquick_dispatch_auto_assign';
@@ -93,7 +92,9 @@ function whatsappLink(phone, message) {
 }
 
 function isOnline(d) {
-    return !!(d.last_seen_at && (Date.now() - new Date(d.last_seen_at).getTime()) < ONLINE_WINDOW_MS);
+    // Trust the driver's own Online toggle, not just GPS heartbeat recency
+    // — see admin-drivers.js isOnline() for why.
+    return d.is_online === true;
 }
 
 function busyDriverIds() {
