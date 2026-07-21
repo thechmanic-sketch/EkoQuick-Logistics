@@ -123,11 +123,6 @@ async function render() {
         if (!destMarker) destMarker = GoogleMaps.createMarker(map, pos, '📍', { title: 'Destination' });
         else destMarker.setLatLng(pos);
     }
-    // Hide the loading overlay once, after the map and its first marker
-    // are actually in place — masks the blank/tiles/markers settle-in
-    // instead of showing that multi-step visual load.
-    const overlay = document.getElementById('mapLoadingOverlay');
-    if (overlay) overlay.classList.add('hide');
 
     renderCustomerPanel();
     renderActionPanel();
