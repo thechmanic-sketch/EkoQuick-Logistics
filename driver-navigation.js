@@ -358,13 +358,26 @@ function recenter(force) {
     setTimeout(function () { programmaticMapChange = false; }, 300);
 }
 
+// Desktop/laptop browsers have no GPS chip — they fall back to WiFi/IP
+// based positioning, which can jump erratically between "fixes" that are
+// really the same physical spot. On a phone with real GPS this is a non-
+// issue, but without filtering it out, that noise visibly jitters the
+// driver marker on every tick. Ignore updates smaller than this.
+const MIN_MOVEMENT_METERS = 8;
+
 function beginTracking() {
     if (!navigator.geolocation) return;
     watchId = navigator.geolocation.watchPosition(
         async function (pos) {
-            lastPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            const newPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
             const speedKmh = pos.coords.speed !== null && pos.coords.speed !== undefined ? Math.round(pos.coords.speed * 3.6) : null;
             document.getElementById('speedText').textContent = 'Speed: ' + (speedKmh !== null ? speedKmh + ' km/h' : '—');
+
+            if (lastPos) {
+                const movedKm = haversineKm(lastPos.lat, lastPos.lng, newPos.lat, newPos.lng);
+                if (movedKm * 1000 < MIN_MOVEMENT_METERS) return;
+            }
+            lastPos = newPos;
 
             if (job) {
                 await supabase.from('jobs').update({ driver_lat: lastPos.lat, driver_lng: lastPos.lng }).eq('id', job.id);
