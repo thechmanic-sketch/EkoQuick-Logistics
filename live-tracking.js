@@ -224,10 +224,19 @@ document.addEventListener('DOMContentLoaded', async function () {
         const card = document.getElementById('otpCard');
         if (!job.collection_code && !job.delivery_code) { card.classList.add('hidden'); return; }
         card.classList.remove('hidden');
-        const collectionVerified = job.status === 'to_dropoff' || job.status === 'delivered';
-        const deliveryVerified = job.status === 'delivered';
-        document.getElementById('collectionStatus').textContent = collectionVerified ? 'Verified' : 'Pending';
-        document.getElementById('deliveryStatus').textContent = deliveryVerified ? 'Verified' : 'Pending';
+
+        // Same four-state logic as the dashboard's codes box: pickup isn't
+        // "done" until the driver has actually collected it, and delivery
+        // only becomes the active code once pickup is done.
+        const pickupDone = job.status === 'to_dropoff' || job.status === 'delivered';
+        const deliveryDone = job.status === 'delivered';
+        const pickupActive = job.status === 'pending' || job.status === 'offered' || job.status === 'to_pickup';
+        const deliveryActive = job.status === 'to_dropoff';
+
+        document.getElementById('collectionCode').textContent = job.collection_code || '—';
+        document.getElementById('deliveryCode').textContent = job.delivery_code || '—';
+        document.getElementById('collectionStatus').textContent = pickupDone ? 'Verified' : pickupActive ? 'Give this to your driver at pickup' : 'Pending';
+        document.getElementById('deliveryStatus').textContent = deliveryDone ? 'Verified' : deliveryActive ? 'Give this to your driver on arrival' : 'Pending';
     }
 
     await loadJob();
