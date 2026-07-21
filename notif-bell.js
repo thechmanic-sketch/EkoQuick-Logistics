@@ -1,8 +1,8 @@
 // Shared notification bell for customer, driver, and admin pages — reads
-// real rows from the `notifications` table (not an ad-hoc, unpersisted
-// local list), so it can actually be "cleared": clicking a notification
-// marks it read and removes it from the dropdown. New inserts play a beep
-// via NotifSound and prepend live without a reload.
+// real, permanently-stored rows from the `notifications` table. Nothing is
+// ever deleted or removed from view: opening a notification only marks it
+// read (dims it in the list), it stays visible in the dropdown/history.
+// New inserts play a beep via NotifSound and prepend live without a reload.
 const NotifBell = (function () {
     let userId = null, role = null, items = [], ui = null;
 
@@ -38,13 +38,14 @@ const NotifBell = (function () {
 
     function render() {
         if (!ui) return;
-        if (items.length) { ui.count.textContent = items.length; ui.count.classList.remove('hidden'); }
+        const unread = items.filter(function (n) { return !n.is_read; }).length;
+        if (unread > 0) { ui.count.textContent = unread; ui.count.classList.remove('hidden'); }
         else ui.count.classList.add('hidden');
 
         ui.panel.innerHTML = items.length
             ? items.map(function (n) {
-                return '<div class="notif-item" data-id="' + n.id + '" style="cursor:pointer;">' +
-                    '<div style="font-weight:700;">' + escapeHtml(n.title) + '</div>' +
+                return '<div class="notif-item" data-id="' + n.id + '" style="cursor:pointer; opacity:' + (n.is_read ? '0.55' : '1') + ';">' +
+                    '<div style="font-weight:' + (n.is_read ? '400' : '700') + ';">' + escapeHtml(n.title) + '</div>' +
                     (n.body ? '<div style="color:var(--muted-dim); font-size:11px;">' + escapeHtml(n.body) + '</div>' : '') +
                     '<div style="color:var(--muted-dim); font-size:10px; margin-top:2px;">' + formatTime(n.created_at) + '</div>' +
                 '</div>';
@@ -62,10 +63,11 @@ const NotifBell = (function () {
     async function handleClick(id) {
         const n = items.find(function (x) { return x.id === id; });
         if (!n) return;
-        await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-        // Clearable: once opened/acted on, it's gone from the dropdown.
-        items = items.filter(function (x) { return x.id !== id; });
-        render();
+        if (!n.is_read) {
+            await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+            n.is_read = true;
+            render();
+        }
 
         if (n.action_type === 'open_chat' && n.delivery_id) window.location.href = 'chat.html?job=' + n.delivery_id;
         else if (n.action_type === 'open_delivery' && n.delivery_id) window.location.href = role === 'driver' ? 'driver-active-deliveries.html' : role === 'admin' ? 'admin-jobs.html' : 'my-orders.html';
@@ -76,7 +78,7 @@ const NotifBell = (function () {
     }
 
     async function loadAll() {
-        let query = supabase.from('notifications').select('*').eq('is_read', false).order('created_at', { ascending: false }).limit(30);
+        let query = supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(50);
         query = role === 'admin' ? query.eq('user_type', 'admin') : query.eq('user_id', userId);
         const { data } = await query;
         items = data || [];
