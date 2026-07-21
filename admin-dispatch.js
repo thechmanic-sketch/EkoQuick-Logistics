@@ -7,7 +7,10 @@ let allDrivers = [];
 let profilesById = {};
 let selectedJobId = null;
 let dispatchMap = null;
-let dispatchMarkers = [];
+let dispatchMarkers = {};
+let dispatchMapUserPanned = false;
+let dispatchMapProgrammatic = false;
+let dispatchMapCenteredJobId = null;
 let dispatchLog = [];
 let autoAssignTimer = null;
 
@@ -47,7 +50,19 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // Map creation runs alongside (not before) the critical data loads below,
     // so a slow/blocked Google Maps script never delays dispatch/auto-assign.
-    GoogleMaps.createMap('dispatchMap', [-29.6, 30.9], 8).then(function (m) { dispatchMap = m; });
+    GoogleMaps.createMap('dispatchMap', [-29.6, 30.9], 8).then(function (m) {
+        dispatchMap = m;
+        // renderDispatchMap() re-ran on every ~10s poll/realtime update and
+        // re-centered every time, overriding any manual pan/zoom — track
+        // real user interaction (dragstart only ever fires for an actual
+        // drag, never programmatically) and stop auto-recentering once
+        // the admin has taken over; selecting a different job still jumps
+        // there (that's an intentional navigation action).
+        if (m.addListener) {
+            m.addListener('dragstart', function () { dispatchMapUserPanned = true; });
+            m.addListener('zoom_changed', function () { if (!dispatchMapProgrammatic) dispatchMapUserPanned = true; });
+        }
+    });
 
     await loadDriverShare();
     await loadCommissionRules();
@@ -414,30 +429,53 @@ async function reassignDriver(jobId) {
 }
 
 function renderDispatchMap(job, withStats) {
-    dispatchMarkers.forEach(function (m) { m.remove(); });
-    dispatchMarkers = [];
+    // dispatchMarkers used to be wiped and rebuilt from scratch on every
+    // single refresh (every ~10s poll or any realtime update) — every pin
+    // briefly vanished and reappeared each time, visible as flickering.
+    // Keyed by a stable id and updated in place instead, like the Fleet
+    // Map already does correctly.
+    const seen = {};
+
+    function upsert(key, pos, emoji, popupHtml) {
+        seen[key] = true;
+        if (dispatchMarkers[key]) {
+            dispatchMarkers[key].setLatLng(pos);
+        } else {
+            dispatchMarkers[key] = GoogleMaps.createMarker(dispatchMap, pos, emoji);
+        }
+        dispatchMarkers[key].bindPopup(popupHtml);
+    }
 
     if (job.pickup_lat && job.pickup_lng) {
-        const pickupMarker = GoogleMaps.createMarker(dispatchMap, [job.pickup_lat, job.pickup_lng], '📦')
-            .bindPopup('<b>Job ' + job.id.slice(0, 8) + '</b><br>Pickup: ' + escapeHtml(job.pickup) + '<br>Drop-off: ' + escapeHtml(job.dropoff));
-        dispatchMarkers.push(pickupMarker);
-        GoogleMaps.setView(dispatchMap, [job.pickup_lat, job.pickup_lng], 11);
+        upsert('pickup', [job.pickup_lat, job.pickup_lng], '📦',
+            '<b>Job ' + job.id.slice(0, 8) + '</b><br>Pickup: ' + escapeHtml(job.pickup) + '<br>Drop-off: ' + escapeHtml(job.dropoff));
+        // Only jump the view when the selection actually changes to a
+        // different job, and only if the admin hasn't manually panned —
+        // re-rendering the same already-selected job (every poll/realtime
+        // update) must not keep resetting their view.
+        if (job.id !== dispatchMapCenteredJobId && !dispatchMapUserPanned) {
+            dispatchMapCenteredJobId = job.id;
+            dispatchMapProgrammatic = true;
+            GoogleMaps.setView(dispatchMap, [job.pickup_lat, job.pickup_lng], 11);
+            setTimeout(function () { dispatchMapProgrammatic = false; }, 300);
+        }
     }
     if (job.dropoff_lat && job.dropoff_lng) {
-        const dropoffMarker = GoogleMaps.createMarker(dispatchMap, [job.dropoff_lat, job.dropoff_lng], '🏁')
-            .bindPopup('Drop-off: ' + escapeHtml(job.dropoff));
-        dispatchMarkers.push(dropoffMarker);
+        upsert('dropoff', [job.dropoff_lat, job.dropoff_lng], '🏁', 'Drop-off: ' + escapeHtml(job.dropoff));
     }
 
     withStats.forEach(function (w) {
         if (!w.driver.last_lat || !w.driver.last_lng) return;
-        const m = GoogleMaps.createMarker(dispatchMap, [w.driver.last_lat, w.driver.last_lng], '🟢').bindPopup(
+        upsert('driver-' + w.driver.id, [w.driver.last_lat, w.driver.last_lng], '🟢',
             '<b>' + escapeHtml(w.driver.full_name) + '</b><br>' + vehicleLabel(w.driver.vehicle_class) +
             '<br>' + (w.dist !== null ? w.dist.toFixed(1) + ' km to pickup' : 'Distance unknown') +
             '<br>ETA: ' + (w.eta !== null ? w.eta + ' min' : '—') +
             '<br><button onclick="confirmAssign(allJobs.find(j=>j.id===\'' + job.id + '\'), \'' + w.driver.id + '\')">Assign Driver</button>'
         );
-        dispatchMarkers.push(m);
+    });
+
+    Object.keys(dispatchMarkers).forEach(function (key) {
+        if (!seen[key]) { dispatchMarkers[key].remove(); delete dispatchMarkers[key]; }
     });
 }
 

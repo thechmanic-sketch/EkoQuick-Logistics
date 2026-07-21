@@ -109,19 +109,36 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     let mapReadyPromise = null;
+    let userPannedMap = false;
+    let programmaticMapChange = false;
     function initMap() {
         if (!mapReadyPromise) {
-            mapReadyPromise = GoogleMaps.createMap('trackMap', [-29.6, 30.9], 8).then(function (m) { map = m; return m; });
+            mapReadyPromise = GoogleMaps.createMap('trackMap', [-29.6, 30.9], 8).then(function (m) {
+                map = m;
+                // recenterMap() ran on every job update (every few seconds
+                // while a driver is live), overriding any manual pan/zoom —
+                // track real user interaction (dragstart only ever fires
+                // for an actual drag, never programmatically) and stop
+                // auto-recentering once they've taken over.
+                if (map.addListener) {
+                    map.addListener('dragstart', function () { userPannedMap = true; });
+                    map.addListener('zoom_changed', function () { if (!programmaticMapChange) userPannedMap = true; });
+                }
+                return m;
+            });
         }
         return mapReadyPromise;
     }
 
     function recenterMap() {
+        if (userPannedMap) return;
         const pts = [];
         if (currentJob.pickup_lat && currentJob.pickup_lng) pts.push([currentJob.pickup_lat, currentJob.pickup_lng]);
         if (currentJob.dropoff_lat && currentJob.dropoff_lng) pts.push([currentJob.dropoff_lat, currentJob.dropoff_lng]);
         if (currentJob.driver_lat && currentJob.driver_lng) pts.push([currentJob.driver_lat, currentJob.driver_lng]);
+        programmaticMapChange = true;
         GoogleMaps.fitBounds(map, pts);
+        setTimeout(function () { programmaticMapChange = false; }, 300);
     }
 
     async function render(job) {

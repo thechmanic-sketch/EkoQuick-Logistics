@@ -486,7 +486,15 @@ async function ensureJobMap(jobId, destLat, destLng) {
 
     const map = await GoogleMaps.createMap('jobMap-' + jobId, [destLat, destLng], 13);
     const destMarker = GoogleMaps.createMarker(map, [destLat, destLng], '📍', { title: 'Destination' });
-    jobMaps[jobId] = { map: map, destMarker: destMarker, driverMarker: null, routeLine: null, destLat: destLat, destLng: destLng, lastRouteAt: 0 };
+    jobMaps[jobId] = { map: map, destMarker: destMarker, driverMarker: null, routeLine: null, destLat: destLat, destLng: destLng, lastRouteAt: 0, userPanned: false, programmatic: false };
+    // fitBounds ran on every single GPS tick, silently overriding any
+    // manual pan/zoom — track real user interaction (dragstart only ever
+    // fires for an actual drag, never programmatically) and stop
+    // auto-fitting once they've taken over.
+    if (map.addListener) {
+        map.addListener('dragstart', function () { jobMaps[jobId] && (jobMaps[jobId].userPanned = true); });
+        map.addListener('zoom_changed', function () { const e = jobMaps[jobId]; if (e && !e.programmatic) e.userPanned = true; });
+    }
 
     if (lastPos) updateJobMapDriverPos(jobId, lastPos.lat, lastPos.lng);
 }
@@ -501,7 +509,10 @@ function updateJobMapDriverPos(jobId, lat, lng) {
         entry.driverMarker.setLatLng([lat, lng]);
     }
 
+    if (entry.userPanned) return;
+    entry.programmatic = true;
     GoogleMaps.fitBounds(entry.map, [[lat, lng], [entry.destLat, entry.destLng]]);
+    setTimeout(function () { if (jobMaps[jobId]) jobMaps[jobId].programmatic = false; }, 300);
 
     const now = Date.now();
     if (now - entry.lastRouteAt > 20000) {

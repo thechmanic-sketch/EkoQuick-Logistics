@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     await loadDriverShare();
     await loadCommissionRules();
 
-    document.getElementById('recenterBtn').addEventListener('click', recenter);
+    document.getElementById('recenterBtn').addEventListener('click', function () { recenter(true); });
     document.getElementById('fullscreenBtn').addEventListener('click', function () {
         const el = document.getElementById('navMap');
         if (document.fullscreenElement) document.exitFullscreen();
@@ -167,7 +167,7 @@ function renderActionPanel() {
 // Keeps the driver in-app: re-centers the map on the live route immediately
 // instead of waiting for the next periodic refresh.
 function focusRoute() {
-    recenter();
+    recenter(true);
     const dest = destCoords();
     if (lastPos && dest.lat && dest.lng) {
         lastRouteAt = 0; // force the route line to refresh again right away
@@ -283,20 +283,41 @@ function wireSignaturePad(canvas) {
 }
 
 let mapReadyPromise = null;
+let userPannedMap = false;
+let programmaticMapChange = false;
+
 function initMap() {
     if (!mapReadyPromise) {
-        mapReadyPromise = GoogleMaps.createMap('navMap', [-29.6, 30.9], 8).then(function (m) { map = m; return m; });
+        mapReadyPromise = GoogleMaps.createMap('navMap', [-29.6, 30.9], 8).then(function (m) {
+            map = m;
+            // The periodic auto-recenter (every GPS tick, every route
+            // refresh) was overriding any manual pan/zoom the driver did —
+            // it felt like the map "fighting back". Track real user
+            // interaction (dragstart only ever fires for a user-initiated
+            // drag, never programmatically) and stop auto-recentering once
+            // they've taken over; the explicit Recenter/Focus Route buttons
+            // still always work and hand control back to auto-follow.
+            if (map.addListener) {
+                map.addListener('dragstart', function () { userPannedMap = true; });
+                map.addListener('zoom_changed', function () { if (!programmaticMapChange) userPannedMap = true; });
+            }
+            return m;
+        });
     }
     return mapReadyPromise;
 }
 
-function recenter() {
+function recenter(force) {
     if (!map) return;
+    if (userPannedMap && !force) return;
+    if (force) userPannedMap = false;
     const dest = destCoords();
     const pts = [];
     if (lastPos) pts.push([lastPos.lat, lastPos.lng]);
     if (dest.lat && dest.lng) pts.push([dest.lat, dest.lng]);
+    programmaticMapChange = true;
     GoogleMaps.fitBounds(map, pts);
+    setTimeout(function () { programmaticMapChange = false; }, 300);
 }
 
 function beginTracking() {
