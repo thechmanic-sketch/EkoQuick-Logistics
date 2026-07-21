@@ -4,8 +4,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // button that silently does nothing when clicked.
     document.getElementById('estimateBtn').addEventListener('click', getEstimate);
 
-    GoogleMaps.attachAutocomplete(document.getElementById('estPickup'), function () {}).catch(function () {});
-    GoogleMaps.attachAutocomplete(document.getElementById('estDropoff'), function () {}).catch(function () {});
+    // This is a ballpark estimator, not the real booking flow — town/suburb
+    // level input (matching the "e.g. Durban CBD" placeholders) needs to
+    // suggest, so widen past the booking page's street-address-only filter.
+    var estimatorTypes = { includedPrimaryTypes: ['street_address', 'route', 'premise', 'subpremise', 'locality', 'sublocality', 'neighborhood'] };
+    GoogleMaps.attachAutocomplete(document.getElementById('estPickup'), function () {}, estimatorTypes).catch(function () {});
+    GoogleMaps.attachAutocomplete(document.getElementById('estDropoff'), function () {}, estimatorTypes).catch(function () {});
 
     PricingEngine.load().then(function () {
         const vehicles = PricingEngine.getConfig().vehicles;

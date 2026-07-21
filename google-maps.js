@@ -172,18 +172,24 @@ const GoogleMaps = (function () {
     // .value unchanged) and inserts the new element right after it, syncing
     // the original input's value whenever a suggestion is selected.
     // onPlace receives { lat, lng, formattedAddress } on selection.
-    async function attachAutocomplete(inputEl, onPlace) {
+    async function attachAutocomplete(inputEl, onPlace, options) {
         await load();
         if (!google.maps.places.PlaceAutocompleteElement) {
             throw new Error('PlaceAutocompleteElement unavailable — check Places API (New) is enabled for this key');
         }
-        const autocompleteEl = new google.maps.places.PlaceAutocompleteElement({
-            componentRestrictions: { country: 'za' },
-            // Bias toward specific addresses (street/premise level), not just
-            // cities/suburbs/landmarks, which is all the element suggests by
-            // default with no type filter set.
-            includedPrimaryTypes: ['street_address', 'route', 'premise', 'subpremise'],
-        });
+        const acOptions = { componentRestrictions: { country: 'za' } };
+        // Bias toward specific addresses (street/premise level), not just
+        // cities/suburbs/landmarks, which is all the element suggests by
+        // default with no type filter set. Callers that only need
+        // area-level input (e.g. a price estimator) can pass
+        // { includedPrimaryTypes: [] } to drop this filter entirely, or
+        // their own list of types.
+        if (!options || !('includedPrimaryTypes' in options)) {
+            acOptions.includedPrimaryTypes = ['street_address', 'route', 'premise', 'subpremise'];
+        } else if (options.includedPrimaryTypes && options.includedPrimaryTypes.length) {
+            acOptions.includedPrimaryTypes = options.includedPrimaryTypes;
+        }
+        const autocompleteEl = new google.maps.places.PlaceAutocompleteElement(acOptions);
         autocompleteEl.id = inputEl.id + 'Autocomplete';
         autocompleteEl.style.width = '100%';
         autocompleteEl.style.display = 'block';
