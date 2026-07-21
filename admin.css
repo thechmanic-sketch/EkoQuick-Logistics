@@ -311,20 +311,40 @@ body { display: block; }
 .simple-table td { padding: 8px 6px; border-bottom: 1px solid var(--line); }
 .simple-table tr:hover td { background: rgba(255,255,255,0.02); }
 
+.cmd-hamburger { display: none; }
+
 @media (max-width: 960px) {
     .cmd-shell { flex-direction: column; }
     .cmd-sidebar {
         width: 100%;
         height: auto;
         position: static;
-        flex-direction: row;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
         padding: 14px 16px;
     }
     .cmd-tag { display: none; }
-    .cmd-nav { display: none; }
-    .cmd-sidebar-bottom { margin-top: 0; padding-top: 0; border-top: none; }
+    .cmd-hamburger {
+        display: flex; align-items: center; justify-content: center;
+        background: transparent; border: 1px solid var(--line); width: 34px; height: 34px; cursor: pointer;
+        order: 1;
+    }
+    .cmd-hamburger:hover { border-color: var(--orange); }
+    .cmd-hamburger-lines, .cmd-hamburger-lines::before, .cmd-hamburger-lines::after {
+        content: ''; display: block; width: 18px; height: 2px; background: var(--paper);
+    }
+    .cmd-hamburger-lines { position: relative; }
+    .cmd-hamburger-lines::before, .cmd-hamburger-lines::after { content: ''; position: absolute; left: 0; }
+    .cmd-hamburger-lines::before { top: -6px; }
+    .cmd-hamburger-lines::after { top: 6px; }
+    .cmd-brand { order: 2; margin-right: auto; margin-left: 10px; margin-bottom: 0; }
+    .cmd-sidebar-bottom { order: 3; margin-top: 0; padding-top: 0; border-top: none; }
+    .cmd-nav {
+        display: none; width: 100%; order: 4;
+        margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line);
+    }
+    .cmd-nav.open { display: flex; }
     .cmd-main { height: auto; padding: 20px 16px 40px; }
     .cmd-grid { grid-template-columns: 1fr; }
     .cmd-panel-scroll { max-height: none; }
