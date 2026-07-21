@@ -582,6 +582,11 @@ async function markRoomRead() {
 function subscribeRealtime() {
     supabase.channel('chat-room-' + room.id)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: 'room_id=eq.' + room.id }, async function (payload) {
+            // sendMessage() already pushes the sender's own message into
+            // `messages` immediately for instant feedback — Supabase
+            // realtime echoes that same INSERT back to the sender too, not
+            // just the other party, so without this check it renders twice.
+            if (messages.some(function (m) { return m.id === payload.new.id; })) return;
             const wasNearBottom = isNearBottom();
             messages.push(payload.new);
             await loadReactionsFor([payload.new]);
