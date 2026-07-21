@@ -16,33 +16,43 @@ const PricingEngine = (function () {
         if (cfg && !force) return cfg;
         if (loadPromise && !force) return loadPromise;
 
-        loadPromise = (async () => {
-            const [vehiclesRes, distanceRes, weightRes, categoriesRes, trafficRes, routeRes, priorityRes, settingsRes] = await Promise.all([
-                supabase.from('pricing_vehicles').select('*').eq('status', 'active').order('sort_order'),
-                supabase.from('pricing_distance_bands').select('*').order('sort_order'),
-                supabase.from('pricing_weight_bands').select('*').order('sort_order'),
-                supabase.from('pricing_parcel_categories').select('*').order('sort_order'),
-                supabase.from('pricing_traffic_multipliers').select('*').order('sort_order'),
-                supabase.from('pricing_route_difficulty').select('*').order('sort_order'),
-                supabase.from('pricing_priority_levels').select('*').order('sort_order'),
-                supabase.from('settings').select('*'),
-            ]);
+        // Never hang forever on a slow/failed Supabase query — a caller
+        // awaiting this (e.g. a page's DOMContentLoaded handler) would
+        // otherwise never reach code after the await, such as wiring up a
+        // button's click listener, making the page look completely dead.
+        loadPromise = Promise.race([
+            (async () => {
+                const [vehiclesRes, distanceRes, weightRes, categoriesRes, trafficRes, routeRes, priorityRes, settingsRes] = await Promise.all([
+                    supabase.from('pricing_vehicles').select('*').eq('status', 'active').order('sort_order'),
+                    supabase.from('pricing_distance_bands').select('*').order('sort_order'),
+                    supabase.from('pricing_weight_bands').select('*').order('sort_order'),
+                    supabase.from('pricing_parcel_categories').select('*').order('sort_order'),
+                    supabase.from('pricing_traffic_multipliers').select('*').order('sort_order'),
+                    supabase.from('pricing_route_difficulty').select('*').order('sort_order'),
+                    supabase.from('pricing_priority_levels').select('*').order('sort_order'),
+                    supabase.from('settings').select('*'),
+                ]);
 
-            const settingsMap = {};
-            (settingsRes.data || []).forEach(function (s) { settingsMap[s.key] = s.value; });
+                const settingsMap = {};
+                (settingsRes.data || []).forEach(function (s) { settingsMap[s.key] = s.value; });
 
-            cfg = {
-                vehicles: vehiclesRes.data || [],
-                distanceBands: distanceRes.data || [],
-                weightBands: weightRes.data || [],
-                categories: categoriesRes.data || [],
-                traffic: trafficRes.data || [],
-                routeTypes: routeRes.data || [],
-                priorities: priorityRes.data || [],
-                settings: settingsMap,
-            };
-            return cfg;
-        })();
+                cfg = {
+                    vehicles: vehiclesRes.data || [],
+                    distanceBands: distanceRes.data || [],
+                    weightBands: weightRes.data || [],
+                    categories: categoriesRes.data || [],
+                    traffic: trafficRes.data || [],
+                    routeTypes: routeRes.data || [],
+                    priorities: priorityRes.data || [],
+                    settings: settingsMap,
+                };
+                return cfg;
+            })(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('PricingEngine.load() timed out')), 10000)),
+        ]);
+
+        // Don't cache a failed/timed-out load forever — let the next call retry.
+        loadPromise.catch(function () { loadPromise = null; });
 
         return loadPromise;
     }

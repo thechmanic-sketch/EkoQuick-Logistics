@@ -1,18 +1,25 @@
-document.addEventListener('DOMContentLoaded', async function () {
-    await PricingEngine.load();
-    const vehicles = PricingEngine.getConfig().vehicles;
-
-    const vehicleSelect = document.getElementById('estVehicle');
-    vehicleSelect.innerHTML = vehicles.map(function (v) {
-        return '<option value="' + v.vehicle_id + '">' + v.icon + ' ' + v.label + '</option>';
-    }).join('');
-
-    renderVehicleCards(vehicles);
-
+document.addEventListener('DOMContentLoaded', function () {
+    // Wire the button up first — if PricingEngine.load() below fails or
+    // times out, the page must not end up with a dead "Get Estimate"
+    // button that silently does nothing when clicked.
     document.getElementById('estimateBtn').addEventListener('click', getEstimate);
 
     GoogleMaps.attachAutocomplete(document.getElementById('estPickup'), function () {}).catch(function () {});
     GoogleMaps.attachAutocomplete(document.getElementById('estDropoff'), function () {}).catch(function () {});
+
+    PricingEngine.load().then(function () {
+        const vehicles = PricingEngine.getConfig().vehicles;
+
+        const vehicleSelect = document.getElementById('estVehicle');
+        vehicleSelect.innerHTML = vehicles.map(function (v) {
+            return '<option value="' + v.vehicle_id + '">' + v.icon + ' ' + v.label + '</option>';
+        }).join('');
+
+        renderVehicleCards(vehicles);
+    }).catch(function (err) {
+        console.error('PricingEngine.load() failed', err);
+        document.getElementById('estimateMsg').textContent = 'Pricing is temporarily unavailable — please try again shortly.';
+    });
 });
 
 function renderVehicleCards(vehicles) {
@@ -41,6 +48,11 @@ async function getEstimate() {
 
     msgEl.textContent = '';
     resultEl.classList.remove('show');
+
+    if (!PricingEngine.getConfig()) {
+        msgEl.textContent = 'Pricing is still loading — please try again in a moment.';
+        return;
+    }
 
     if (!pickup || !dropoff) {
         msgEl.textContent = 'Enter both a pickup and a destination.';
