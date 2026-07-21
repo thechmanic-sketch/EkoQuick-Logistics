@@ -623,6 +623,28 @@ section { border-top: 1px solid var(--line); }
     max-width: 40ch;
 }
 
+.pickup-estimate-band {
+    padding: var(--sp-7) 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-6);
+    align-items: center;
+}
+.pickup-estimate-band > * { min-width: 0; }
+@media (max-width: 860px) { .pickup-estimate-band { grid-template-columns: 1fr; } }
+.pickup-estimate-band .home-estimator { max-width: none; margin: 0; }
+.pickup-estimate-band h2 {
+    font-family: var(--font-stencil);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: clamp(28px, 3.8vw, 44px);
+    color: #fff;
+    line-height: 1;
+    margin: 0;
+}
+.pickup-estimate-band p { font-family: 'Karla', var(--font-body); color: var(--muted); margin-top: var(--sp-2); max-width: 40ch; }
+.pickup-estimate-band .stamp-btn { margin-top: var(--sp-4); }
+
 .stamp-btn {
     font-family: var(--font-mono);
     font-weight: 700;
