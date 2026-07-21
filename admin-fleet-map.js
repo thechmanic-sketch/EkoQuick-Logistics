@@ -1,5 +1,10 @@
-const ONLINE_WINDOW_MS = 5 * 60 * 1000;
 const STALE_GPS_MS = 10 * 60 * 1000;
+// How fresh a GPS ping has to be for a driver to actually show on the map —
+// tighter than a general "online" window since this controls visibility,
+// not just a status label. A driver whose location hasn't updated within
+// this window isn't live, even if their Online toggle is still on.
+const LIVE_WINDOW_MS = 2 * 60 * 1000;
+const TRAIL_MAX_POINTS = 100;
 
 let fleetMap = null;
 let driverMarkers = {};
@@ -12,6 +17,9 @@ let selectedDriverId = null;
 let selectedJobId = null;
 let eventLog = [];
 let prevSnapshot = {};
+let driverTrails = {}; // driverId -> [[lat,lng], ...] breadcrumb of recent live positions
+let selectedTrailLine = null;
+let followSelected = false;
 
 document.addEventListener('DOMContentLoaded', async function () {
     const user = await requireSession('admin-login.html');
@@ -82,6 +90,13 @@ function isOnline(driver) {
     return driver.is_online === true;
 }
 
+function isLive(driver) {
+    // Whether a driver should actually show on the map right now — the
+    // Online toggle alone isn't enough (it can't detect a crashed app or
+    // dead connection), so also require a recent GPS ping.
+    return isOnline(driver) && !!driver.last_seen_at && (Date.now() - new Date(driver.last_seen_at).getTime()) < LIVE_WINDOW_MS;
+}
+
 function activeJobForDriver(driverId) {
     return allJobs.find(function (j) { return j.driver_id === driverId && (j.status === 'offered' || j.status === 'to_pickup' || j.status === 'to_dropoff'); });
 }
@@ -93,6 +108,28 @@ function haversineKm(lat1, lng1, lat2, lng2) {
     const a = Math.sin(dLat / 2) ** 2 +
         Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function recordTrailPoint(driverId, pos) {
+    const trail = driverTrails[driverId] || (driverTrails[driverId] = []);
+    const last = trail[trail.length - 1];
+    if (last && last[0] === pos[0] && last[1] === pos[1]) return; // no movement, don't pad the trail
+    trail.push(pos);
+    if (trail.length > TRAIL_MAX_POINTS) trail.shift();
+}
+
+function renderSelectedTrail() {
+    if (!selectedDriverId || !driverMarkers[selectedDriverId]) {
+        if (selectedTrailLine) { selectedTrailLine.remove(); selectedTrailLine = null; }
+        return;
+    }
+    const trail = driverTrails[selectedDriverId] || [];
+    if (trail.length < 2) {
+        if (selectedTrailLine) { selectedTrailLine.remove(); selectedTrailLine = null; }
+        return;
+    }
+    if (selectedTrailLine) selectedTrailLine.setLatLngs(trail);
+    else selectedTrailLine = GoogleMaps.createPolyline(fleetMap, trail, '#FF6A2B', 3);
 }
 
 function computeEta(job) {
@@ -265,9 +302,17 @@ function renderMap() {
 
     allDrivers.forEach(function (d) {
         if (!d.last_lat || !d.last_lng) return;
+        // Only show a driver on the map while they're actually live — not
+        // just toggled Online with stale/no recent GPS. A driver mid-
+        // delivery stays visible through a brief GPS hiccup (flagged
+        // 'attention' by driverStatus) since losing the pin during an
+        // active job would be worse than a stale one.
+        const job = activeJobForDriver(d.id);
+        if (!job && !isLive(d)) return;
         const status = driverStatus(d);
         seenDrivers[d.id] = true;
         const pos = [d.last_lat, d.last_lng];
+        recordTrailPoint(d.id, pos);
         if (driverMarkers[d.id]) {
             driverMarkers[d.id].setLatLng(pos);
             driverMarkers[d.id].setIcon(dotEmoji[status]);
@@ -280,6 +325,12 @@ function renderMap() {
     Object.keys(driverMarkers).forEach(function (id) {
         if (!seenDrivers[id]) { driverMarkers[id].remove(); delete driverMarkers[id]; }
     });
+
+    renderSelectedTrail();
+    if (followSelected && selectedDriverId && seenDrivers[selectedDriverId]) {
+        const d = allDrivers.find(function (x) { return x.id === selectedDriverId; });
+        if (d && d.last_lat && d.last_lng) fleetMap.setCenter({ lat: d.last_lat, lng: d.last_lng });
+    }
 
     const seenJobs = {};
     const activeJobs = allJobs.filter(function (j) { return j.status === 'offered' || j.status === 'to_pickup' || j.status === 'to_dropoff'; });
@@ -348,6 +399,7 @@ function kv(label, value) {
 }
 
 function selectDriver(driverId) {
+    if (selectedDriverId !== driverId) followSelected = false;
     selectedDriverId = driverId;
     selectedJobId = null;
     const d = allDrivers.find(function (x) { return x.id === driverId; });
@@ -355,14 +407,22 @@ function selectDriver(driverId) {
     if (driverMarkers[driverId]) driverMarkers[driverId].openPopup();
     renderDriverList();
     renderDriverDetails(driverId);
+    renderSelectedTrail();
+}
+
+function toggleFollowSelected() {
+    followSelected = !followSelected;
+    renderDriverDetails(selectedDriverId);
 }
 
 function selectJob(jobId) {
+    followSelected = false;
     selectedJobId = jobId;
     selectedDriverId = null;
     const j = allJobs.find(function (x) { return x.id === jobId; });
     if (j && j.pickup_lat && j.pickup_lng) GoogleMaps.setView(fleetMap, [j.pickup_lat, j.pickup_lng], 13);
     renderJobDetails(jobId);
+    renderSelectedTrail();
 }
 
 function driverStatsToday(driverId) {
@@ -397,12 +457,16 @@ function renderDriverDetails(driverId) {
         '<h3 style="font-size:11px; color:var(--muted-dim); margin:14px 0 6px; text-transform:uppercase;">Location</h3>' +
         kv('Coordinates', d.last_lat && d.last_lng ? d.last_lat.toFixed(5) + ', ' + d.last_lng.toFixed(5) : 'No GPS data') +
         kv('Last Seen', formatTime(d.last_seen_at)) +
+        kv('Trail points', (driverTrails[d.id] || []).length) +
         '<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">' +
             (callLink ? '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" href="' + callLink + '">Call Driver</a>' : '') +
             (waLink ? '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" target="_blank" href="' + waLink + '">Message</a>' : '') +
             '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" href="admin-drivers.html?driver=' + d.id + '">Driver Profile</a>' +
             (job ? '<a class="btn btn-outline-blue" style="width:auto; text-decoration:none; text-align:center;" href="admin-jobs.html?job=' + job.id + '">View Job</a>' : '') +
+            '<button type="button" class="btn ' + (followSelected ? 'btn-blue' : 'btn-outline-blue') + '" style="width:auto;" id="followDriverBtn">' + (followSelected ? '📍 Following…' : '📍 Follow on Map') + '</button>' +
         '</div>';
+    const followBtn = document.getElementById('followDriverBtn');
+    if (followBtn) followBtn.addEventListener('click', toggleFollowSelected);
 }
 
 function renderJobDetails(jobId) {
