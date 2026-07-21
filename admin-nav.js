@@ -19,16 +19,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // A dedicated Home link right under the brand — always visible without
     // scrolling, since it was previously appended at the very bottom of a
-    // 20+ item nav list and effectively unfindable.
+    // 20+ item nav list and effectively unfindable. Opens in a new tab so
+    // the admin session in this tab is never touched by navigating away.
     const homeLink = document.createElement('a');
     homeLink.href = 'index.html';
+    homeLink.target = '_blank';
+    homeLink.rel = 'noopener';
     homeLink.className = 'cmd-home-link';
-    homeLink.textContent = '🏠 Home';
+    homeLink.textContent = '🏠 Home ↗';
     brand.insertAdjacentElement('afterend', homeLink);
 
     // Same public reference pages as the homepage's own menu, appended
     // after admin's own nav — so admin can still check a public page
-    // (tariff, coverage, etc.) without logging out.
+    // (tariff, coverage, etc.) without leaving the logged-in tab.
     const referenceLinks = [
         ['services.html', 'Services'],
         ['pricing.html', 'Tariff'],
@@ -43,12 +46,14 @@ document.addEventListener('DOMContentLoaded', function () {
     ];
     const sectionHeader = document.createElement('div');
     sectionHeader.className = 'cmd-nav-section';
-    sectionHeader.textContent = 'Site';
+    sectionHeader.textContent = 'Site (opens in new tab)';
     nav.appendChild(sectionHeader);
     referenceLinks.forEach(function (l) {
         const a = document.createElement('a');
         a.href = l[0];
-        a.textContent = l[1];
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = l[1] + ' ↗';
         nav.appendChild(a);
     });
 

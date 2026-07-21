@@ -84,9 +84,9 @@
                 const active = page === l[0];
                 return '<a href="' + l[0] + '"' + (active ? ' class="active"' : '') + '>' + l[1] + '</a>';
             }).join('') +
-            '<div class="app-mobile-menu-section">Site</div>' +
+            '<div class="app-mobile-menu-section">Site (opens in new tab)</div>' +
             referenceLinks.map(function (l) {
-                return '<a href="' + l[0] + '">' + l[1] + '</a>';
+                return '<a href="' + l[0] + '" target="_blank" rel="noopener">' + l[1] + ' ↗</a>';
             }).join('');
         navbar.insertAdjacentElement('afterend', panel);
 
