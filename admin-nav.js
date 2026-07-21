@@ -17,11 +17,19 @@ document.addEventListener('DOMContentLoaded', function () {
     btn.innerHTML = '<span class="cmd-hamburger-lines"></span>';
     sidebar.insertBefore(btn, brand);
 
+    // A dedicated Home link right under the brand — always visible without
+    // scrolling, since it was previously appended at the very bottom of a
+    // 20+ item nav list and effectively unfindable.
+    const homeLink = document.createElement('a');
+    homeLink.href = 'index.html';
+    homeLink.className = 'cmd-home-link';
+    homeLink.textContent = '🏠 Home';
+    brand.insertAdjacentElement('afterend', homeLink);
+
     // Same public reference pages as the homepage's own menu, appended
-    // after admin's own nav — so admin can still get back to Home or check
-    // a public page (tariff, coverage, etc.) without logging out.
+    // after admin's own nav — so admin can still check a public page
+    // (tariff, coverage, etc.) without logging out.
     const referenceLinks = [
-        ['index.html', 'Home'],
         ['services.html', 'Services'],
         ['pricing.html', 'Tariff'],
         ['track-parcel.html', 'Track'],
