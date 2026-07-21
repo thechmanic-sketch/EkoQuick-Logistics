@@ -188,6 +188,56 @@
         </div>
     </section>
 
+    <section id="estimate">
+        <div class="wrap">
+            <div class="sec-head">
+                <div>
+                    <p class="sec-tag">Instant estimate</p>
+                    <h2>What will it cost?</h2>
+                </div>
+                <p class="sec-note">Real driving distance, real pricing — no surprises.</p>
+            </div>
+            <div class="home-estimator">
+                <div class="home-estimator-grid">
+                    <div>
+                        <label>Pickup</label>
+                        <input id="homeEstPickup" placeholder="e.g. 12 Musgrave Road, Durban">
+                        <button type="button" class="home-estimator-map-btn" id="homeEstPickMapBtn">📍 Select on Map</button>
+                        <div id="homeEstPickupMap" class="home-estimator-mini-map hidden"></div>
+                    </div>
+                    <div>
+                        <label>Destination</label>
+                        <input id="homeEstDropoff" placeholder="e.g. 5 Church St, Pietermaritzburg">
+                        <button type="button" class="home-estimator-map-btn" id="homeEstPickMapBtn2">📍 Select on Map</button>
+                        <div id="homeEstDropoffMap" class="home-estimator-mini-map hidden"></div>
+                    </div>
+                    <div>
+                        <label>Vehicle</label>
+                        <select id="homeEstVehicle"></select>
+                    </div>
+                    <div>
+                        <label>Parcel Type</label>
+                        <select id="homeEstParcelType">
+                            <option value="parcel">Parcel</option>
+                            <option value="documents">Documents</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="food">Food</option>
+                            <option value="clothing">Clothing</option>
+                            <option value="furniture">Furniture</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="home-estimator-btn" id="homeEstimateBtn">Get Estimate</button>
+                <div class="home-estimate-msg" id="homeEstimateMsg"></div>
+                <div class="home-estimate-result" id="homeEstimateResult">
+                    <div class="amt" id="homeEstAmount">R0</div>
+                    <div class="detail" id="homeEstDetail"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section id="coverage">
         <div class="wrap">
             <div class="sec-head">
@@ -255,6 +305,11 @@
         </div>
     </footer>
 
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="google-maps.js"></script>
+    <script src="pricing-engine.js"></script>
+    <script src="home-estimator.js"></script>
     <script src="nav.js"></script>
     <script src="support-widget.js"></script>
 </body>

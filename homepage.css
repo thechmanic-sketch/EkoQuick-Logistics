@@ -547,6 +547,36 @@ section { border-top: 1px solid var(--line); }
     font-size: 13px;
 }
 
+/* ---------- HOME ESTIMATOR ---------- */
+.home-estimator { border: 1px solid var(--line); background: var(--ink-2); padding: var(--sp-4); max-width: 700px; }
+.home-estimator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+@media (max-width: 640px) { .home-estimator-grid { grid-template-columns: 1fr; } }
+.home-estimator label { display: block; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-dim); margin-bottom: 4px; }
+.home-estimator input, .home-estimator select {
+    width: 100%; background: var(--ink); border: 1px solid var(--line); color: var(--paper);
+    padding: 10px; font-family: var(--font-mono); font-size: 13px; margin-bottom: var(--sp-3); box-sizing: border-box;
+}
+.home-estimator input:focus, .home-estimator select:focus { outline: none; border-color: var(--orange); }
+.home-estimator-btn {
+    width: 100%; background: var(--orange); color: var(--ink); border: none; padding: 12px;
+    font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    cursor: pointer; font-size: 13px;
+}
+.home-estimator-btn:disabled { opacity: 0.6; cursor: wait; }
+.home-estimator-map-btn {
+    width: 100%; background: transparent; color: var(--muted); border: 1px solid var(--line);
+    padding: 8px; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.05em; cursor: pointer; margin-top: -6px; margin-bottom: var(--sp-3); box-sizing: border-box;
+}
+.home-estimator-map-btn:hover { border-color: var(--orange); color: var(--orange); }
+.home-estimator-mini-map { height: 180px; border: 1px solid var(--line); margin-bottom: var(--sp-3); }
+.home-estimate-result { margin-top: var(--sp-3); border: 1px solid var(--orange); padding: var(--sp-3); display: none; }
+.home-estimate-result.show { display: block; }
+.home-estimate-result .amt { font-family: var(--font-stencil); font-size: 40px; color: var(--orange); line-height: 1; }
+.home-estimate-result .detail { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-top: 6px; }
+.home-estimate-msg { font-family: var(--font-mono); font-size: 12px; color: var(--red); margin-top: 8px; }
+.hidden { display: none !important; }
+
 /* ---------- COVERAGE ---------- */
 .route-strip {
     font-family: var(--font-mono);
