@@ -120,7 +120,18 @@ function renderCustomerPanel() {
     panel.classList.remove('hidden');
 }
 
+let lastActionPanelKey = null;
+
 function renderActionPanel() {
+    // render() runs on every GPS position tick (every few seconds while
+    // tracking), which used to rebuild this panel's innerHTML every time —
+    // wiping out the pickup/delivery code input mid-typing. Only rebuild
+    // when something that actually changes what this panel shows has
+    // changed (job status or arrival flags), not on every position update.
+    const key = job.status + '|' + (job.arrived_at_pickup_at || '') + '|' + (job.arrived_at_dropoff_at || '');
+    if (key === lastActionPanelKey) return;
+    lastActionPanelKey = key;
+
     const panel = document.getElementById('actionPanel');
     const extras = document.getElementById('completionExtras');
     extras.classList.add('hidden');
