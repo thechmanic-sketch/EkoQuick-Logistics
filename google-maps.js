@@ -198,7 +198,7 @@ const GoogleMaps = (function () {
         // uncentered, or crowded against whatever sits below it.
         const inputStyle = window.getComputedStyle(inputEl);
         autocompleteEl.style.cssText =
-            'display:block; width:100%; box-sizing:border-box;' +
+            'display:block; width:100%; max-width:100%; min-width:0; box-sizing:border-box;' +
             'margin-bottom:' + inputStyle.marginBottom + ';' +
             'min-height:' + inputStyle.height + ';';
         // Google renders this element with its own light Material theme by

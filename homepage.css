@@ -550,6 +550,7 @@ section { border-top: 1px solid var(--line); }
 /* ---------- HOME ESTIMATOR ---------- */
 .home-estimator { border: 1px solid var(--line); background: var(--ink-2); padding: var(--sp-4); max-width: 700px; }
 .home-estimator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.home-estimator-grid > div { min-width: 0; }
 @media (max-width: 640px) { .home-estimator-grid { grid-template-columns: 1fr; } }
 .home-estimator label { display: block; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-dim); margin-bottom: 4px; }
 .home-estimator input, .home-estimator select {
