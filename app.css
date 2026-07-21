@@ -45,6 +45,33 @@ body {
 }
 .navbar .nav-logout:hover { border-color: var(--orange); color: var(--orange); }
 
+/* ---------- LOGGED-IN APP HAMBURGER MENU ---------- */
+.app-hamburger {
+    background: transparent; border: 1px solid var(--line); width: 34px; height: 34px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    margin-right: 12px; flex-shrink: 0;
+}
+.app-hamburger:hover { border-color: var(--orange); }
+.app-hamburger-lines, .app-hamburger-lines::before, .app-hamburger-lines::after {
+    content: ''; display: block; width: 18px; height: 2px; background: var(--paper);
+}
+.app-hamburger-lines { position: relative; }
+.app-hamburger-lines::before, .app-hamburger-lines::after { content: ''; position: absolute; left: 0; }
+.app-hamburger-lines::before { top: -6px; }
+.app-hamburger-lines::after { top: 6px; }
+.app-mobile-menu {
+    display: none; flex-direction: column; background: var(--ink-2);
+    border-bottom: 1px solid var(--line); padding: 4px 20px;
+}
+.app-mobile-menu.open { display: flex; }
+.app-mobile-menu a {
+    padding: 12px 0; border-bottom: 1px solid var(--line); color: var(--paper);
+    text-decoration: none; font-family: var(--font-mono); font-size: 13px;
+    letter-spacing: 0.03em; text-transform: uppercase;
+}
+.app-mobile-menu a:last-child { border-bottom: none; }
+.app-mobile-menu a.active { color: var(--orange); }
+
 .page-wrap {
     max-width: 480px;
     margin: 0 auto;
