@@ -322,6 +322,7 @@ function wireSignaturePad(canvas) {
 let mapReadyPromise = null;
 let userPannedMap = false;
 let programmaticMapChange = false;
+let hasAutoFitOnce = false;
 
 function initMap() {
     if (!mapReadyPromise) {
@@ -372,7 +373,17 @@ function beginTracking() {
 
                 if (!driverMarker) driverMarker = GoogleMaps.createMarker(map, [lastPos.lat, lastPos.lng], '🚚', { title: 'You' });
                 else driverMarker.setLatLng([lastPos.lat, lastPos.lng]);
-                recenter();
+                // Auto-fit the view once when tracking starts, then stop —
+                // calling this on every tick (even with userPannedMap
+                // false) re-fit the bounds to the driver's slightly
+                // jittering GPS position every 1-2s, which is what was
+                // still flickering the map continuously. The marker itself
+                // keeps moving via setLatLng above; the Recenter button
+                // still re-fits on demand.
+                if (!hasAutoFitOnce) {
+                    hasAutoFitOnce = true;
+                    recenter();
+                }
 
                 const dest = destCoords();
                 const now = Date.now();
