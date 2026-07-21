@@ -56,7 +56,24 @@ document.addEventListener('DOMContentLoaded', async function () {
     beginTracking();
 
     supabase.channel('driver-nav-' + currentUser.id)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs', filter: 'driver_id=eq.' + currentUser.id }, loadJob)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs', filter: 'driver_id=eq.' + currentUser.id }, function (payload) {
+            // beginTracking() writes driver_lat/driver_lng to this same
+            // job every 1-2s (every GPS tick), and this subscription has
+            // no column filter — so that write echoed straight back here
+            // and triggered a full loadJob()/render() every single time,
+            // which is what was flickering the map and code box
+            // continuously. Only actually reload when something that
+            // isn't routine tracking data changed (status, arrival, etc).
+            if (payload.eventType === 'UPDATE' && payload.old && payload.new) {
+                const onlyTrackingFieldsChanged =
+                    payload.old.status === payload.new.status &&
+                    payload.old.arrived_at_pickup_at === payload.new.arrived_at_pickup_at &&
+                    payload.old.arrived_at_dropoff_at === payload.new.arrived_at_dropoff_at &&
+                    payload.old.driver_id === payload.new.driver_id;
+                if (onlyTrackingFieldsChanged) return;
+            }
+            loadJob();
+        })
         .subscribe();
 });
 
@@ -111,7 +128,16 @@ async function render() {
     renderActionPanel();
 }
 
+let lastCustomerPanelKey = null;
+
 function renderCustomerPanel() {
+    // render() runs on every GPS tick (every 1-2s) — rebuilding this
+    // panel's innerHTML every single time visibly flickered it for no
+    // reason, since none of this content actually changes between ticks.
+    const key = job.status + '|' + job.sender_name + '|' + job.customer_phone + '|' + job.receiver_name + '|' + job.receiver_phone;
+    if (key === lastCustomerPanelKey) return;
+    lastCustomerPanelKey = key;
+
     const panel = document.getElementById('customerPanel');
     const label = job.status === 'to_pickup'
         ? 'Customer: ' + (job.sender_name || '—') + (job.customer_phone ? ' · ' + job.customer_phone : '')
