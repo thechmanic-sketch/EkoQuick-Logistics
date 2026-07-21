@@ -112,7 +112,15 @@ function driverStatus(d) {
         return 'busy';
     }
     if (job) return 'busy';
-    if (isOnline(d)) return 'online';
+    if (isOnline(d)) {
+        // The Online toggle can't detect a crashed app, force-closed tab,
+        // or dead connection — only a logout click turns it off cleanly.
+        // A very stale GPS heartbeat while still marked online is the only
+        // signal we have that they may not actually be reachable.
+        const staleGps = d.last_seen_at && (Date.now() - new Date(d.last_seen_at).getTime()) > STALE_GPS_MS;
+        if (staleGps) return 'attention';
+        return 'online';
+    }
     return 'offline';
 }
 

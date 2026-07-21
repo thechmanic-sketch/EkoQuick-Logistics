@@ -74,6 +74,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('logoutBtn').addEventListener('click', async function () {
         stopTracking();
         stopPresence();
+        // Logging out must take the driver off the map and out of dispatch
+        // — otherwise admin (which now trusts this toggle as the sole
+        // source of truth) would keep showing them Online forever.
+        await supabase.from('profiles').update({ is_online: false }).eq('id', currentUser.id);
         await supabase.auth.signOut();
         window.location.href = 'login.html';
     });
