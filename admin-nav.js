@@ -3,7 +3,7 @@
 // admins on a phone/tablet had no navigation at all besides the current
 // page. This just wires a button to toggle .cmd-nav's visibility; the
 // actual menu links already exist in the markup.
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
     const sidebar = document.querySelector('.cmd-sidebar');
     const brand = document.querySelector('.cmd-brand');
     const nav = document.querySelector('.cmd-nav');
@@ -64,4 +64,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (window.innerWidth > 960) return;
         if (!nav.contains(e.target) && !btn.contains(e.target)) nav.classList.remove('open');
     });
+
+    if (typeof supabase !== 'undefined' && typeof NotifBell !== 'undefined') {
+        const { data } = await supabase.auth.getSession();
+        if (data && data.session) NotifBell.init({ userId: data.session.user.id, role: 'admin' });
+    }
 });

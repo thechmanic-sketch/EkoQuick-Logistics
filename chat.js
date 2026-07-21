@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     currentProfile = await getProfile(currentUser.id);
     if (!currentProfile) return;
     myRole = currentProfile.role === 'driver' ? 'driver' : currentProfile.role === 'admin' ? 'admin' : 'customer';
+    if (typeof NotifSound !== 'undefined') NotifSound.loadPreference(currentUser.id);
 
     const fromParam = new URLSearchParams(window.location.search).get('from');
     document.getElementById('backBtn').href = fromParam === 'delivery'
@@ -587,6 +588,7 @@ function subscribeRealtime() {
             // realtime echoes that same INSERT back to the sender too, not
             // just the other party, so without this check it renders twice.
             if (messages.some(function (m) { return m.id === payload.new.id; })) return;
+            if (payload.new.sender_id !== currentUser.id && typeof NotifSound !== 'undefined') NotifSound.play();
             const wasNearBottom = isNearBottom();
             messages.push(payload.new);
             await loadReactionsFor([payload.new]);

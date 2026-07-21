@@ -118,14 +118,6 @@ async function loadDashboard() {
     renderRecentOrders(jobs || [], drivers || []);
     renderDriverStatus(jobs || [], drivers || []);
     renderSystemStatus(drivers || []);
-    renderBell(jobs || []);
-}
-
-function renderBell(jobs) {
-    const complaints = jobs.filter(function (j) { return j.rating && j.rating <= 2; }).length;
-    const el = document.getElementById('bellCount');
-    if (complaints > 0) { el.textContent = complaints; el.classList.remove('hidden'); }
-    else el.classList.add('hidden');
 }
 
 function kpiCard(title, value, sub, subClass) {

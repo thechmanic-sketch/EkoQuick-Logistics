@@ -78,9 +78,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         window.location.href = 'login.html';
     });
     document.getElementById('onlineToggle').addEventListener('change', toggleOnline);
-    document.getElementById('bellBtn').addEventListener('click', function () {
-        document.getElementById('notifPanel').classList.toggle('open');
-    });
+    NotifBell.init({ userId: currentUser.id, role: 'driver' });
 
     await loadDriverShare();
     await loadCommissionRules();
@@ -167,7 +165,6 @@ async function loadJobs() {
     renderAvailableJobs(availablePending);
     renderRecentDeliveries();
     renderPerformance();
-    renderNotifications();
     renderChatUnreadBadge();
 
     const inProgress = allJobs.find(function (j) { return j.status === 'to_pickup' || j.status === 'to_dropoff'; });
@@ -358,35 +355,6 @@ async function renderChatUnreadBadge() {
     if (count) { badge.textContent = count; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
 }
 
-async function renderNotifications() {
-    const notifs = [];
-    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
-
-    allJobs.forEach(function (j) {
-        if (j.status === 'offered' && j.assigned_at && new Date(j.assigned_at).getTime() >= dayAgo) {
-            notifs.push({ time: j.assigned_at, label: 'New job assigned: ' + j.pickup + ' → ' + j.dropoff });
-        }
-        if (j.status === 'cancelled' && j.cancelled_at && new Date(j.cancelled_at).getTime() >= dayAgo) {
-            notifs.push({ time: j.cancelled_at, label: 'Job cancelled: ' + j.pickup + ' → ' + j.dropoff });
-        }
-    });
-
-    const { data: payouts } = await supabase.from('driver_payouts').select('*').eq('driver_id', currentUser.id).eq('status', 'paid').order('paid_at', { ascending: false }).limit(5);
-    (payouts || []).forEach(function (p) {
-        if (p.paid_at && new Date(p.paid_at).getTime() >= dayAgo) {
-            notifs.push({ time: p.paid_at, label: 'Earnings paid: R' + Number(p.total_amount).toFixed(2) });
-        }
-    });
-
-    notifs.sort(function (a, b) { return new Date(b.time) - new Date(a.time); });
-
-    const bell = document.getElementById('bellCount');
-    if (notifs.length) { bell.textContent = notifs.length; bell.classList.remove('hidden'); } else { bell.classList.add('hidden'); }
-
-    document.getElementById('notifPanel').innerHTML = notifs.length
-        ? notifs.map(function (n) { return '<div class="notif-item">' + escapeHtml(n.label) + '</div>'; }).join('')
-        : '<div class="empty">No notifications.</div>';
-}
 
 function showJobError(id, message) {
     const el = document.getElementById(id);

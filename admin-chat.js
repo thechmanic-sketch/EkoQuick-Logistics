@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const profile = await getProfile(user.id);
     if (!profile || profile.role !== 'admin') { await supabase.auth.signOut(); window.location.href = 'admin-login.html'; return; }
     window.currentAdminName = profile.full_name || profile.email || 'Admin';
+    if (typeof NotifSound !== 'undefined') NotifSound.loadPreference(user.id);
     await loadAppSettings();
     window.chatFlaggedKeywords = appSetting('chat_flagged_keywords', '').split(',').map(function (s) { return s.trim(); });
 
@@ -53,11 +54,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     await loadAll();
     supabase.channel('admin-chat-rooms').on('postgres_changes', { event: '*', schema: 'public', table: 'chat_rooms' }, loadAll).subscribe();
     supabase.channel('admin-chat-messages').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, function (payload) {
+        if (payload.new.sender_type !== 'admin' && typeof NotifSound !== 'undefined') NotifSound.play();
         if (currentSource === 'room' && payload.new.room_id === currentId) { appendMessageToView(payload.new); }
         else { unreadByRoom[payload.new.room_id] = (unreadByRoom[payload.new.room_id] || 0) + 1; renderRoomList(); }
     }).subscribe();
     supabase.channel('admin-driver-chats').on('postgres_changes', { event: '*', schema: 'public', table: 'driver_admin_chats' }, loadAll).subscribe();
     supabase.channel('admin-driver-messages').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'driver_admin_messages' }, function (payload) {
+        if (payload.new.sender_type !== 'admin' && typeof NotifSound !== 'undefined') NotifSound.play();
         if (currentSource === 'driverAdmin' && payload.new.chat_id === currentId) { appendDriverMessageToView(payload.new); }
         else { unreadByDriverChat[payload.new.chat_id] = (unreadByDriverChat[payload.new.chat_id] || 0) + 1; renderRoomList(); }
     }).subscribe();

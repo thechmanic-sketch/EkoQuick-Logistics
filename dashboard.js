@@ -35,15 +35,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         preview.classList.remove('hidden');
     }
 
+    NotifBell.init({ userId: currentUser.id, role: 'customer' });
+
     document.getElementById('avatarSaveBtn').addEventListener('click', saveAvatar);
     document.getElementById('logoutBtn').addEventListener('click', async function () {
         await supabase.auth.signOut();
         window.location.href = 'login.html';
-    });
-    document.getElementById('bellBtn').addEventListener('click', function (e) {
-        e.stopPropagation();
-        document.getElementById('profilePanel').classList.remove('open');
-        document.getElementById('notifPanel').classList.toggle('open');
     });
     document.getElementById('avatarBtn').addEventListener('click', function (e) {
         e.stopPropagation();
@@ -113,7 +110,6 @@ async function loadAll() {
     renderActiveDeliveries();
     renderRecentOrders();
     renderActivity();
-    renderNotifications();
     updateQuickActions();
 }
 
@@ -309,35 +305,6 @@ function renderActivity() {
     }).join('');
 }
 
-function renderNotifications() {
-    const notifs = [];
-    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
-
-    allJobs.forEach(function (j) {
-        if (j.assigned_at && new Date(j.assigned_at).getTime() >= dayAgo) notifs.push({ time: j.assigned_at, label: 'Driver assigned to your order (' + j.pickup + ' → ' + j.dropoff + ')' });
-        if (j.delivered_at && new Date(j.delivered_at).getTime() >= dayAgo) notifs.push({ time: j.delivered_at, label: 'Delivery completed — ' + j.pickup + ' → ' + j.dropoff });
-        if (j.payment_status === 'paid' && j.payment_verified_at && new Date(j.payment_verified_at).getTime() >= dayAgo) notifs.push({ time: j.payment_verified_at, label: 'Payment received for order ' + j.id.slice(0, 8) });
-
-        if (j.status === 'to_pickup' && j.driver_lat && j.driver_lng && j.pickup_lat && j.pickup_lng) {
-            const km = haversineKm(j.driver_lat, j.driver_lng, j.pickup_lat, j.pickup_lng);
-            if (km <= 1) notifs.push({ time: new Date().toISOString(), label: 'Your driver is near the pickup location' });
-        }
-        if (j.status === 'to_dropoff' && j.driver_lat && j.driver_lng && j.dropoff_lat && j.dropoff_lng) {
-            const km = haversineKm(j.driver_lat, j.driver_lng, j.dropoff_lat, j.dropoff_lng);
-            if (km <= 1) notifs.push({ time: new Date().toISOString(), label: 'Your driver is near your delivery address' });
-        }
-    });
-
-    notifs.sort(function (a, b) { return new Date(b.time) - new Date(a.time); });
-
-    const bell = document.getElementById('bellCount');
-    if (notifs.length) { bell.textContent = notifs.length; bell.classList.remove('hidden'); } else { bell.classList.add('hidden'); }
-
-    const panel = document.getElementById('notifPanel');
-    panel.innerHTML = notifs.length
-        ? notifs.map(function (n) { return '<div class="notif-item">' + escapeHtml(n.label) + '</div>'; }).join('')
-        : '<div class="empty">No notifications.</div>';
-}
 
 async function saveAvatar() {
     const file = document.getElementById('avatarFile').files[0];
