@@ -1912,3 +1912,46 @@ create trigger trg_notify_on_eta_soon
   after update of eta_seconds on jobs
   for each row execute function notify_on_eta_soon();
 
+
+-- Track Parcel page now looks up by tracking number alone (phone number
+-- field removed from the UI) — new single-arg function, tracking_number
+-- itself is the only credential now.
+create or replace function public_track_job(p_tracking_number text)
+returns table (
+  status text,
+  vehicle text,
+  pickup text,
+  dropoff text,
+  distance numeric,
+  duration text,
+  quote numeric,
+  delivery_type text,
+  driver_name text,
+  driver_vehicle_make text,
+  driver_vehicle_model text,
+  driver_lat double precision,
+  driver_lng double precision,
+  collection_code text,
+  delivery_code text,
+  assigned_at timestamptz,
+  to_pickup_at timestamptz,
+  to_dropoff_at timestamptz,
+  delivered_at timestamptz,
+  cancelled_at timestamptz,
+  scheduled_at timestamptz,
+  created_at timestamptz
+)
+security definer
+set search_path = public
+as $$
+  select j.status, j.vehicle, j.pickup, j.dropoff, j.distance, j.duration, j.quote, j.delivery_type,
+         p.full_name, p.vehicle_make, p.vehicle_model,
+         j.driver_lat, j.driver_lng, j.collection_code, j.delivery_code,
+         j.assigned_at, j.to_pickup_at, j.to_dropoff_at, j.delivered_at, j.cancelled_at, j.scheduled_at, j.created_at
+  from jobs j
+  left join profiles p on p.id = j.driver_id
+  where j.tracking_number = upper(trim(p_tracking_number))
+  limit 1;
+$$ language sql;
+
+grant execute on function public_track_job(text) to anon;

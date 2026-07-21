@@ -10,7 +10,7 @@
     <script src="transitions.js"></script>
     <style>
         .track-form { border: 1px solid var(--line); background: var(--ink-2); padding: var(--sp-4); }
-        .track-form-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: var(--sp-3); align-items: end; }
+        .track-form-grid { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-3); align-items: end; }
         @media (max-width: 700px) { .track-form-grid { grid-template-columns: 1fr; } }
         .track-form label { display: block; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-dim); margin-bottom: 4px; }
         .track-form input {
@@ -123,7 +123,7 @@
             <p class="breadcrumb"><a href="index.html">Home</a> / Track Parcel</p>
             <p class="sec-tag">Track parcel</p>
             <h1>Where's my delivery?</h1>
-            <p class="page-lede">Enter your tracking number (given to you after booking) and the phone number on the job to see live status — no login needed.</p>
+            <p class="page-lede">Enter your tracking number (given to you after booking) to see live status — no login needed.</p>
         </div>
     </header>
 
@@ -134,10 +134,6 @@
                     <div>
                         <label>Tracking Number</label>
                         <input id="trackNumber" placeholder="e.g. EQ4F2A9C">
-                    </div>
-                    <div>
-                        <label>Phone Number On The Job</label>
-                        <input id="trackPhone" placeholder="0676659966">
                     </div>
                     <button class="track-btn" id="trackBtn">Track</button>
                 </div>
