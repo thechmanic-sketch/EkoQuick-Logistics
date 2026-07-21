@@ -11,6 +11,7 @@
     <script src="transitions.js"></script>
     <script src="notif-sound.js"></script>
     <script src="notif-bell.js"></script>
+    <script src="geo-permission.js"></script>
     <script src="app-nav.js"></script>
     <style>
         .step-indicator { display: flex; justify-content: space-between; margin-bottom: 20px; }
@@ -57,7 +58,8 @@
 
                 <label style="margin-top:10px;" id="pickupLabel">Pickup Address</label>
                 <input class="field-plain" id="pickup" placeholder="e.g. 45 West Street, Durban CBD">
-                <div style="display:flex; gap:8px; margin:6px 0;">
+                <div style="display:flex; gap:8px; margin:6px 0; flex-wrap:wrap;">
+                    <button class="btn btn-outline-blue" id="useMyLocationBtn" style="width:auto;">📍 Use My Location</button>
                     <button class="btn btn-outline-blue" id="pickMapBtn1" style="width:auto;">📍 Select on Map</button>
                     <button class="btn btn-outline-blue" id="savedAddrBtn1" style="width:auto;">❤️ Saved Addresses</button>
                 </div>
@@ -87,7 +89,8 @@
 
                 <label style="margin-top:10px;" id="dropoffLabel">Delivery Address</label>
                 <input class="field-plain" id="dropoff" placeholder="e.g. 12 Main Road, Pietermaritzburg">
-                <div style="display:flex; gap:8px; margin:6px 0;">
+                <div style="display:flex; gap:8px; margin:6px 0; flex-wrap:wrap;">
+                    <button class="btn btn-outline-blue hidden" id="useMyLocationBtn2" style="width:auto;">📍 Use My Location</button>
                     <button class="btn btn-outline-blue" id="pickMapBtn2" style="width:auto;">📍 Select on Map</button>
                 </div>
                 <div id="dropoffMap" class="mini-map hidden"></div>

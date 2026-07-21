@@ -37,6 +37,17 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     NotifBell.init({ userId: currentUser.id, role: 'customer' });
 
+    if (typeof GeoPermission !== 'undefined') {
+        GeoPermission.checkStatus(function (status) {
+            if (status === 'denied' || status === 'prompt') {
+                GeoPermission.showBanner(
+                    document.querySelector('.page-wrap'),
+                    'Turn on location so we can pre-fill your pickup address and route your driver accurately.'
+                );
+            }
+        });
+    }
+
     document.getElementById('avatarSaveBtn').addEventListener('click', saveAvatar);
     document.getElementById('logoutBtn').addEventListener('click', async function () {
         await supabase.auth.signOut();

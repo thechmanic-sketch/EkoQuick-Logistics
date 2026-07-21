@@ -69,6 +69,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('savedAddrBtn1').addEventListener('click', showSavedAddresses);
     document.getElementById('calcBtn').addEventListener('click', calculateDistance);
     document.getElementById('bookBtn').addEventListener('click', bookNow);
+    document.getElementById('useMyLocationBtn').addEventListener('click', function () { useMyLocation('pickup'); });
+    document.getElementById('useMyLocationBtn2').addEventListener('click', function () { useMyLocation('dropoff'); });
 
     GoogleMaps.attachAutocomplete(document.getElementById('pickup'), function (place) {
         pickupCoords = { lat: place.lat, lng: place.lng };
@@ -86,6 +88,8 @@ function applyPickupModeLabels() {
     document.getElementById('senderPhoneLabel').textContent = 'Store Phone Number (if known)';
     document.getElementById('pickupLabel').textContent = 'Store / Collection Address';
     document.getElementById('pickup').placeholder = 'e.g. Game Pavilion, Musgrave Road, Durban';
+    document.getElementById('useMyLocationBtn').classList.add('hidden');
+    document.getElementById('useMyLocationBtn2').classList.remove('hidden');
 
     document.getElementById('step2Title').textContent = '2. Your Details';
     document.getElementById('receiverNameLabel').textContent = 'Your Full Name';
@@ -186,6 +190,29 @@ function wireNav() {
 }
 
 // ---- Map pickers (Google Maps) ----
+
+async function useMyLocation(fieldId) {
+    // In pickup mode, "pickup" is the store's address, not the customer's —
+    // "my location" only ever applies to whichever field is actually the
+    // customer's own address (pickup normally, dropoff in pickup mode).
+    const btn = document.getElementById(fieldId === 'dropoff' ? 'useMyLocationBtn2' : 'useMyLocationBtn');
+    if (typeof GeoPermission === 'undefined') return;
+    btn.disabled = true;
+    btn.textContent = 'Locating...';
+    try {
+        const pos = await GeoPermission.request();
+        const lat = pos.coords.latitude, lng = pos.coords.longitude;
+        if (fieldId === 'dropoff') dropoffCoords = { lat: lat, lng: lng }; else pickupCoords = { lat: lat, lng: lng };
+        const addr = await reverseGeocode(lat, lng);
+        if (addr) GoogleMaps.showAddressInInput(fieldId, addr);
+        else alert('Could not resolve an address for your location — try Select on Map instead.');
+    } catch (err) {
+        alert('Could not get your location. Check that location access is allowed for this site in your browser settings.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '📍 Use My Location';
+    }
+}
 
 function wireMapPickers() {
     document.getElementById('pickMapBtn1').addEventListener('click', async function () {

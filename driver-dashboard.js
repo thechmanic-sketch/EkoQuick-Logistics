@@ -80,6 +80,18 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('onlineToggle').addEventListener('change', toggleOnline);
     NotifBell.init({ userId: currentUser.id, role: 'driver' });
 
+    if (typeof GeoPermission !== 'undefined') {
+        GeoPermission.checkStatus(function (status) {
+            if (status === 'denied' || status === 'prompt') {
+                GeoPermission.showBanner(
+                    document.querySelector('.page-wrap'),
+                    'Turn on location so you show up on the map and can be dispatched jobs near you.',
+                    function () { beginPresence(); }
+                );
+            }
+        });
+    }
+
     await loadDriverShare();
     await loadCommissionRules();
     beginPresence();
