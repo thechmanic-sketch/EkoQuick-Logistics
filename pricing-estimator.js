@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     renderVehicleCards(vehicles);
 
     document.getElementById('estimateBtn').addEventListener('click', getEstimate);
+
+    GoogleMaps.attachAutocomplete(document.getElementById('estPickup'), function () {}).catch(function () {});
+    GoogleMaps.attachAutocomplete(document.getElementById('estDropoff'), function () {}).catch(function () {});
 });
 
 function renderVehicleCards(vehicles) {
