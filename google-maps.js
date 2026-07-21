@@ -18,7 +18,22 @@ const GoogleMaps = (function () {
     // caller's `await` stuck — which previously froze whole page init
     // sequences (auto-assign never running, bookings never completing) with
     // no error shown anywhere.
+    // Every page sets `body { color: var(--paper) }` for the dark theme,
+    // which inherits straight into Google's InfoWindow popup content since
+    // it doesn't set its own text color — the popup bubble's background
+    // stays Google's default white, so the text was rendering white-on-
+    // white and effectively invisible. Force dark, readable text in every
+    // InfoWindow across the whole site with one injected stylesheet.
+    function ensurePopupStyles() {
+        if (document.getElementById('gmapsPopupFix')) return;
+        const style = document.createElement('style');
+        style.id = 'gmapsPopupFix';
+        style.textContent = '.gm-style-iw, .gm-style-iw * { color: #1a1a1a !important; }';
+        document.head.appendChild(style);
+    }
+
     function load() {
+        ensurePopupStyles();
         if (loadPromise) return loadPromise;
         loadPromise = new Promise(function (resolve, reject) {
             if (window.google && window.google.maps) { resolve(window.google.maps); return; }
