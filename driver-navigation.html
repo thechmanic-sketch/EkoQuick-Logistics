@@ -10,14 +10,18 @@
     <script src="transitions.js"></script>
     <style>
         html, body { height: 100%; margin: 0; }
-        .nav-wrap { display: flex; flex-direction: column; height: 100vh; }
+        /* 100vh on mobile doesn't shrink for the browser's own address/nav
+           bar, so it clips content underneath it (e.g. the last action
+           button) — 100dvh tracks the actual visible viewport instead.
+           Keep 100vh as a fallback for browsers that don't support dvh. */
+        .nav-wrap { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
         .top-bar { background: var(--ink-2); border-bottom: 1px solid var(--line); padding: 10px 14px; font-size: 13px; }
         .top-bar .route { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
         .top-bar .stats { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); }
         #navMap { flex: 1; position: relative; }
         .map-controls { position: absolute; right: 8px; top: 8px; z-index: 500; display: flex; flex-direction: column; gap: 6px; }
         .map-btn { background: #12161F; border: 1px solid var(--line); color: #fff; width: 38px; height: 38px; border-radius: 8px; cursor: pointer; font-size: 16px; }
-        .bottom-panel { background: var(--ink-2); border-top: 1px solid var(--line); padding: 12px 14px; }
+        .bottom-panel { background: var(--ink-2); border-top: 1px solid var(--line); padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px)); overflow-y: auto; }
         .bottom-panel .actions { display: flex; gap: 8px; flex-wrap: wrap; }
         .bottom-panel .actions .btn { width: auto; }
         .emergency-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
