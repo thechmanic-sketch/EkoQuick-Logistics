@@ -175,7 +175,7 @@ function renderActionPanel() {
         document.getElementById('arrivedBtn').addEventListener('click', function () { setArrived('arrived_at_pickup_at'); });
     } else if (job.status === 'to_pickup' && job.arrived_at_pickup_at) {
         panel.innerHTML =
-            '<label style="width:100%;">Pickup code (optional)</label>' +
+            '<label for="collectionInput" style="width:100%;">Pickup code (optional)</label>' +
             '<input class="field-plain" id="collectionInput" placeholder="4-digit code" style="width:100%;">' +
             '<div class="msg error hidden" id="collectionError" style="width:100%;"></div>' +
             '<button class="btn btn-blue" id="pickedUpBtn">Parcel Picked Up</button>' +
@@ -192,7 +192,7 @@ function renderActionPanel() {
         document.getElementById('arrivedBtn').addEventListener('click', function () { setArrived('arrived_at_dropoff_at'); });
     } else if (job.status === 'to_dropoff' && job.arrived_at_dropoff_at) {
         panel.innerHTML =
-            '<label style="width:100%;">Delivery code</label>' +
+            '<label for="deliveryInput" style="width:100%;">Delivery code</label>' +
             '<input class="field-plain" id="deliveryInput" placeholder="4-digit code" style="width:100%;">' +
             '<div class="msg error hidden" id="deliveryError" style="width:100%;"></div>' +
             '<button class="btn btn-blue" id="completeBtn">Complete Delivery</button>';
