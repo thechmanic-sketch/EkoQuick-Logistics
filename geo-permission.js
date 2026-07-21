@@ -7,16 +7,20 @@
 // with a clear "Enable Location" action, and can report current status so
 // pages can warn persistently when it's blocked.
 const GeoPermission = (function () {
+    // Some browsers (Brave in particular) report incorrect/stale results
+    // from navigator.permissions.query({name:'geolocation'}) — it can say
+    // 'denied' or 'prompt' forever even when location genuinely works,
+    // which showed the "enable location" banner on every single reload
+    // regardless of the real state. A real (silent, cached-friendly)
+    // getCurrentPosition() call is the only trustworthy signal across
+    // every browser, so use that to decide, not the Permissions API.
     function checkStatus(cb) {
         if (!navigator.geolocation) { cb('unsupported'); return; }
-        if (navigator.permissions && navigator.permissions.query) {
-            navigator.permissions.query({ name: 'geolocation' }).then(function (result) {
-                cb(result.state); // 'granted' | 'denied' | 'prompt'
-                result.onchange = function () { cb(result.state); };
-            }).catch(function () { cb('unknown'); });
-        } else {
-            cb('unknown');
-        }
+        navigator.geolocation.getCurrentPosition(
+            function () { cb('granted'); },
+            function (err) { cb(err && err.code === err.PERMISSION_DENIED ? 'denied' : 'prompt'); },
+            { enableHighAccuracy: false, timeout: 5000, maximumAge: 120000 }
+        );
     }
 
     function request() {
