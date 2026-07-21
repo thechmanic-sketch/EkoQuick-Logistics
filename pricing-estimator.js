@@ -1,15 +1,25 @@
+let pickupCoords = null, dropoffCoords = null;
+let pickupMap = null, dropoffMap = null, pickupMarker = null, dropoffMarker = null;
+
 document.addEventListener('DOMContentLoaded', function () {
     // Wire the button up first — if PricingEngine.load() below fails or
     // times out, the page must not end up with a dead "Get Estimate"
     // button that silently does nothing when clicked.
     document.getElementById('estimateBtn').addEventListener('click', getEstimate);
 
-    // This is a ballpark estimator, not the real booking flow — town/suburb
-    // level input (matching the "e.g. Durban CBD" placeholders) needs to
-    // suggest, so widen past the booking page's street-address-only filter.
-    var estimatorTypes = { includedPrimaryTypes: ['street_address', 'route', 'premise', 'subpremise', 'locality', 'sublocality', 'neighborhood'] };
-    GoogleMaps.attachAutocomplete(document.getElementById('estPickup'), function () {}, estimatorTypes).catch(function () {});
-    GoogleMaps.attachAutocomplete(document.getElementById('estDropoff'), function () {}, estimatorTypes).catch(function () {});
+    // This feeds a real Routes API distance calculation the same way the
+    // booking flow does, so it needs full addresses, not just town names —
+    // keep the default street-level filter (accuracy over broad matching),
+    // and back it with map pickers below for anyone who'd rather point at
+    // the map than type an address.
+    GoogleMaps.attachAutocomplete(document.getElementById('estPickup'), function (place) {
+        pickupCoords = { lat: place.lat, lng: place.lng };
+    }).catch(function () {});
+    GoogleMaps.attachAutocomplete(document.getElementById('estDropoff'), function (place) {
+        dropoffCoords = { lat: place.lat, lng: place.lng };
+    }).catch(function () {});
+
+    wireMapPickers();
 
     PricingEngine.load().then(function () {
         const vehicles = PricingEngine.getConfig().vehicles;
@@ -39,6 +49,38 @@ function renderVehicleCards(vehicles) {
             '</div>'
         );
     }).join('');
+}
+
+function wireMapPickers() {
+    document.getElementById('estPickMapBtn').addEventListener('click', async function () {
+        const mapEl = document.getElementById('estPickupMap');
+        mapEl.classList.toggle('hidden');
+        if (!mapEl.classList.contains('hidden') && !pickupMap) {
+            pickupMap = await GoogleMaps.createMap('estPickupMap', [-29.6, 30.9], 8);
+            pickupMap.addListener('click', async function (e) {
+                const lat = e.latLng.lat(), lng = e.latLng.lng();
+                pickupCoords = { lat: lat, lng: lng };
+                if (pickupMarker) pickupMarker.setLatLng([lat, lng]); else pickupMarker = GoogleMaps.createMarker(pickupMap, [lat, lng], '📍');
+                const addr = await GoogleMaps.reverseGeocode(lat, lng);
+                if (addr) GoogleMaps.showAddressInInput('estPickup', addr);
+            });
+        }
+    });
+
+    document.getElementById('estPickMapBtn2').addEventListener('click', async function () {
+        const mapEl = document.getElementById('estDropoffMap');
+        mapEl.classList.toggle('hidden');
+        if (!mapEl.classList.contains('hidden') && !dropoffMap) {
+            dropoffMap = await GoogleMaps.createMap('estDropoffMap', [-29.6, 30.9], 8);
+            dropoffMap.addListener('click', async function (e) {
+                const lat = e.latLng.lat(), lng = e.latLng.lng();
+                dropoffCoords = { lat: lat, lng: lng };
+                if (dropoffMarker) dropoffMarker.setLatLng([lat, lng]); else dropoffMarker = GoogleMaps.createMarker(dropoffMap, [lat, lng], '📍');
+                const addr = await GoogleMaps.reverseGeocode(lat, lng);
+                if (addr) GoogleMaps.showAddressInInput('estDropoff', addr);
+            });
+        }
+    });
 }
 
 async function getEstimate() {

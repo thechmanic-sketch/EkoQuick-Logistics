@@ -24,6 +24,14 @@
             cursor: pointer; font-size: 13px;
         }
         .estimator-btn:disabled { opacity: 0.6; cursor: wait; }
+        .estimator-map-btn {
+            width: 100%; background: transparent; color: var(--muted); border: 1px solid var(--line);
+            padding: 8px; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase;
+            letter-spacing: 0.05em; cursor: pointer; margin-top: -6px; margin-bottom: var(--sp-3);
+        }
+        .estimator-map-btn:hover { border-color: var(--orange); color: var(--orange); }
+        .estimator-mini-map { height: 180px; border: 1px solid var(--line); margin-bottom: var(--sp-3); }
+        .hidden { display: none !important; }
         .estimate-result { margin-top: var(--sp-3); border: 1px solid var(--orange); padding: var(--sp-3); display: none; }
         .estimate-result.show { display: block; }
         .estimate-result .amt { font-family: var(--font-stencil); font-size: 40px; color: var(--orange); line-height: 1; }
@@ -128,11 +136,15 @@
                 <div class="estimator-grid">
                     <div>
                         <label>Pickup</label>
-                        <input id="estPickup" placeholder="e.g. Durban CBD">
+                        <input id="estPickup" placeholder="e.g. 12 Musgrave Road, Durban">
+                        <button type="button" class="estimator-map-btn" id="estPickMapBtn">📍 Select on Map</button>
+                        <div id="estPickupMap" class="estimator-mini-map hidden"></div>
                     </div>
                     <div>
                         <label>Destination</label>
-                        <input id="estDropoff" placeholder="e.g. Pietermaritzburg">
+                        <input id="estDropoff" placeholder="e.g. 5 Church St, Pietermaritzburg">
+                        <button type="button" class="estimator-map-btn" id="estPickMapBtn2">📍 Select on Map</button>
+                        <div id="estDropoffMap" class="estimator-mini-map hidden"></div>
                     </div>
                     <div>
                         <label>Vehicle</label>
