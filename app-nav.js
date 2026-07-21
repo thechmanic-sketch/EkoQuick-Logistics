@@ -42,6 +42,23 @@
         ];
         const links = isDriver ? driverLinks : customerLinks;
 
+        // Same public reference pages as the homepage's own mobile menu —
+        // so a logged-in user can still get back to Home or look something
+        // up (tariff, coverage, FAQ, etc.) without logging out first.
+        const referenceLinks = [
+            ['index.html', 'Home'],
+            ['services.html', 'Services'],
+            ['pricing.html', 'Tariff'],
+            ['track-parcel.html', 'Track'],
+            ['coverage.html', 'Coverage'],
+            ['how-it-works.html', 'Manifest'],
+            ['about.html', 'About'],
+            ['faq.html', 'FAQ'],
+            ['contact.html', 'Contact'],
+            ['for-business.html', 'Business'],
+            ['become-a-driver.html', 'Drive'],
+        ];
+
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'app-hamburger';
@@ -62,10 +79,15 @@
         const panel = document.createElement('div');
         panel.className = 'app-mobile-menu';
         panel.id = 'appMobileMenu';
-        panel.innerHTML = links.map(function (l) {
-            const active = page === l[0];
-            return '<a href="' + l[0] + '"' + (active ? ' class="active"' : '') + '>' + l[1] + '</a>';
-        }).join('');
+        panel.innerHTML =
+            links.map(function (l) {
+                const active = page === l[0];
+                return '<a href="' + l[0] + '"' + (active ? ' class="active"' : '') + '>' + l[1] + '</a>';
+            }).join('') +
+            '<div class="app-mobile-menu-section">Site</div>' +
+            referenceLinks.map(function (l) {
+                return '<a href="' + l[0] + '">' + l[1] + '</a>';
+            }).join('');
         navbar.insertAdjacentElement('afterend', panel);
 
         btn.addEventListener('click', function () {

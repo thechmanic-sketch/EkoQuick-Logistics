@@ -17,6 +17,33 @@ document.addEventListener('DOMContentLoaded', function () {
     btn.innerHTML = '<span class="cmd-hamburger-lines"></span>';
     sidebar.insertBefore(btn, brand);
 
+    // Same public reference pages as the homepage's own menu, appended
+    // after admin's own nav — so admin can still get back to Home or check
+    // a public page (tariff, coverage, etc.) without logging out.
+    const referenceLinks = [
+        ['index.html', 'Home'],
+        ['services.html', 'Services'],
+        ['pricing.html', 'Tariff'],
+        ['track-parcel.html', 'Track'],
+        ['coverage.html', 'Coverage'],
+        ['how-it-works.html', 'Manifest'],
+        ['about.html', 'About'],
+        ['faq.html', 'FAQ'],
+        ['contact.html', 'Contact'],
+        ['for-business.html', 'Business'],
+        ['become-a-driver.html', 'Drive'],
+    ];
+    const sectionHeader = document.createElement('div');
+    sectionHeader.className = 'cmd-nav-section';
+    sectionHeader.textContent = 'Site';
+    nav.appendChild(sectionHeader);
+    referenceLinks.forEach(function (l) {
+        const a = document.createElement('a');
+        a.href = l[0];
+        a.textContent = l[1];
+        nav.appendChild(a);
+    });
+
     btn.addEventListener('click', function () {
         nav.classList.toggle('open');
     });

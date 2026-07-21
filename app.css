@@ -71,6 +71,10 @@ body {
 }
 .app-mobile-menu a:last-child { border-bottom: none; }
 .app-mobile-menu a.active { color: var(--orange); }
+.app-mobile-menu-section {
+    padding: 10px 0 4px; font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-dim);
+}
 
 .page-wrap {
     max-width: 480px;
