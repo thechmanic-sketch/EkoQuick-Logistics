@@ -35,9 +35,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     });
 
+    if (typeof NotifSound !== 'undefined') NotifSound.loadPreference(currentUser.id);
+
     await loadAll();
     supabase.channel('notifications-' + currentUser.id)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: myRole === 'admin' ? 'user_type=eq.admin' : 'user_id=eq.' + currentUser.id }, loadAll)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: myRole === 'admin' ? 'user_type=eq.admin' : 'user_id=eq.' + currentUser.id }, function () {
+            if (typeof NotifSound !== 'undefined') NotifSound.play();
+            loadAll();
+        })
         .subscribe();
 });
 

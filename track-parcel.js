@@ -3,7 +3,6 @@ let trackMap = null;
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('trackBtn').addEventListener('click', trackJob);
     document.getElementById('trackNumber').addEventListener('keydown', function (e) { if (e.key === 'Enter') trackJob(); });
-    document.getElementById('trackPhone').addEventListener('keydown', function (e) { if (e.key === 'Enter') trackJob(); });
 });
 
 const STATUS_LABELS = {
@@ -17,7 +16,6 @@ const STATUS_LABELS = {
 
 async function trackJob() {
     const trackingNumber = document.getElementById('trackNumber').value.trim();
-    const phone = document.getElementById('trackPhone').value.trim();
     const msgEl = document.getElementById('trackMsg');
     const resultEl = document.getElementById('trackResult');
     const btn = document.getElementById('trackBtn');
@@ -25,8 +23,8 @@ async function trackJob() {
     msgEl.textContent = '';
     resultEl.classList.remove('show');
 
-    if (!trackingNumber || !phone) {
-        msgEl.textContent = 'Enter both your tracking number and the phone number on the job.';
+    if (!trackingNumber) {
+        msgEl.textContent = 'Enter your tracking number.';
         return;
     }
 
@@ -35,7 +33,6 @@ async function trackJob() {
 
     const { data, error } = await supabase.rpc('public_track_job', {
         p_tracking_number: trackingNumber,
-        p_phone: phone,
     });
 
     btn.disabled = false;
@@ -43,7 +40,7 @@ async function trackJob() {
 
     const job = data && data[0];
     if (error || !job) {
-        msgEl.textContent = "We couldn't find a job matching that tracking number and phone number. Double check both and try again.";
+        msgEl.textContent = "We couldn't find a job matching that tracking number. Double check it and try again.";
         return;
     }
 

@@ -1,4 +1,3 @@
-const ONLINE_WINDOW_MS = 5 * 60 * 1000;
 let revenueChart = null, ordersChart = null, successChart = null;
 let realtimeStatus = 'connecting';
 
@@ -64,7 +63,9 @@ function startClock() {
 }
 
 function isOnline(driver) {
-    return !!(driver.last_seen_at && (Date.now() - new Date(driver.last_seen_at).getTime()) < ONLINE_WINDOW_MS);
+    // Trust the driver's own Online toggle, not just GPS heartbeat recency
+    // — see admin-drivers.js isOnline() for why.
+    return driver.is_online === true;
 }
 
 function startOfToday() {
@@ -118,14 +119,6 @@ async function loadDashboard() {
     renderRecentOrders(jobs || [], drivers || []);
     renderDriverStatus(jobs || [], drivers || []);
     renderSystemStatus(drivers || []);
-    renderBell(jobs || []);
-}
-
-function renderBell(jobs) {
-    const complaints = jobs.filter(function (j) { return j.rating && j.rating <= 2; }).length;
-    const el = document.getElementById('bellCount');
-    if (complaints > 0) { el.textContent = complaints; el.classList.remove('hidden'); }
-    else el.classList.add('hidden');
 }
 
 function kpiCard(title, value, sub, subClass) {

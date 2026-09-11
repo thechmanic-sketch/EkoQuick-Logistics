@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     await loadDriverShare();
     await loadCommissionRules();
 
-    document.getElementById('recenterBtn').addEventListener('click', recenter);
+    document.getElementById('recenterBtn').addEventListener('click', function () { recenter(true); });
     document.getElementById('fullscreenBtn').addEventListener('click', function () {
         const el = document.getElementById('navMap');
         if (document.fullscreenElement) document.exitFullscreen();
@@ -56,7 +56,24 @@ document.addEventListener('DOMContentLoaded', async function () {
     beginTracking();
 
     supabase.channel('driver-nav-' + currentUser.id)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs', filter: 'driver_id=eq.' + currentUser.id }, loadJob)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs', filter: 'driver_id=eq.' + currentUser.id }, function (payload) {
+            // beginTracking() writes driver_lat/driver_lng to this same
+            // job every 1-2s (every GPS tick), and this subscription has
+            // no column filter — so that write echoed straight back here
+            // and triggered a full loadJob()/render() every single time,
+            // which is what was flickering the map and code box
+            // continuously. Only actually reload when something that
+            // isn't routine tracking data changed (status, arrival, etc).
+            if (payload.eventType === 'UPDATE' && payload.old && payload.new) {
+                const onlyTrackingFieldsChanged =
+                    payload.old.status === payload.new.status &&
+                    payload.old.arrived_at_pickup_at === payload.new.arrived_at_pickup_at &&
+                    payload.old.arrived_at_dropoff_at === payload.new.arrived_at_dropoff_at &&
+                    payload.old.driver_id === payload.new.driver_id;
+                if (onlyTrackingFieldsChanged) return;
+            }
+            loadJob();
+        })
         .subscribe();
 });
 
@@ -111,7 +128,16 @@ async function render() {
     renderActionPanel();
 }
 
+let lastCustomerPanelKey = null;
+
 function renderCustomerPanel() {
+    // render() runs on every GPS tick (every 1-2s) — rebuilding this
+    // panel's innerHTML every single time visibly flickered it for no
+    // reason, since none of this content actually changes between ticks.
+    const key = job.status + '|' + job.sender_name + '|' + job.customer_phone + '|' + job.receiver_name + '|' + job.receiver_phone;
+    if (key === lastCustomerPanelKey) return;
+    lastCustomerPanelKey = key;
+
     const panel = document.getElementById('customerPanel');
     const label = job.status === 'to_pickup'
         ? 'Customer: ' + (job.sender_name || '—') + (job.customer_phone ? ' · ' + job.customer_phone : '')
@@ -120,7 +146,18 @@ function renderCustomerPanel() {
     panel.classList.remove('hidden');
 }
 
+let lastActionPanelKey = null;
+
 function renderActionPanel() {
+    // render() runs on every GPS position tick (every few seconds while
+    // tracking), which used to rebuild this panel's innerHTML every time —
+    // wiping out the pickup/delivery code input mid-typing. Only rebuild
+    // when something that actually changes what this panel shows has
+    // changed (job status or arrival flags), not on every position update.
+    const key = job.status + '|' + (job.arrived_at_pickup_at || '') + '|' + (job.arrived_at_dropoff_at || '');
+    if (key === lastActionPanelKey) return;
+    lastActionPanelKey = key;
+
     const panel = document.getElementById('actionPanel');
     const extras = document.getElementById('completionExtras');
     extras.classList.add('hidden');
@@ -138,7 +175,7 @@ function renderActionPanel() {
         document.getElementById('arrivedBtn').addEventListener('click', function () { setArrived('arrived_at_pickup_at'); });
     } else if (job.status === 'to_pickup' && job.arrived_at_pickup_at) {
         panel.innerHTML =
-            '<label style="width:100%;">Pickup code (optional)</label>' +
+            '<label for="collectionInput" style="width:100%;">Pickup code (optional)</label>' +
             '<input class="field-plain" id="collectionInput" placeholder="4-digit code" style="width:100%;">' +
             '<div class="msg error hidden" id="collectionError" style="width:100%;"></div>' +
             '<button class="btn btn-blue" id="pickedUpBtn">Parcel Picked Up</button>' +
@@ -155,7 +192,7 @@ function renderActionPanel() {
         document.getElementById('arrivedBtn').addEventListener('click', function () { setArrived('arrived_at_dropoff_at'); });
     } else if (job.status === 'to_dropoff' && job.arrived_at_dropoff_at) {
         panel.innerHTML =
-            '<label style="width:100%;">Delivery code</label>' +
+            '<label for="deliveryInput" style="width:100%;">Delivery code</label>' +
             '<input class="field-plain" id="deliveryInput" placeholder="4-digit code" style="width:100%;">' +
             '<div class="msg error hidden" id="deliveryError" style="width:100%;"></div>' +
             '<button class="btn btn-blue" id="completeBtn">Complete Delivery</button>';
@@ -167,7 +204,7 @@ function renderActionPanel() {
 // Keeps the driver in-app: re-centers the map on the live route immediately
 // instead of waiting for the next periodic refresh.
 function focusRoute() {
-    recenter();
+    recenter(true);
     const dest = destCoords();
     if (lastPos && dest.lat && dest.lng) {
         lastRouteAt = 0; // force the route line to refresh again right away
@@ -283,29 +320,64 @@ function wireSignaturePad(canvas) {
 }
 
 let mapReadyPromise = null;
+let userPannedMap = false;
+let programmaticMapChange = false;
+let hasAutoFitOnce = false;
+
 function initMap() {
     if (!mapReadyPromise) {
-        mapReadyPromise = GoogleMaps.createMap('navMap', [-29.6, 30.9], 8).then(function (m) { map = m; return m; });
+        mapReadyPromise = GoogleMaps.createMap('navMap', [-29.6, 30.9], 8).then(function (m) {
+            map = m;
+            // The periodic auto-recenter (every GPS tick, every route
+            // refresh) was overriding any manual pan/zoom the driver did —
+            // it felt like the map "fighting back". Track real user
+            // interaction (dragstart only ever fires for a user-initiated
+            // drag, never programmatically) and stop auto-recentering once
+            // they've taken over; the explicit Recenter/Focus Route buttons
+            // still always work and hand control back to auto-follow.
+            if (map.addListener) {
+                map.addListener('dragstart', function () { userPannedMap = true; });
+                map.addListener('zoom_changed', function () { if (!programmaticMapChange) userPannedMap = true; });
+            }
+            return m;
+        });
     }
     return mapReadyPromise;
 }
 
-function recenter() {
+function recenter(force) {
     if (!map) return;
+    if (userPannedMap && !force) return;
+    if (force) userPannedMap = false;
     const dest = destCoords();
     const pts = [];
     if (lastPos) pts.push([lastPos.lat, lastPos.lng]);
     if (dest.lat && dest.lng) pts.push([dest.lat, dest.lng]);
+    programmaticMapChange = true;
     GoogleMaps.fitBounds(map, pts);
+    setTimeout(function () { programmaticMapChange = false; }, 300);
 }
+
+// Desktop/laptop browsers have no GPS chip — they fall back to WiFi/IP
+// based positioning, which can jump erratically between "fixes" that are
+// really the same physical spot. On a phone with real GPS this is a non-
+// issue, but without filtering it out, that noise visibly jitters the
+// driver marker on every tick. Ignore updates smaller than this.
+const MIN_MOVEMENT_METERS = 8;
 
 function beginTracking() {
     if (!navigator.geolocation) return;
     watchId = navigator.geolocation.watchPosition(
         async function (pos) {
-            lastPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            const newPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
             const speedKmh = pos.coords.speed !== null && pos.coords.speed !== undefined ? Math.round(pos.coords.speed * 3.6) : null;
             document.getElementById('speedText').textContent = 'Speed: ' + (speedKmh !== null ? speedKmh + ' km/h' : '—');
+
+            if (lastPos) {
+                const movedKm = haversineKm(lastPos.lat, lastPos.lng, newPos.lat, newPos.lng);
+                if (movedKm * 1000 < MIN_MOVEMENT_METERS) return;
+            }
+            lastPos = newPos;
 
             if (job) {
                 await supabase.from('jobs').update({ driver_lat: lastPos.lat, driver_lng: lastPos.lng }).eq('id', job.id);
@@ -314,7 +386,17 @@ function beginTracking() {
 
                 if (!driverMarker) driverMarker = GoogleMaps.createMarker(map, [lastPos.lat, lastPos.lng], '🚚', { title: 'You' });
                 else driverMarker.setLatLng([lastPos.lat, lastPos.lng]);
-                recenter();
+                // Auto-fit the view once when tracking starts, then stop —
+                // calling this on every tick (even with userPannedMap
+                // false) re-fit the bounds to the driver's slightly
+                // jittering GPS position every 1-2s, which is what was
+                // still flickering the map continuously. The marker itself
+                // keeps moving via setLatLng above; the Recenter button
+                // still re-fits on demand.
+                if (!hasAutoFitOnce) {
+                    hasAutoFitOnce = true;
+                    recenter();
+                }
 
                 const dest = destCoords();
                 const now = Date.now();

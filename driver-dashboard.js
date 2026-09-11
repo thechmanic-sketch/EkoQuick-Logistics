@@ -74,13 +74,27 @@ document.addEventListener('DOMContentLoaded', async function () {
     document.getElementById('logoutBtn').addEventListener('click', async function () {
         stopTracking();
         stopPresence();
+        // Logging out must take the driver off the map and out of dispatch
+        // — otherwise admin (which now trusts this toggle as the sole
+        // source of truth) would keep showing them Online forever.
+        await supabase.from('profiles').update({ is_online: false }).eq('id', currentUser.id);
         await supabase.auth.signOut();
         window.location.href = 'login.html';
     });
     document.getElementById('onlineToggle').addEventListener('change', toggleOnline);
-    document.getElementById('bellBtn').addEventListener('click', function () {
-        document.getElementById('notifPanel').classList.toggle('open');
-    });
+    NotifBell.init({ userId: currentUser.id, role: 'driver' });
+
+    if (typeof GeoPermission !== 'undefined') {
+        GeoPermission.checkStatus(function (status) {
+            if (status === 'denied' || status === 'prompt') {
+                GeoPermission.showBanner(
+                    document.querySelector('.page-wrap'),
+                    'Turn on location so you show up on the map and can be dispatched jobs near you.',
+                    function () { beginPresence(); }
+                );
+            }
+        });
+    }
 
     await loadDriverShare();
     await loadCommissionRules();
@@ -167,7 +181,6 @@ async function loadJobs() {
     renderAvailableJobs(availablePending);
     renderRecentDeliveries();
     renderPerformance();
-    renderNotifications();
     renderChatUnreadBadge();
 
     const inProgress = allJobs.find(function (j) { return j.status === 'to_pickup' || j.status === 'to_dropoff'; });
@@ -358,35 +371,6 @@ async function renderChatUnreadBadge() {
     if (count) { badge.textContent = count; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
 }
 
-async function renderNotifications() {
-    const notifs = [];
-    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
-
-    allJobs.forEach(function (j) {
-        if (j.status === 'offered' && j.assigned_at && new Date(j.assigned_at).getTime() >= dayAgo) {
-            notifs.push({ time: j.assigned_at, label: 'New job assigned: ' + j.pickup + ' → ' + j.dropoff });
-        }
-        if (j.status === 'cancelled' && j.cancelled_at && new Date(j.cancelled_at).getTime() >= dayAgo) {
-            notifs.push({ time: j.cancelled_at, label: 'Job cancelled: ' + j.pickup + ' → ' + j.dropoff });
-        }
-    });
-
-    const { data: payouts } = await supabase.from('driver_payouts').select('*').eq('driver_id', currentUser.id).eq('status', 'paid').order('paid_at', { ascending: false }).limit(5);
-    (payouts || []).forEach(function (p) {
-        if (p.paid_at && new Date(p.paid_at).getTime() >= dayAgo) {
-            notifs.push({ time: p.paid_at, label: 'Earnings paid: R' + Number(p.total_amount).toFixed(2) });
-        }
-    });
-
-    notifs.sort(function (a, b) { return new Date(b.time) - new Date(a.time); });
-
-    const bell = document.getElementById('bellCount');
-    if (notifs.length) { bell.textContent = notifs.length; bell.classList.remove('hidden'); } else { bell.classList.add('hidden'); }
-
-    document.getElementById('notifPanel').innerHTML = notifs.length
-        ? notifs.map(function (n) { return '<div class="notif-item">' + escapeHtml(n.label) + '</div>'; }).join('')
-        : '<div class="empty">No notifications.</div>';
-}
 
 function showJobError(id, message) {
     const el = document.getElementById(id);
@@ -502,7 +486,15 @@ async function ensureJobMap(jobId, destLat, destLng) {
 
     const map = await GoogleMaps.createMap('jobMap-' + jobId, [destLat, destLng], 13);
     const destMarker = GoogleMaps.createMarker(map, [destLat, destLng], '📍', { title: 'Destination' });
-    jobMaps[jobId] = { map: map, destMarker: destMarker, driverMarker: null, routeLine: null, destLat: destLat, destLng: destLng, lastRouteAt: 0 };
+    jobMaps[jobId] = { map: map, destMarker: destMarker, driverMarker: null, routeLine: null, destLat: destLat, destLng: destLng, lastRouteAt: 0, userPanned: false, programmatic: false };
+    // fitBounds ran on every single GPS tick, silently overriding any
+    // manual pan/zoom — track real user interaction (dragstart only ever
+    // fires for an actual drag, never programmatically) and stop
+    // auto-fitting once they've taken over.
+    if (map.addListener) {
+        map.addListener('dragstart', function () { jobMaps[jobId] && (jobMaps[jobId].userPanned = true); });
+        map.addListener('zoom_changed', function () { const e = jobMaps[jobId]; if (e && !e.programmatic) e.userPanned = true; });
+    }
 
     if (lastPos) updateJobMapDriverPos(jobId, lastPos.lat, lastPos.lng);
 }
@@ -517,7 +509,10 @@ function updateJobMapDriverPos(jobId, lat, lng) {
         entry.driverMarker.setLatLng([lat, lng]);
     }
 
+    if (entry.userPanned) return;
+    entry.programmatic = true;
     GoogleMaps.fitBounds(entry.map, [[lat, lng], [entry.destLat, entry.destLng]]);
+    setTimeout(function () { if (jobMaps[jobId]) jobMaps[jobId].programmatic = false; }, 300);
 
     const now = Date.now();
     if (now - entry.lastRouteAt > 20000) {

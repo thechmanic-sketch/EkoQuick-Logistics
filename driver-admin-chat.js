@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (!currentUser) return;
     currentProfile = await getProfile(currentUser.id);
     if (!currentProfile || currentProfile.role !== 'driver') { window.location.href = 'driver-login.html'; return; }
+    if (typeof NotifSound !== 'undefined') NotifSound.loadPreference(currentUser.id);
 
     const deliveryId = new URLSearchParams(window.location.search).get('delivery');
 
@@ -77,6 +78,11 @@ function renderMessages() {
 function subscribeRealtime() {
     supabase.channel('driver-admin-chat-' + chat.id)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'driver_admin_messages', filter: 'chat_id=eq.' + chat.id }, function (payload) {
+            // The sender already pushed their own message locally for
+            // instant feedback — realtime echoes the same INSERT back to
+            // them too, so skip it here or it renders twice.
+            if (messages.some(function (m) { return m.id === payload.new.id; })) return;
+            if (payload.new.sender_type !== 'driver' && typeof NotifSound !== 'undefined') NotifSound.play();
             messages.push(payload.new);
             renderMessages();
         })

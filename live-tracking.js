@@ -109,19 +109,36 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     let mapReadyPromise = null;
+    let userPannedMap = false;
+    let programmaticMapChange = false;
     function initMap() {
         if (!mapReadyPromise) {
-            mapReadyPromise = GoogleMaps.createMap('trackMap', [-29.6, 30.9], 8).then(function (m) { map = m; return m; });
+            mapReadyPromise = GoogleMaps.createMap('trackMap', [-29.6, 30.9], 8).then(function (m) {
+                map = m;
+                // recenterMap() ran on every job update (every few seconds
+                // while a driver is live), overriding any manual pan/zoom —
+                // track real user interaction (dragstart only ever fires
+                // for an actual drag, never programmatically) and stop
+                // auto-recentering once they've taken over.
+                if (map.addListener) {
+                    map.addListener('dragstart', function () { userPannedMap = true; });
+                    map.addListener('zoom_changed', function () { if (!programmaticMapChange) userPannedMap = true; });
+                }
+                return m;
+            });
         }
         return mapReadyPromise;
     }
 
     function recenterMap() {
+        if (userPannedMap) return;
         const pts = [];
         if (currentJob.pickup_lat && currentJob.pickup_lng) pts.push([currentJob.pickup_lat, currentJob.pickup_lng]);
         if (currentJob.dropoff_lat && currentJob.dropoff_lng) pts.push([currentJob.dropoff_lat, currentJob.dropoff_lng]);
         if (currentJob.driver_lat && currentJob.driver_lng) pts.push([currentJob.driver_lat, currentJob.driver_lng]);
+        programmaticMapChange = true;
         GoogleMaps.fitBounds(map, pts);
+        setTimeout(function () { programmaticMapChange = false; }, 300);
     }
 
     async function render(job) {
@@ -224,10 +241,19 @@ document.addEventListener('DOMContentLoaded', async function () {
         const card = document.getElementById('otpCard');
         if (!job.collection_code && !job.delivery_code) { card.classList.add('hidden'); return; }
         card.classList.remove('hidden');
-        const collectionVerified = job.status === 'to_dropoff' || job.status === 'delivered';
-        const deliveryVerified = job.status === 'delivered';
-        document.getElementById('collectionStatus').textContent = collectionVerified ? 'Verified' : 'Pending';
-        document.getElementById('deliveryStatus').textContent = deliveryVerified ? 'Verified' : 'Pending';
+
+        // Same four-state logic as the dashboard's codes box: pickup isn't
+        // "done" until the driver has actually collected it, and delivery
+        // only becomes the active code once pickup is done.
+        const pickupDone = job.status === 'to_dropoff' || job.status === 'delivered';
+        const deliveryDone = job.status === 'delivered';
+        const pickupActive = job.status === 'pending' || job.status === 'offered' || job.status === 'to_pickup';
+        const deliveryActive = job.status === 'to_dropoff';
+
+        document.getElementById('collectionCode').textContent = job.collection_code || '—';
+        document.getElementById('deliveryCode').textContent = job.delivery_code || '—';
+        document.getElementById('collectionStatus').textContent = pickupDone ? 'Verified' : pickupActive ? 'Give this to your driver at pickup' : 'Pending';
+        document.getElementById('deliveryStatus').textContent = deliveryDone ? 'Verified' : deliveryActive ? 'Give this to your driver on arrival' : 'Pending';
     }
 
     await loadJob();

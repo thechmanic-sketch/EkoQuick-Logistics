@@ -18,7 +18,22 @@ const GoogleMaps = (function () {
     // caller's `await` stuck — which previously froze whole page init
     // sequences (auto-assign never running, bookings never completing) with
     // no error shown anywhere.
+    // Every page sets `body { color: var(--paper) }` for the dark theme,
+    // which inherits straight into Google's InfoWindow popup content since
+    // it doesn't set its own text color — the popup bubble's background
+    // stays Google's default white, so the text was rendering white-on-
+    // white and effectively invisible. Force dark, readable text in every
+    // InfoWindow across the whole site with one injected stylesheet.
+    function ensurePopupStyles() {
+        if (document.getElementById('gmapsPopupFix')) return;
+        const style = document.createElement('style');
+        style.id = 'gmapsPopupFix';
+        style.textContent = '.gm-style-iw, .gm-style-iw * { color: #1a1a1a !important; }';
+        document.head.appendChild(style);
+    }
+
     function load() {
+        ensurePopupStyles();
         if (loadPromise) return loadPromise;
         loadPromise = new Promise(function (resolve, reject) {
             if (window.google && window.google.maps) { resolve(window.google.maps); return; }
@@ -191,8 +206,24 @@ const GoogleMaps = (function () {
         }
         const autocompleteEl = new google.maps.places.PlaceAutocompleteElement(acOptions);
         autocompleteEl.id = inputEl.id + 'Autocomplete';
-        autocompleteEl.style.width = '100%';
-        autocompleteEl.style.display = 'block';
+        // It renders as its own custom element, not an <input>/<select>, so
+        // it falls outside every page's "input, select { ... }" sizing/
+        // spacing rules — set the same box model directly here so it lines
+        // up with the field it's replacing instead of looking oversized,
+        // uncentered, or crowded against whatever sits below it.
+        const inputStyle = window.getComputedStyle(inputEl);
+        autocompleteEl.style.cssText =
+            'display:block; width:100%; max-width:100%; min-width:0; box-sizing:border-box;' +
+            'margin-bottom:' + inputStyle.marginBottom + ';' +
+            'min-height:' + inputStyle.height + ';';
+        // Google renders this element with its own light Material theme by
+        // default, ignoring page CSS entirely — match it to the dark theme
+        // via its documented custom properties instead of leaving a bright
+        // white box sitting inside a dark form.
+        autocompleteEl.style.setProperty('--gmp-mat-color-surface', inputStyle.backgroundColor);
+        autocompleteEl.style.setProperty('--gmp-mat-color-on-surface', inputStyle.color);
+        autocompleteEl.style.setProperty('--gmp-mat-color-on-surface-variant', inputStyle.color);
+        autocompleteEl.style.setProperty('--gmp-mat-color-outline', inputStyle.borderTopColor);
 
         inputEl.style.display = 'none';
         inputEl.insertAdjacentElement('afterend', autocompleteEl);

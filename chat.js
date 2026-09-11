@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     currentProfile = await getProfile(currentUser.id);
     if (!currentProfile) return;
     myRole = currentProfile.role === 'driver' ? 'driver' : currentProfile.role === 'admin' ? 'admin' : 'customer';
+    if (typeof NotifSound !== 'undefined') NotifSound.loadPreference(currentUser.id);
 
     const fromParam = new URLSearchParams(window.location.search).get('from');
     document.getElementById('backBtn').href = fromParam === 'delivery'
@@ -582,6 +583,12 @@ async function markRoomRead() {
 function subscribeRealtime() {
     supabase.channel('chat-room-' + room.id)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: 'room_id=eq.' + room.id }, async function (payload) {
+            // sendMessage() already pushes the sender's own message into
+            // `messages` immediately for instant feedback — Supabase
+            // realtime echoes that same INSERT back to the sender too, not
+            // just the other party, so without this check it renders twice.
+            if (messages.some(function (m) { return m.id === payload.new.id; })) return;
+            if (payload.new.sender_id !== currentUser.id && typeof NotifSound !== 'undefined') NotifSound.play();
             const wasNearBottom = isNearBottom();
             messages.push(payload.new);
             await loadReactionsFor([payload.new]);
