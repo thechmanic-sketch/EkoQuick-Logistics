@@ -662,6 +662,57 @@ section { border-top: 1px solid var(--line); }
 }
 .stamp-btn:hover { transform: rotate(0deg); background: var(--orange); color: var(--ink); }
 
+/* ---------- HOME STORE (dominant showcase section) ---------- */
+#home-store {
+    padding: var(--sp-8, 72px) 0;
+    background: linear-gradient(180deg, rgba(255,106,43,0.06), transparent 60%);
+    border-top: 2px solid var(--orange);
+    text-align: center;
+}
+.home-store-h2 {
+    font-family: var(--font-stencil);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: clamp(32px, 5vw, 56px);
+    color: #fff;
+    line-height: 1;
+    margin: var(--sp-2) 0 var(--sp-3);
+}
+.home-store-lede {
+    font-family: 'Karla', var(--font-body);
+    color: var(--muted);
+    max-width: 60ch;
+    margin: 0 auto var(--sp-6);
+}
+.home-store-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    text-align: left;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+.home-store-card {
+    border: 1px solid var(--line);
+    background: var(--ink-2, #121826);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.home-store-card img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--ink); }
+.home-store-card .hsc-body { padding: 12px; }
+.home-store-card .hsc-title { font-weight: 700; font-size: 14px; color: #fff; }
+.home-store-card .hsc-supplier { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+.home-store-card .hsc-price { color: var(--orange); font-family: var(--font-mono); font-weight: 700; margin-top: 6px; }
+.home-store-skel {
+    aspect-ratio: 0.85;
+    background: linear-gradient(90deg, var(--ink) 25%, var(--line) 50%, var(--ink) 75%);
+    background-size: 200% 100%;
+    animation: home-store-pulse 1.4s ease infinite;
+    border: 1px solid var(--line);
+}
+@keyframes home-store-pulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
 /* ---------- FOOTER ---------- */
 footer { padding: var(--sp-6) 0 var(--sp-4); }
 
