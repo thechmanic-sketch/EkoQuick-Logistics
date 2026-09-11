@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick Store</title>
+    <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+        .store-card { border: 1px solid var(--line); background: var(--ink-2); overflow: hidden; display: flex; flex-direction: column; }
+        .store-card img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--ink); }
+        .store-card .sc-body { padding: 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+        .store-card .sc-title { font-weight: 700; font-size: 14px; }
+        .store-card .sc-price { color: var(--orange); font-family: var(--font-mono); font-weight: 700; }
+        .store-card button { margin-top: auto; background: var(--orange); color: var(--ink); border: none; padding: 8px; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; font-size: 12px; cursor: pointer; }
+        .store-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .cart-link { font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--line); padding: 8px 14px; color: var(--paper); text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="ticker-bar">
+        <div class="ticker-track">
+            <span>SUPPLIER · COMMISSION · DELIVERY</span>
+            <span>SUPPLIER · COMMISSION · DELIVERY</span>
+        </div>
+    </div>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="logo-block">
+                <a class="logo" href="index.html">Eko<span>quick</span></a>
+                <span class="logo-meta">STORE · DURBAN PILOT</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="services.html">Services</a></li>
+                <li><a href="pricing.html">Tariff</a></li>
+                <li><a href="store.html">Store</a></li>
+                <li><a href="coverage.html">Coverage</a></li>
+            </ul>
+            <div class="nav-cta-group">
+                <a class="btn btn-ghost btn-sm" href="login.html">Login</a>
+                <a class="btn btn-primary btn-sm" href="signup.html">Sign up</a>
+            </div>
+            <button class="nav-hamburger" id="navHamburger" type="button" aria-label="Menu">
+                <span class="nav-hamburger-lines"><span></span></span>
+            </button>
+        </div>
+        <div class="nav-mobile-menu" id="navMobileMenu">
+            <a href="services.html">Services</a>
+            <a href="pricing.html">Tariff</a>
+            <a href="store.html">Store</a>
+            <a href="coverage.html">Coverage</a>
+            <div class="nav-mobile-ctas">
+                <a class="btn btn-ghost btn-sm" href="login.html" style="flex:1;">Login</a>
+                <a class="btn btn-primary btn-sm" href="signup.html" style="flex:1;">Sign up</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="page-hero">
+        <div class="wrap">
+            <p class="breadcrumb"><a href="index.html">Home</a> / Store</p>
+            <p class="sec-tag">Ekoquick Store</p>
+            <h1>Shop local, delivered fast</h1>
+            <p class="page-lede">Products from hand-picked Durban suppliers, delivered by our own drivers. Browse freely — log in when you're ready to check out.</p>
+        </div>
+    </header>
+
+    <section class="content-block" style="max-width: none;">
+        <div class="wrap" style="max-width: 1100px;">
+            <div class="store-topbar">
+                <span style="font-family:var(--font-mono); font-size:12px; color:var(--muted);" id="productCount"></span>
+                <a class="cart-link" href="cart.html">🛒 Cart</a>
+            </div>
+            <div class="store-grid" id="storeGrid"><div style="color:var(--muted); font-family:var(--font-mono); font-size:13px;">Loading products...</div></div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="footer-bottom">
+                <span>© 2026 EKOQUICK — WAYBILL EQ-2026-00417</span>
+                <span>DURBAN PILOT</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="store.js"></script>
+    <script src="nav.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>

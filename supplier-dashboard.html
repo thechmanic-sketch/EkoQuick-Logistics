@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Supplier Dashboard</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        .product-card { border: 1px solid var(--line); padding: 12px; display: flex; gap: 12px; margin-bottom: 10px; align-items: center; }
+        .product-card img { width: 56px; height: 56px; object-fit: cover; border: 1px solid var(--line); flex-shrink: 0; background: var(--ink-2); }
+        .product-card .pinfo { flex: 1; min-width: 0; }
+        .product-card .pinfo .ptitle { font-weight: 700; }
+        .product-card .pinfo .pmeta { font-size: 12px; color: var(--muted); }
+        .status-pill { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 8px; border: 1px solid var(--line); display: inline-block; }
+        .status-pill.pending { color: var(--amber, #E8A33D); border-color: var(--amber, #E8A33D); }
+        .status-pill.approved { color: var(--green, #2FA85B); border-color: var(--green, #2FA85B); }
+        .status-pill.rejected { color: #E2544C; border-color: #E2544C; }
+        .order-card { border: 1px solid var(--line); padding: 12px; margin-bottom: 10px; }
+        .order-card .orow { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        .order-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        #addProductForm label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 3px; }
+        #addProductForm input, #addProductForm textarea { width: 100%; background: var(--ink); border: 1px solid var(--line); color: var(--paper); padding: 8px; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="brand">Eko<span>quick</span> Store</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div class="dropdown">
+                <button class="bell-btn" id="bellBtn" style="position:relative; background:transparent; border:1px solid var(--line); color:var(--paper); width:34px; height:34px; cursor:pointer;">🔔<span class="bell-count hidden" id="bellCount" style="position:absolute; top:-6px; right:-6px; background:var(--orange); color:#1a1a1a; font-size:10px; font-weight:700; border-radius:50%; width:16px; height:16px; display:flex; align-items:center; justify-content:center;"></span></button>
+                <div class="dropdown-panel" id="notifPanel" style="position:absolute; right:0; top:40px; width:280px; max-height:340px; overflow-y:auto; background:var(--ink-2); border:1px solid var(--line); z-index:30; display:none; padding:10px;"></div>
+            </div>
+            <button class="nav-logout" id="logoutBtn">Log Out</button>
+        </div>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card">
+            <h1 style="margin:0;">Welcome, <span id="supplierName"></span></h1>
+            <div id="approvalBanner" class="meta" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="card">
+            <div class="summary-cards" id="summaryCards"></div>
+        </div>
+
+        <div class="card">
+            <h2>Incoming Orders</h2>
+            <div id="ordersList"><div class="empty">Loading...</div></div>
+        </div>
+
+        <div class="card">
+            <h2>Add a Product</h2>
+            <form id="addProductForm">
+                <label>Title</label>
+                <input type="text" id="pTitle" required>
+                <label>Description</label>
+                <textarea id="pDescription" rows="2"></textarea>
+                <label>Price (R)</label>
+                <input type="number" id="pPrice" min="1" step="0.01" required>
+                <label>Stock Count</label>
+                <input type="number" id="pStock" min="0" step="1" required>
+                <label>Photo</label>
+                <input type="file" id="pPhoto" accept="image/*">
+                <button type="submit" class="btn btn-orange" style="margin-top:12px;">Add Product</button>
+                <div class="form-msg" id="addProductMsg" style="margin-top:8px; font-size:12px;"></div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>My Products</h2>
+            <div id="productsList"><div class="empty">Loading...</div></div>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="supplier-dashboard.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>
