@@ -18,6 +18,7 @@
     ];
 
     var FAB_PAGES = ['dashboard.html', 'my-orders.html', 'index.html', ''];
+    var NO_TABBAR_PAGES = ['login.html', 'signup.html', 'forgot-password.html', 'reset-password.html', 'reset-link-sent.html', 'signup-success.html', 'admin-login.html', 'driver-login.html', 'driver-signup.html', 'supplier-login.html', 'supplier-signup.html'];
 
     function currentPage() {
         var path = window.location.pathname.split('/').pop();
@@ -74,8 +75,10 @@
     function init() {
         if (!isNative()) return;
         document.documentElement.classList.add('eq-native');
-        buildTabbar();
-        updateChatBadge();
+        if (NO_TABBAR_PAGES.indexOf(currentPage()) === -1) {
+            buildTabbar();
+            updateChatBadge();
+        }
         document.querySelectorAll('details.eq-advanced-settings[open]').forEach(function (d) {
             d.removeAttribute('open');
         });
