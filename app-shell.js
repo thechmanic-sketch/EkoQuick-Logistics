@@ -5,6 +5,7 @@
 
 (function () {
     function isNative() {
+        if (navigator.userAgent.indexOf('EkoquickNativeApp') !== -1) return true;
         return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
     }
 
