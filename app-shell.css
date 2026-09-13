@@ -1,0 +1,114 @@
+/* Ekoquick native-app shell — only active inside the Capacitor APK
+   (html.eq-native, set by app-shell.js after detecting window.Capacitor).
+   The website at thechmanic-sketch.github.io is completely untouched;
+   this file is inert there. */
+
+html.eq-native .navbar,
+html.eq-native nav {
+    display: none !important;
+}
+
+html.eq-native body {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+html.eq-native .page-wrap,
+html.eq-native .content-block .wrap {
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+}
+
+.eq-tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 500;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(18, 24, 38, 0.96);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line, #232A3A);
+    display: flex;
+    align-items: stretch;
+}
+
+.eq-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-decoration: none;
+    color: var(--muted-dim, #5B6478);
+    position: relative;
+}
+
+.eq-tab .eq-tab-icon {
+    font-size: 19px;
+    opacity: 0.6;
+    line-height: 1;
+}
+
+.eq-tab .eq-tab-label {
+    font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.eq-tab .eq-tab-badge {
+    position: absolute;
+    top: 2px;
+    right: calc(50% - 20px);
+    background: var(--orange, #FF6A2B);
+    color: #0B0F16;
+    font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+    font-size: 9px;
+    font-weight: 700;
+    min-width: 15px;
+    height: 15px;
+    border-radius: 8px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+}
+
+.eq-tab .eq-tab-badge.show { display: flex; }
+
+.eq-tab.active { color: var(--orange, #FF6A2B); }
+.eq-tab.active .eq-tab-icon { opacity: 1; transform: translateY(-1px); }
+.eq-tab.active .eq-tab-label { font-weight: 700; }
+.eq-tab.active .eq-tab-icon::after {
+    content: '';
+    display: block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--orange, #FF6A2B);
+    margin: 3px auto 0;
+}
+
+.eq-fab {
+    position: fixed;
+    left: 50%;
+    bottom: calc(52px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    z-index: 501;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--orange, #FF6A2B);
+    color: #0B0F16;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+    text-decoration: none;
+    box-shadow: 0 8px 18px rgba(255, 106, 43, 0.4), 0 0 0 5px var(--ink, #0B0F16);
+}
+
+html.eq-native .eq-fab.show { display: flex; }
+html.eq-native .eq-tabbar { display: flex; }
+.eq-tabbar { display: none; }
