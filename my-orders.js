@@ -98,6 +98,8 @@ function filteredJobs() {
 
 function renderTable() {
     const jobs = filteredJobs();
+    renderCardList(jobs);
+
     const body = document.getElementById('ordersBody');
     const empty = document.getElementById('emptyState');
 
@@ -131,6 +133,40 @@ function renderTable() {
 
     body.querySelectorAll('button[data-action="toggle-details"]').forEach(function (btn) {
         btn.addEventListener('click', function () { toggleDetails(btn.dataset.job); });
+    });
+}
+
+function renderCardList(jobs) {
+    const list = document.getElementById('eqOrdersList');
+    if (!list) return;
+
+    if (!jobs.length) {
+        list.innerHTML = '<div class="empty">No orders found.</div>';
+        return;
+    }
+
+    list.innerHTML = jobs.map(function (job) {
+        const isDone = job.status === 'delivered';
+        const isCancelled = job.status === 'cancelled';
+        const iconClass = isDone ? 'done' : (isCancelled ? 'cancelled' : '');
+        const icon = isDone ? '✓' : (isCancelled ? '✕' : '🚚');
+        const href = (!isDone && !isCancelled) ? 'live-tracking.html?job=' + job.id : '#';
+        return '<a class="eq-order-row" href="' + href + '" data-job-row="' + job.id + '">' +
+            '<div class="eqo-icon ' + iconClass + '">' + icon + '</div>' +
+            '<div class="eqo-info">' +
+                '<div class="eqo-route">' + escapeHtml(job.pickup) + ' → ' + escapeHtml(job.dropoff) + '</div>' +
+                '<div class="eqo-sub">EQ' + job.id.slice(0, 6).toUpperCase() + ' · ' + formatDate(job.created_at) + '</div>' +
+            '</div>' +
+            '<div class="eqo-status ' + iconClass + '">' + STATUS_LABELS[job.status] + '</div>' +
+        '</a>';
+    }).join('');
+
+    list.querySelectorAll('a[href="#"]').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+            e.preventDefault();
+            toggleDetails(a.getAttribute('data-job-row'));
+            a.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
     });
 }
 

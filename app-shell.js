@@ -76,6 +76,9 @@
         document.documentElement.classList.add('eq-native');
         buildTabbar();
         updateChatBadge();
+        document.querySelectorAll('details.eq-advanced-settings[open]').forEach(function (d) {
+            d.removeAttribute('open');
+        });
     }
 
     if (document.readyState === 'loading') {

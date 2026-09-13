@@ -20,6 +20,34 @@
         .toggle-row:last-child { border-bottom: none; }
         img.avatar-lg { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); }
         .danger-btn { background: #C0392B; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+
+        /* app-only identity header + quick menu — hidden entirely on the
+           website, where the full settings form below already does this job */
+        .eq-profile-head { display: none; align-items: center; gap: 14px; padding: 4px 0 10px; }
+        .eq-profile-head .eph-avatar {
+            width: 54px; height: 54px; border-radius: 50%; flex-shrink: 0;
+            background: linear-gradient(135deg, var(--orange), #E5551E); color: var(--ink);
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-stencil, var(--font-mono)); font-weight: 800; font-size: 20px;
+        }
+        .eq-profile-head .eph-name { font-weight: 700; font-size: 16px; color: var(--paper); }
+        .eq-profile-head .eph-meta { font-family: var(--font-mono); font-size: 11px; color: var(--muted-dim); margin-top: 2px; }
+        .eq-quick-menu { display: none; flex-direction: column; }
+        .eq-quick-menu a, .eq-quick-menu .eq-menu-item {
+            display: flex; align-items: center; gap: 10px; padding: 13px 2px; border-bottom: 1px solid var(--line);
+            font-size: 13.5px; color: var(--paper); text-decoration: none; cursor: pointer;
+        }
+        .eq-quick-menu a:last-child, .eq-quick-menu .eq-menu-item:last-child { border-bottom: none; }
+        .eq-quick-menu .eqm-icon { width: 24px; text-align: center; font-size: 15px; }
+        .eq-quick-menu .eqm-chevron { margin-left: auto; color: var(--muted-dim); }
+        html.eq-native .eq-profile-head { display: flex; }
+        html.eq-native .eq-quick-menu { display: flex; }
+        .eq-advanced-settings summary { display: none; }
+        html.eq-native .eq-advanced-settings summary {
+            cursor: pointer; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--muted); padding: 10px 0;
+        }
+        html.eq-native details.eq-advanced-settings .card:first-of-type { margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -30,8 +58,25 @@
     <div class="page-wrap">
         <div class="card">
             <h1>Profile &amp; Settings</h1>
+
+            <div class="eq-profile-head">
+                <div class="eph-avatar" id="eqProfileInitial">?</div>
+                <div>
+                    <div class="eph-name" id="eqProfileName">—</div>
+                    <div class="eph-meta" id="eqProfileMeta">—</div>
+                </div>
+            </div>
+            <div class="eq-quick-menu">
+                <a href="saved-addresses.html"><span class="eqm-icon">❤️</span>Saved Addresses<span class="eqm-chevron">›</span></a>
+                <a href="payments.html"><span class="eqm-icon">💳</span>Payments<span class="eqm-chevron">›</span></a>
+                <a href="notifications.html"><span class="eqm-icon">🔔</span>Notifications<span class="eqm-chevron">›</span></a>
+                <a href="support.html"><span class="eqm-icon">🎫</span>Support<span class="eqm-chevron">›</span></a>
+                <div class="eq-menu-item" id="eqQuickLogout" style="color:var(--red, #E2544C);"><span class="eqm-icon">🚪</span>Log Out</div>
+            </div>
         </div>
 
+        <details class="eq-advanced-settings" open>
+        <summary>Account Settings ▾</summary>
         <!-- PERSONAL INFORMATION -->
         <div class="card">
             <h2>Personal Information</h2>
@@ -178,6 +223,7 @@
             <div class="meta" style="margin-top:6px;">This opens a support ticket for our team to process your deletion request — accounts aren't deleted automatically.</div>
             <button class="btn btn-outline-blue" id="logoutBtn" style="margin-top:10px; width:auto;">Logout</button>
         </div>
+        </details>
     </div>
 
     <script src="vendor/supabase.js"></script>

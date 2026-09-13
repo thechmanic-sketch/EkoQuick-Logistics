@@ -45,6 +45,16 @@
         @keyframes skeleton-pulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .details-row { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); }
         .details-row.open { display: block; }
+
+        .eq-shop-hero {
+            display: none; background: linear-gradient(135deg, var(--orange), #E5551E); border-radius: 16px;
+            padding: 18px; text-decoration: none; margin-bottom: 4px;
+        }
+        .eq-shop-hero .esh-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(11,15,22,0.7); }
+        .eq-shop-hero .esh-title { font-family: var(--font-stencil, var(--font-mono)); font-weight: 900; text-transform: uppercase; font-size: 22px; color: var(--ink); line-height: 1.1; margin-top: 4px; }
+        .eq-shop-hero .esh-cta { margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--ink); background: rgba(11,15,22,0.12); padding: 6px 12px; border-radius: 20px; }
+        html.eq-native .eq-shop-hero { display: block; }
+        html.eq-native #dashboardStoreQuickAction { display: none; }
     </style>
 </head>
 <body>
@@ -88,10 +98,16 @@
 
         <div id="activeDeliveriesWrap"></div>
 
+        <a class="eq-shop-hero" href="store.html">
+            <div class="esh-tag">Durban Pilot · New</div>
+            <div class="esh-title">Shop local.<br>We deliver.</div>
+            <div class="esh-cta">Browse Store →</div>
+        </a>
+
         <div class="card">
             <h2>Quick Actions</h2>
             <div class="quick-actions">
-                <a class="quick-action" href="store.html" style="grid-column: 1 / -1; background: var(--orange); color: #1a1a1a; font-weight: 700; border-color: var(--orange);">🛒 Shop Ekoquick Store</a>
+                <a class="quick-action" id="dashboardStoreQuickAction" href="store.html" style="grid-column: 1 / -1; background: var(--orange); color: #1a1a1a; font-weight: 700; border-color: var(--orange);">🛒 Shop Ekoquick Store</a>
                 <a class="quick-action" href="new-delivery.html">📦 Book Delivery</a>
                 <a class="quick-action" href="new-delivery.html?mode=pickup">🛍️ Request a Pickup</a>
                 <a class="quick-action disabled" id="trackAction" href="#">📍 Track Delivery</a>
