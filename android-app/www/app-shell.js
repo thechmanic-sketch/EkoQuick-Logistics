@@ -10,11 +10,11 @@
     }
 
     var TABS = [
-        { icon: '🏠', label: 'Home', href: 'dashboard.html', match: ['dashboard.html', 'index.html', ''] },
-        { icon: '🛒', label: 'Store', href: 'store.html', match: ['store.html', 'cart.html'] },
-        { icon: '📦', label: 'Orders', href: 'my-orders.html', match: ['my-orders.html', 'live-tracking.html', 'new-delivery.html'] },
-        { icon: '💬', label: 'Chat', href: 'chat-list.html', match: ['chat-list.html', 'chat.html'] },
-        { icon: '👤', label: 'Profile', href: 'profile-settings.html', match: ['profile-settings.html', 'notifications.html', 'saved-addresses.html', 'payments.html'] },
+        { icon: '🏠', label: 'Home', href: 'dashboard.html', match: ['dashboard.html', 'index.html', ''], authRequired: true },
+        { icon: '🛒', label: 'Store', href: 'store.html', match: ['store.html', 'cart.html'], authRequired: false },
+        { icon: '📦', label: 'Orders', href: 'my-orders.html', match: ['my-orders.html', 'live-tracking.html', 'new-delivery.html'], authRequired: true },
+        { icon: '💬', label: 'Chat', href: 'chat-list.html', match: ['chat-list.html', 'chat.html'], authRequired: true },
+        { icon: '👤', label: 'Profile', href: 'profile-settings.html', match: ['profile-settings.html', 'notifications.html', 'saved-addresses.html', 'payments.html'], authRequired: true },
     ];
 
     var FAB_PAGES = ['dashboard.html', 'my-orders.html', 'index.html', ''];
@@ -23,6 +23,18 @@
     function currentPage() {
         var path = window.location.pathname.split('/').pop();
         return path || '';
+    }
+
+    function goWithAuthGate(href, e) {
+        if (e) e.preventDefault();
+        supabase.auth.getSession().then(function (res) {
+            var session = res && res.data && res.data.session;
+            if (session) {
+                window.location.href = href;
+            } else {
+                window.location.href = 'login.html?redirect=' + encodeURIComponent(href);
+            }
+        });
     }
 
     function buildTabbar() {
@@ -39,6 +51,9 @@
                 '<span class="eq-tab-icon">' + tab.icon + '</span>' +
                 '<span class="eq-tab-badge" id="eqTabBadge-' + tab.label + '"></span>' +
                 '<span class="eq-tab-label">' + tab.label + '</span>';
+            if (tab.authRequired) {
+                a.addEventListener('click', function (e) { goWithAuthGate(tab.href, e); });
+            }
             bar.appendChild(a);
         });
 
@@ -50,6 +65,7 @@
             fab.href = 'new-delivery.html';
             fab.setAttribute('aria-label', 'Book a delivery');
             fab.textContent = '📦';
+            fab.addEventListener('click', function (e) { goWithAuthGate('new-delivery.html', e); });
             document.body.appendChild(fab);
         }
     }

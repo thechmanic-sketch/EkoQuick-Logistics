@@ -96,13 +96,21 @@ function wireCustomerLogin() {
                 showFormError(form, profile.account_status === 'banned' ? 'This account has been blocked.' : 'This account is currently paused.');
                 return;
             }
-            window.location.href = 'dashboard.html';
+            window.location.href = redirectTarget('dashboard.html');
         } catch (err) {
             showFormError(form, 'Something went wrong: ' + (err && err.message ? err.message : err));
         } finally {
             setBusy(btn, null, btnText);
         }
     });
+}
+
+function redirectTarget(fallback) {
+    var redirect = new URLSearchParams(window.location.search).get('redirect');
+    // Only ever follow a same-app relative page — never an absolute URL,
+    // which would make this an open-redirect footgun.
+    if (redirect && /^[a-zA-Z0-9_-]+\.html($|\?)/.test(redirect)) return redirect;
+    return fallback;
 }
 
 function wireAdminLogin() {
