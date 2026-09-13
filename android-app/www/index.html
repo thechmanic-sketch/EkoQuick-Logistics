@@ -1,3 +1,326 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Ekoquick</title></head>
-<body>Loading Ekoquick…</body></html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Get it there, today.</title>
+    <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+</head>
+<body>
+    <div class="ticker-bar">
+        <div class="ticker-track">
+            <span>DBN → PMB → HWK → BAL → RBY → NCT → LDS → PSP → PIN → WVL</span>
+            <span>DBN → PMB → HWK → BAL → RBY → NCT → LDS → PSP → PIN → WVL</span>
+        </div>
+    </div>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="logo-block">
+                <a class="logo" href="index.html">Eko<span>quick</span></a>
+                <span class="logo-meta">WAYBILL NO. EQ-2026-00417 · KZN</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="services.html">Services</a></li>
+                <li><a href="pricing.html">Tariff</a></li>
+                <li><a href="track-parcel.html">Track</a></li>
+                <li><a href="coverage.html">Coverage</a></li>
+                <li><a href="store.html">Store</a></li>
+                <li class="nav-dropdown" id="companyDropdown">
+                    <button class="nav-dropdown-trigger" id="companyDropdownBtn" type="button">Company <span class="caret">▾</span></button>
+                    <div class="nav-dropdown-panel">
+                        <a href="how-it-works.html">Manifest</a>
+                        <a href="about.html">About</a>
+                        <a href="faq.html">FAQ</a>
+                        <a href="contact.html">Contact</a>
+                        <a href="for-business.html">Business</a>
+                        <a href="become-a-driver.html">Drive</a>
+                        <a href="supplier-signup.html">Sell</a>
+                    </div>
+                </li>
+            </ul>
+            <div class="nav-cta-group">
+                <a class="btn btn-ghost btn-sm" href="login.html">Login</a>
+                <a class="btn btn-primary btn-sm" href="signup.html">Book now</a>
+            </div>
+            <button class="nav-hamburger" id="navHamburger" type="button" aria-label="Menu">
+                <span class="nav-hamburger-lines"><span></span></span>
+            </button>
+        </div>
+        <div class="nav-mobile-menu" id="navMobileMenu">
+            <a href="services.html">Services</a>
+            <a href="pricing.html">Tariff</a>
+            <a href="track-parcel.html">Track</a>
+            <a href="coverage.html">Coverage</a>
+            <a href="how-it-works.html">Manifest</a>
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <a href="contact.html">Contact</a>
+            <a href="for-business.html">Business</a>
+            <a href="become-a-driver.html">Drive</a>
+                        <a href="supplier-signup.html">Sell</a>
+            <div class="nav-mobile-ctas">
+                <a class="btn btn-ghost btn-sm" href="login.html" style="flex:1;">Login</a>
+                <a class="btn btn-primary btn-sm" href="signup.html" style="flex:1;">Book now</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero" id="top">
+        <div class="hero-copy">
+            <p class="manifest-no">ORIGIN <b>ANY KZN ADDRESS</b> — DESTINATION <b>ANY KZN ADDRESS</b></p>
+            <h1>No warehouses.<br>No middlemen.<br><span class="accent">Just your parcel, moving.</span></h1>
+            <p class="hero-sub">Direct sender-to-recipient delivery across KwaZulu-Natal — from your hands straight to their door, today.</p>
+            <div class="hero-ctas">
+                <a class="btn btn-primary" href="signup.html">Book a delivery</a>
+                <a class="btn btn-ghost" href="requirements.html">Become a driver</a>
+            </div>
+            <div class="stat-line">
+                <div><b>18</b><span>Towns on file</span></div>
+                <div><b>05</b><span>Vehicle classes</span></div>
+                <div><b>R25</b><span>Fare from</span></div>
+            </div>
+        </div>
+        <div class="hero-photo">
+            <img src="hero.png" alt="Ekoquick delivery van on a KwaZulu-Natal highway">
+            <div class="postmark">KZN<b>ALL<br>ROUTES</b>SINCE 2026</div>
+        </div>
+    </header>
+
+    <section id="home-store">
+        <div class="wrap">
+            <p class="sec-tag" style="color: var(--orange);">Ekoquick Store · Durban Pilot</p>
+            <h2 class="home-store-h2">Shop local. We deliver it.</h2>
+            <p class="home-store-lede">Real products from hand-picked Durban suppliers — browse now, no login needed. Check out and we'll have it on your doorstep the same way we deliver everything else.</p>
+            <div class="home-store-grid" id="homeStoreGrid">
+                <div class="home-store-skel"></div>
+                <div class="home-store-skel"></div>
+                <div class="home-store-skel"></div>
+                <div class="home-store-skel"></div>
+            </div>
+            <a class="stamp-btn" href="store.html" style="margin-top: 24px;">Shop the full store →</a>
+        </div>
+    </section>
+
+    <section id="pickup-usp">
+        <div class="wrap pickup-estimate-band" style="border: 1.5px solid var(--orange); background: linear-gradient(180deg, rgba(255,106,43,0.08), transparent);">
+            <div class="home-estimator">
+                <p class="sec-tag">Instant estimate</p>
+                <div class="home-estimator-grid">
+                    <div>
+                        <label>Pickup</label>
+                        <input id="homeEstPickup" placeholder="e.g. 12 Musgrave Road, Durban">
+                        <button type="button" class="home-estimator-map-btn" id="homeEstPickMapBtn">📍 Select on Map</button>
+                        <div id="homeEstPickupMap" class="home-estimator-mini-map hidden"></div>
+                    </div>
+                    <div>
+                        <label>Destination</label>
+                        <input id="homeEstDropoff" placeholder="e.g. 5 Church St, Pietermaritzburg">
+                        <button type="button" class="home-estimator-map-btn" id="homeEstPickMapBtn2">📍 Select on Map</button>
+                        <div id="homeEstDropoffMap" class="home-estimator-mini-map hidden"></div>
+                    </div>
+                    <div>
+                        <label>Vehicle</label>
+                        <select id="homeEstVehicle"></select>
+                    </div>
+                    <div>
+                        <label>Parcel Type</label>
+                        <select id="homeEstParcelType">
+                            <option value="parcel">Parcel</option>
+                            <option value="documents">Documents</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="food">Food</option>
+                            <option value="clothing">Clothing</option>
+                            <option value="furniture">Furniture</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="home-estimator-btn" id="homeEstimateBtn">Get Estimate</button>
+                <div class="home-estimate-msg" id="homeEstimateMsg"></div>
+                <div class="home-estimate-result" id="homeEstimateResult">
+                    <div class="amt" id="homeEstAmount">R0</div>
+                    <div class="detail" id="homeEstDetail"></div>
+                </div>
+            </div>
+            <div>
+                <p class="sec-tag" style="color: var(--orange);">New</p>
+                <h2>Buy from home.<br>We bring it home for you.</h2>
+                <p>Ordered something at a shop, a market stall, a spaza, anywhere in KZN? You don't have to go get it. Send a driver to collect it and bring it straight to your door — no store account needed, no warehouse in between.</p>
+                <a class="stamp-btn" href="signup.html">Request a pickup →</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="how">
+        <div class="wrap">
+            <div class="sec-head">
+                <div>
+                    <p class="sec-tag">Manifest</p>
+                    <h2>How a job moves</h2>
+                </div>
+                <p class="sec-note">Four line items, start to finish. <a href="how-it-works.html" style="color: var(--orange);">Read the full breakdown →</a></p>
+            </div>
+            <table class="manifest-table">
+                <tbody>
+                    <tr>
+                        <td class="m-code">STEP/01</td>
+                        <td class="m-action">Enter the route</td>
+                        <td class="m-detail">Type pickup and drop-off — we work out the real driving distance in KZN.</td>
+                    </tr>
+                    <tr>
+                        <td class="m-code">STEP/02</td>
+                        <td class="m-action">Read the tariff</td>
+                        <td class="m-detail">Pick bike, bakkie or truck and see the full fare before you confirm.</td>
+                    </tr>
+                    <tr>
+                        <td class="m-code">STEP/03</td>
+                        <td class="m-action">Driver dispatched</td>
+                        <td class="m-detail">The nearest available driver takes the job and heads to collect.</td>
+                    </tr>
+                    <tr>
+                        <td class="m-code">STEP/04</td>
+                        <td class="m-action">Tracked live</td>
+                        <td class="m-detail">Watch the driver move on the map, door to door, until it's signed for.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="tariff">
+        <div class="wrap">
+            <div class="sec-head">
+                <div>
+                    <p class="sec-tag">Tariff sheet</p>
+                    <h2>Priced by the kilometre</h2>
+                </div>
+                <p class="sec-note">Base fee plus distance. <a href="pricing.html" style="color: var(--orange);">See the full tariff sheet →</a></p>
+            </div>
+            <table class="tariff">
+                <thead>
+                    <tr>
+                        <th>Vehicle</th>
+                        <th>Base fare</th>
+                        <th>Rate / km</th>
+                        <th>Suited for</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="veh">🏍️ Bike</td>
+                        <td class="num">R25</td>
+                        <td class="num">R5.00</td>
+                        <td class="fit">Documents, small parcels, food and lightweight deliveries</td>
+                    </tr>
+                    <tr>
+                        <td class="veh">🚗 Small Car</td>
+                        <td class="num">R35</td>
+                        <td class="num">R7.00</td>
+                        <td class="fit">Groceries, retail purchases, medium-sized parcels</td>
+                    </tr>
+                    <tr>
+                        <td class="veh">🛻 Bakkie</td>
+                        <td class="num">R80</td>
+                        <td class="num">R12.00</td>
+                        <td class="fit">Furniture, appliances, construction materials</td>
+                    </tr>
+                    <tr>
+                        <td class="veh">🚚 1–2 Ton Truck</td>
+                        <td class="num">R150</td>
+                        <td class="num">R18.00</td>
+                        <td class="fit">Office relocations, business deliveries, bulk transport</td>
+                    </tr>
+                    <tr>
+                        <td class="veh">🚛 7 Ton Truck</td>
+                        <td class="num">R250</td>
+                        <td class="num">R25.00</td>
+                        <td class="fit">Industrial transport, warehouse stock, large-scale logistics</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="coverage">
+        <div class="wrap">
+            <div class="sec-head">
+                <div>
+                    <p class="sec-tag">Coverage</p>
+                    <h2>KwaZulu-Natal, wall to wall</h2>
+                </div>
+                <p class="sec-note">KZN-only for now. <a href="coverage.html" style="color: var(--orange);">See full coverage →</a></p>
+            </div>
+            <p class="route-strip">
+                <span class="code">DBN</span> Durban <span class="arrow">→</span>
+                <span class="code">PMB</span> Pietermaritzburg <span class="arrow">→</span>
+                <span class="code">UML</span> Umhlanga <span class="arrow">→</span>
+                <span class="code">BAL</span> Ballito <span class="arrow">→</span>
+                <span class="code">RBY</span> Richards Bay <span class="arrow">→</span>
+                <span class="code">NCT</span> Newcastle <span class="arrow">→</span>
+                <span class="code">LDS</span> Ladysmith <span class="arrow">→</span>
+                <span class="code">PSP</span> Port Shepstone <span class="arrow">+ more</span>
+            </p>
+            <p style="font-family: var(--font-mono); font-size: 12px; color: var(--muted-dim); margin-top: var(--sp-3);">Operating in KwaZulu-Natal only for now — expanding to more of South Africa soon.</p>
+        </div>
+    </section>
+
+    <section id="driver">
+        <div class="wrap cta-band">
+            <div>
+                <h2>Own a vehicle?<br>Start earning.</h2>
+                <p>Set your own hours, get paid per job, pick up work anywhere in KZN.</p>
+            </div>
+            <a class="stamp-btn" href="requirements.html">See driver requirements →</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="footer-grid has-legal">
+                <div class="footer-brand">
+                    <a class="logo" href="index.html">Eko<span>quick</span></a>
+                    <p>Fast, reliable delivery across KwaZulu-Natal — for customers, drivers and businesses alike.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Account</h4>
+                    <a href="login.html">Login</a>
+                    <a href="signup.html">Sign up</a>
+                    <a href="requirements.html">Become a driver</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <a href="https://wa.me/27676659966" target="_blank" rel="noopener">WhatsApp us</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Legal</h4>
+                    <a href="privacy.html">Privacy Policy</a>
+                    <a href="terms.html">Terms &amp; Conditions</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Made by</h4>
+                    <span style="display:block; color: var(--muted); font-size: 13px;">Techmanic Software and Digital Solutions</span>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 EKOQUICK — WAYBILL EQ-2026-00417</span>
+                <span>BUILT FOR THE ROAD</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="session-nav.js"></script>
+    <script src="google-maps.js"></script>
+    <script src="pricing-engine.js"></script>
+    <script src="home-estimator.js"></script>
+    <script src="home-store.js"></script>
+    <script src="nav.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>
+<!-- redeploy nudge 2026-09-13T12:07:52Z -->
