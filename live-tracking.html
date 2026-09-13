@@ -30,6 +30,23 @@
         .otp-pill { background: rgba(255,255,255,0.05); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; flex: 1; min-width: 140px; }
         .driver-row { display: flex; align-items: center; gap: 12px; }
         .driver-row img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line); }
+
+        /* app-native reflow: map first, then OTP codes above the fold,
+           status/driver/timeline next, extra details tucked away */
+        html.eq-native #trackingContent { display: flex; flex-direction: column; }
+        html.eq-native #headerCard { order: -1; }
+        html.eq-native #trackingContent > .card:nth-of-type(2) { order: 1; } /* Live Map */
+        html.eq-native #otpCard { order: 2; }
+        html.eq-native #trackingContent > .card:nth-of-type(1) { order: 3; } /* Status */
+        html.eq-native #driverCard { order: 4; }
+        html.eq-native #trackingContent > .card:nth-of-type(5) { order: 5; } /* Timeline */
+        html.eq-native #trackingContent > .card:nth-of-type(3) { order: 6; } /* Delivery Details */
+        html.eq-native #trackingContent > .card:nth-of-type(6) { order: 7; } /* Support */
+
+        html.eq-native #trackMap { height: 220px; }
+        html.eq-native .otp-box { gap: 10px; }
+        html.eq-native .otp-pill { text-align: center; border-style: dashed; }
+        html.eq-native .otp-pill b { color: var(--orange); }
     </style>
 </head>
 <body>

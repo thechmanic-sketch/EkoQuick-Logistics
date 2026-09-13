@@ -47,6 +47,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         await supabase.auth.signOut();
         window.location.href = 'login.html';
     });
+    var quickLogout = document.getElementById('eqQuickLogout');
+    if (quickLogout) {
+        quickLogout.addEventListener('click', async function () {
+            await supabase.auth.signOut();
+            window.location.href = 'login.html';
+        });
+    }
     document.getElementById('downloadDataBtn').addEventListener('click', downloadMyData);
     document.getElementById('exportOrdersBtn').addEventListener('click', exportMyOrders);
     document.getElementById('requestDeleteBtn').addEventListener('click', requestAccountDeletion);
@@ -61,6 +68,16 @@ function fillForm(p) {
     document.getElementById('fEmail').value = p.email || currentUser.email || '';
     document.getElementById('dateJoined').textContent = 'Date Joined: ' + formatDate(p.created_at);
     document.getElementById('customerId').textContent = 'Customer ID: ' + currentUser.id.slice(0, 8);
+
+    var initialEl = document.getElementById('eqProfileInitial');
+    var nameEl = document.getElementById('eqProfileName');
+    var metaEl = document.getElementById('eqProfileMeta');
+    if (initialEl && nameEl && metaEl) {
+        var name = p.full_name || 'Ekoquick Customer';
+        initialEl.textContent = name.charAt(0).toUpperCase();
+        nameEl.textContent = name;
+        metaEl.textContent = (p.phone || '') + (p.created_at ? ' · Customer since ' + new Date(p.created_at).getFullYear() : '');
+    }
 
     document.getElementById('fEmergencyName').value = p.emergency_contact_name || '';
     document.getElementById('fEmergencyPhone').value = p.emergency_contact_phone || '';

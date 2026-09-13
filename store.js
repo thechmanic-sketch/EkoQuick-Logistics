@@ -1,33 +1,59 @@
-document.addEventListener('DOMContentLoaded', loadStoreProducts);
+let allStoreProducts = [];
+
+document.addEventListener('DOMContentLoaded', function () {
+    loadStoreProducts();
+    var searchInput = document.getElementById('storeSearchInput');
+    if (searchInput) searchInput.addEventListener('input', renderStoreGrid);
+});
 
 async function loadStoreProducts() {
     var { data: products, error } = await supabase
         .from('products')
-        .select('*')
+        .select('*, supplier_details:supplier_id(business_name)')
         .eq('approval_status', 'approved')
         .eq('active', true)
         .gt('stock_count', 0)
         .order('created_at', { ascending: false });
 
+    allStoreProducts = error ? [] : (products || []);
+    renderStoreGrid();
+}
+
+function renderStoreGrid() {
     var grid = document.getElementById('storeGrid');
     var countEl = document.getElementById('productCount');
+    var searchInput = document.getElementById('storeSearchInput');
+    var q = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
-    if (error || !products || products.length === 0) {
-        grid.innerHTML = '<div style="color:var(--muted); font-family:var(--font-mono); font-size:13px;">No products available yet — check back soon.</div>';
+    var products = allStoreProducts.filter(function (p) {
+        if (!q) return true;
+        var supplierName = (p.supplier_details && p.supplier_details.business_name) || '';
+        return p.title.toLowerCase().includes(q) || supplierName.toLowerCase().includes(q);
+    });
+
+    if (allStoreProducts.length === 0) {
+        grid.innerHTML = '<div class="store-empty">No products available yet — check back soon.</div>';
         if (countEl) countEl.textContent = '';
+        return;
+    }
+    if (products.length === 0) {
+        grid.innerHTML = '<div class="store-empty">No products match "' + escapeHtmlStore(q) + '".</div>';
+        if (countEl) countEl.textContent = '0 products';
         return;
     }
 
     if (countEl) countEl.textContent = products.length + ' product' + (products.length === 1 ? '' : 's');
 
     grid.innerHTML = products.map(function (p) {
+        var supplierName = (p.supplier_details && p.supplier_details.business_name) || 'Ekoquick Supplier';
         return '<div class="store-card">' +
             '<img src="' + (p.photo_url || '') + '" onerror="this.style.background=\'var(--ink)\'">' +
             '<div class="sc-body">' +
+                '<div class="sc-shop">' + escapeHtmlStore(supplierName) + '</div>' +
                 '<div class="sc-title">' + escapeHtmlStore(p.title) + '</div>' +
                 '<div class="sc-price">R' + Number(p.price).toFixed(2) + '</div>' +
-                '<button data-id="' + p.id + '">Add to Cart</button>' +
             '</div>' +
+            '<button data-id="' + p.id + '">Add to Cart</button>' +
         '</div>';
     }).join('');
 
