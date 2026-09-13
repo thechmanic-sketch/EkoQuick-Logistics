@@ -5,34 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ekoquick</title>
     <style>
-        html, body { background: #0B0F16; height: 100%; margin: 0; }
-        .splash { height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 14px; }
-        .splash .logo { font-family: 'IBM Plex Mono', monospace; font-size: 28px; font-weight: 700; color: #F1EEE6; letter-spacing: 0.02em; }
+        html, body { background: #0B0F16; height: 100%; margin: 0; overflow: hidden; }
+        .splash { height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 28px; font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+        .splash .logo { font-size: 26px; font-weight: 700; color: #F1EEE6; letter-spacing: 0.02em; }
         .splash .logo span { color: #FF6A2B; }
-        .splash .dot { width: 8px; height: 8px; border-radius: 50%; background: #FF6A2B; animation: pulse 1s ease-in-out infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+        .route-anim { width: 240px; height: 60px; position: relative; }
+        .route-line {
+            position: absolute; top: 30px; left: 0; right: 0; height: 2px;
+            background-image: linear-gradient(90deg, #232A3A 60%, transparent 40%);
+            background-size: 14px 2px; background-repeat: repeat-x;
+        }
+        .route-pin {
+            position: absolute; right: -2px; top: 12px; font-size: 22px;
+        }
+        .route-car {
+            position: absolute; top: 10px; left: 0; font-size: 24px;
+            animation: drive 2.2s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+        }
+        @keyframes drive {
+            0% { left: 0; transform: scaleX(1); }
+            96% { left: calc(100% - 30px); transform: scaleX(1); }
+            100% { left: calc(100% - 30px); transform: scaleX(1); }
+        }
+        .splash .tag { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #5B6478; }
+        @media (prefers-reduced-motion: reduce) { .route-car { animation-duration: 0.01s; } }
     </style>
 </head>
 <body>
     <div class="splash">
         <div class="logo">Eko<span>quick</span></div>
-        <div class="dot"></div>
+        <div class="route-anim">
+            <div class="route-line"></div>
+            <div class="route-car">🚚</div>
+            <div class="route-pin">📍</div>
+        </div>
+        <div class="tag">KwaZulu-Natal</div>
     </div>
 
-    <script src="vendor/supabase.js"></script>
-    <script src="config.js"></script>
     <script>
-        // This app's entry point never shows the public marketing homepage —
-        // that's a website page, not an app screen. Route straight to the
-        // signed-in dashboard or the login screen based on session state.
-        (async function () {
-            try {
-                var { data: { session } } = await supabase.auth.getSession();
-                window.location.replace(session ? 'dashboard.html' : 'login.html');
-            } catch (err) {
-                window.location.replace('login.html');
-            }
-        })();
+        // Always land on the public Store — browsing needs no account.
+        // Logging in / signing up only happens when an action requires it
+        // (handled by app-shell.js's per-tab auth gate).
+        setTimeout(function () {
+            window.location.replace('store.html');
+        }, 2200);
     </script>
 </body>
 </html>
