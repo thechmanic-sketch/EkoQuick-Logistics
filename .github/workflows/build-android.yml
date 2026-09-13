@@ -8,6 +8,9 @@ on:
       - '.github/workflows/build-android.yml'
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -76,3 +79,23 @@ jobs:
         with:
           name: ekoquick-customer-debug-apk
           path: android-app/android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Commit latest APK into the repo for easy download
+        working-directory: android-app
+        run: |
+          mkdir -p builds
+          if [ "${{ steps.keystore.outputs.has_keystore }}" = "true" ]; then
+            cp android/app/build/outputs/apk/release/app-release.apk builds/ekoquick-customer-latest.apk
+          else
+            cp android/app/build/outputs/apk/debug/app-debug.apk builds/ekoquick-customer-latest.apk
+          fi
+          cd ..
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add android-app/builds/ekoquick-customer-latest.apk
+          if ! git diff --cached --quiet; then
+            git commit -m "Update built APK [skip ci]"
+            git push
+          else
+            echo "APK unchanged, nothing to commit"
+          fi
