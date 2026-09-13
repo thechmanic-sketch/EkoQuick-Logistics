@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Rate Driver</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <script src="notif-sound.js"></script>
+    <script src="notif-bell.js"></script>
+    <script src="app-nav.js"></script>
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="dashboard.html">← Eko<span>quick</span></a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card center">
+            <h1>Rate Your Driver</h1>
+            <p class="auth-subtitle">How was your delivery experience?</p>
+
+            <label style="text-align:left; display:block;">Overall Experience</label>
+            <div class="star-rating" id="starRating">
+                <span class="star" data-value="1">★</span>
+                <span class="star" data-value="2">★</span>
+                <span class="star" data-value="3">★</span>
+                <span class="star" data-value="4">★</span>
+                <span class="star" data-value="5">★</span>
+            </div>
+
+            <div id="categoryRatings" style="text-align:left; margin-top:10px;"></div>
+
+            <label style="text-align:left; display:block; margin-top:10px;">Additional Comments (optional, max 1000 characters)</label>
+            <textarea id="comment" class="field-plain" rows="3" maxlength="1000" placeholder="Tell us more..."></textarea>
+
+            <label style="text-align:left; display:block; margin-top:10px;">Delivery Photo (optional)</label>
+            <input type="file" id="reviewPhoto" accept="image/*" class="field-plain">
+
+            <div id="msgArea"></div>
+
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn btn-blue" id="submitRating">Submit Review</button>
+                <a class="btn btn-outline-blue" href="reviews.html">Cancel</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="rate-driver.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>

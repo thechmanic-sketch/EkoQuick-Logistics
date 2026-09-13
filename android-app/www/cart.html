@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart — Ekoquick Store</title>
+    <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="app-shell.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <style>
+        .cart-item { display: flex; gap: 12px; align-items: center; border: 1px solid var(--line); padding: 12px; margin-bottom: 10px; }
+        .cart-item img { width: 56px; height: 56px; object-fit: cover; border: 1px solid var(--line); background: var(--ink-2); flex-shrink: 0; }
+        .cart-item .ci-info { flex: 1; min-width: 0; }
+        .cart-item .ci-title { font-weight: 700; font-size: 14px; }
+        .cart-item .ci-supplier { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+        .cart-item .ci-qty { display: flex; align-items: center; gap: 6px; }
+        .cart-item .ci-qty button { width: 26px; height: 26px; background: var(--ink-2); border: 1px solid var(--line); color: var(--paper); cursor: pointer; }
+        .cart-item .ci-remove { color: #E2544C; font-size: 11px; font-family: var(--font-mono); cursor: pointer; background: none; border: none; }
+        .checkout-box { border: 1px solid var(--line); background: var(--ink-2); padding: 18px; margin-top: 20px; }
+        .checkout-box .cbrow { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 13px; padding: 4px 0; }
+        .checkout-box select, .checkout-box input { width: 100%; background: var(--ink); border: 1px solid var(--line); color: var(--paper); padding: 10px; margin-top: 6px; font-size: 13px; }
+        .checkout-box label { font-size: 12px; color: var(--muted); display: block; margin-top: 12px; }
+        #checkoutBtn { margin-top: 16px; width: 100%; background: var(--orange); color: var(--ink); border: none; padding: 12px; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; cursor: pointer; }
+        #checkoutMsg { font-size: 12px; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-inner">
+            <div class="logo-block">
+                <a class="logo" href="index.html">Eko<span>quick</span></a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="store.html">Store</a></li>
+            </ul>
+            <div class="nav-cta-group">
+                <a class="btn btn-ghost btn-sm" href="store.html">← Back to Store</a>
+            </div>
+            <button class="nav-hamburger" id="navHamburger" type="button" aria-label="Menu">
+                <span class="nav-hamburger-lines"><span></span></span>
+            </button>
+        </div>
+        <div class="nav-mobile-menu" id="navMobileMenu">
+            <a href="store.html">Store</a>
+        </div>
+    </nav>
+
+    <header class="page-hero">
+        <div class="wrap">
+            <p class="sec-tag">Your Cart</p>
+            <h1>Checkout</h1>
+        </div>
+    </header>
+
+    <section class="content-block" style="max-width: none;">
+        <div class="wrap" style="max-width: 700px;">
+            <div id="cartItems"><div style="color:var(--muted); font-family:var(--font-mono); font-size:13px;">Loading cart...</div></div>
+
+            <div class="checkout-box" id="checkoutBox" style="display:none;">
+                <div class="cbrow"><span>Items subtotal</span><span id="ckSubtotal">R0.00</span></div>
+                <div class="cbrow"><span>Delivery fee (per supplier)</span><span id="ckDelivery">—</span></div>
+                <div class="cbrow"><span>Platform fee</span><span id="ckPlatformFee">—</span></div>
+                <div class="cbrow" style="border-top:1px solid var(--line); padding-top:8px; margin-top:4px; font-weight:700; color:var(--paper);"><span>Estimated total</span><span id="ckTotal">R0.00</span></div>
+
+                <label>Delivery Address</label>
+                <input type="text" id="deliveryAddress" placeholder="Where should we deliver this?">
+
+                <label>Your Phone Number</label>
+                <input type="tel" id="deliveryPhone" placeholder="0676659966">
+
+                <label>Payment Method</label>
+                <select id="paymentMethod">
+                    <option value="cash">Cash on Delivery</option>
+                    <option value="eft">EFT</option>
+                    <option value="card">Card (via PayFast — coming soon)</option>
+                </select>
+
+                <button id="checkoutBtn">Place Order</button>
+                <div id="checkoutMsg"></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <div class="footer-bottom">
+                <span>© 2026 EKOQUICK — WAYBILL EQ-2026-00417</span>
+                <span>DURBAN PILOT</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="google-maps.js"></script>
+    <script src="pricing-engine.js"></script>
+    <script src="cart.js"></script>
+    <script src="nav.js"></script>
+    <script src="support-widget.js"></script>
+    <script src="app-shell.js"></script>
+</body>
+</html>

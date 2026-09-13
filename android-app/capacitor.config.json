@@ -2,11 +2,6 @@
   "appId": "za.co.ekoquick.customer",
   "appName": "Ekoquick",
   "webDir": "www",
-  "server": {
-    "url": "https://thechmanic-sketch.github.io/EkoQuick-Logistics/index.html",
-    "cleartext": false,
-    "androidScheme": "https"
-  },
   "android": {
     "allowMixedContent": false
   }

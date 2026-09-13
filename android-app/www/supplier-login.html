@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Supplier Login</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+</head>
+<body>
+    <div class="hero-bg-wrap">
+        <img class="hero-bg" src="hero.png" alt="">
+        <div class="hero-overlay"></div>
+    </div>
+    <div class="auth-shell">
+        <header class="auth-topbar-nav">
+            <a class="auth-logo-link" href="index.html">
+                <span class="logo">Eko<span>quick</span></span>
+                <span class="auth-logo-tag">KZN</span>
+            </a>
+            <button class="hamburger" id="hamburgerBtn" aria-label="Menu" aria-expanded="false">
+                <span class="hamburger-lines"><span></span></span>
+            </button>
+        </header>
+        <nav class="auth-mobile-menu" id="authMobileMenu">
+            <a href="index.html">Home</a>
+        </nav>
+        <main class="auth-main">
+        <div class="auth-wrap">
+        <div class="auth-card">
+            <div class="auth-icon auth-icon-orange">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v6H3zM3 9v12h18V9M9 21V9"/></svg>
+            </div>
+            <h1>Supplier Login</h1>
+            <p class="auth-subtitle">Manage your products and orders.</p>
+
+            <form id="supplierLoginForm">
+                <label class="field">
+                    <input type="email" id="email" placeholder="Email" autocomplete="email" required>
+                </label>
+                <label class="field">
+                    <input type="password" id="password" placeholder="Password" autocomplete="current-password" required>
+                    <button type="button" class="field-toggle" aria-label="Show password">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </label>
+                <button type="submit" class="btn btn-orange">Login</button>
+            </form>
+
+            <div style="margin-top: 14px; font-size: 13px;">New supplier? <a class="auth-link" style="display: inline; margin: 0;" href="supplier-signup.html">Apply to sell</a></div>
+        </div>
+        </div>
+        </main>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="supplier-auth.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>
