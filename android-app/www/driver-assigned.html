@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>html{background:#0B0F16}</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekoquick — Driver Assigned</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="support-widget.css">
+    <script src="transitions.js"></script>
+    <script src="notif-sound.js"></script>
+    <script src="notif-bell.js"></script>
+    <script src="app-nav.js"></script>
+</head>
+<body>
+    <div class="navbar">
+        <a class="brand" style="color:#fff; text-decoration:none;" href="dashboard.html">← Eko<span>quick</span></a>
+    </div>
+
+    <div class="page-wrap">
+        <div class="card center">
+            <div class="icon-circle auth-icon-blue">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17h1a2 2 0 0 0 4 0h6a2 2 0 0 0 4 0h1a1 1 0 0 0 1-1v-3.5a1 1 0 0 0-.29-.71L17 9h-3V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1Z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg>
+            </div>
+            <h1 id="statusTitle">Waiting for driver assignment...</h1>
+            <p class="auth-subtitle" id="statusSubtitle">We're finding a driver for your delivery.</p>
+
+            <div id="driverInfo" class="hidden">
+                <div class="job">
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom: 8px;">
+                        <img id="driverAvatar" class="hidden" style="width:48px; height:48px; object-fit:cover; border:1px solid var(--line); border-radius:50%;">
+                        <div class="route" id="driverName" style="margin-bottom:0;"></div>
+                    </div>
+                    <div class="meta" id="driverPhone"></div>
+                    <div class="meta" id="jobRoute"></div>
+                </div>
+            </div>
+
+            <div id="codesInfo" class="hidden">
+                <div class="job">
+                    <div class="route">Pickup code (give to your sender): <span id="collectionCode"></span></div>
+                    <div class="route" style="margin-top: 8px;">Delivery code (give to the receiver): <span id="deliveryCode"></span></div>
+                    <div class="meta" style="margin-top: 8px;">The driver must be given these codes before starting and completing the trip.</div>
+                </div>
+                <button class="btn btn-blue" id="sendCodeBtn" style="margin-bottom: 12px;">Send delivery code via WhatsApp</button>
+            </div>
+
+            <a class="btn btn-blue hidden" id="trackBtn" href="#">Track Delivery</a>
+        </div>
+    </div>
+
+    <script src="vendor/supabase.js"></script>
+    <script src="config.js"></script>
+    <script src="driver-assigned.js"></script>
+    <script src="support-widget.js"></script>
+</body>
+</html>
