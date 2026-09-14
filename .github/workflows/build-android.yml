@@ -59,12 +59,12 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease --no-daemon
+        run: for i in 1 2 3; do ./gradlew assembleRelease --no-daemon && break || { echo "Attempt $i failed, retrying..."; sleep 10; }; done
 
       - name: Build debug APK (no signing secrets configured yet)
         if: steps.keystore.outputs.has_keystore != 'true'
         working-directory: android-app/android
-        run: ./gradlew assembleDebug --no-daemon
+        run: for i in 1 2 3; do ./gradlew assembleDebug --no-daemon && break || { echo "Attempt $i failed, retrying..."; sleep 10; }; done
 
       - name: Upload release APK
         if: steps.keystore.outputs.has_keystore == 'true'
